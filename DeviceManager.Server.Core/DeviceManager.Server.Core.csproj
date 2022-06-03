@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <RootNamespace>DeviceManager.Server</RootNamespace>
+    <CodeAnalysisRuleSet>..\Analyzers.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Linq.Async" Version="6.0.1" />
+    <PackageReference Include="Usa.Smart.Core" Version="2.1.0" />
+    <PackageReference Include="Usa.Smart.Data" Version="2.1.0" />
+    <PackageReference Include="Usa.Smart.Data.Accessor" Version="2.1.0" />
+  </ItemGroup>
+
+</Project>
