@@ -1,0 +1,37 @@
+@inherits LayoutComponentBase
+
+<ErrorBoundary @ref="errorBoundary">
+    <ChildContent>
+        <MudThemeProvider Theme="@Styles.NoMenuTheme" />
+        <MudDialogProvider />
+        <MudSnackbarProvider />
+        <MudLayout>
+            <MudMainContent>
+                <MudContainer MaxWidth="MaxWidth.Large" Class="d-flex justify-center pt-16">
+                    @Body
+                </MudContainer>
+            </MudMainContent>
+        </MudLayout>
+    </ChildContent>
+    <ErrorContent>
+        <MudThemeProvider Theme="@Styles.NoMenuTheme" />
+        <MudDialogProvider />
+        <MudSnackbarProvider />
+        <MudLayout>
+            <MudMainContent>
+                <MudContainer MaxWidth="MaxWidth.Large" Class="d-flex justify-center pt-16">
+                    <ErrorDispatcher Exception="context" RecoverRequest="() => errorBoundary?.Recover()" />
+                </MudContainer>
+            </MudMainContent>
+        </MudLayout>
+    </ErrorContent>
+</ErrorBoundary>
+
+@code {
+    private ErrorBoundary? errorBoundary;
+
+    protected override void OnParametersSet()
+    {
+        errorBoundary?.Recover();
+    }
+}

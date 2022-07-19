@@ -4,7 +4,9 @@ using System.Text.Unicode;
 
 using DeviceManager.Server.Components.Json;
 using DeviceManager.Server.Components.Storage;
+using DeviceManager.Server.Web.Components;
 
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.Hosting.WindowsServices;
 using Microsoft.Extensions.Options;
 
@@ -77,6 +79,8 @@ builder.Services.AddMudServices(config =>
     config.SnackbarConfiguration.ShowTransitionDuration = 500;
     config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
 });
+
+builder.Services.AddSingleton<IErrorBoundaryLogger, ErrorBoundaryLogger>();
 
 // API
 builder.Services
