@@ -2,7 +2,6 @@ using System.Text.Encodings.Web;
 using System.Text.Json.Serialization;
 using System.Text.Unicode;
 
-using DeviceManager.Server.Components.Json;
 using DeviceManager.Server.Components.Storage;
 using DeviceManager.Server.Web.Components;
 
@@ -93,7 +92,7 @@ builder.Services
     {
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
         options.JsonSerializerOptions.Encoder = JavaScriptEncoder.Create(UnicodeRanges.All);
-        options.JsonSerializerOptions.Converters.Add(new DateTimeConverter());
+        options.JsonSerializerOptions.Converters.Add(new DeviceManager.Server.Components.Json.DateTimeConverter());
     });
 
 // Swagger
