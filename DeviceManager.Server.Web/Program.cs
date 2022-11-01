@@ -116,9 +116,6 @@ ValidatorOptions.Global
 ValidatorOptions.Global.DefaultClassLevelCascadeMode = CascadeMode.Continue;
 ValidatorOptions.Global.DefaultRuleLevelCascadeMode = CascadeMode.Stop;
 
-// HTTP
-builder.Services.AddHttpClient();
-
 // Data
 var connectionStringBuilder = new SqliteConnectionStringBuilder
 {
