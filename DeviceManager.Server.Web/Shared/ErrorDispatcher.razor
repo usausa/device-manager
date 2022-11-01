@@ -1,19 +1,15 @@
-@if (Exception is AuthorizeException authorizeException)
+@if (Exception is Smart.AspNetCore.Exceptions.HttpStatusException httpStatusException)
 {
-    if (authorizeException.StatusCode == 404)
+    if (httpStatusException.StatusCode == 404)
     {
         <Error404 />
+    }
+    else if (httpStatusException.StatusCode == 403)
+    {
+        <Error403 />
     }
 }
 else
 {
     <Error500 Exception="Exception" RecoverRequest="RecoverRequest" />
-}
-
-@code {
-    [Parameter]
-    public Exception? Exception { get; set; }
-
-    [Parameter]
-    public EventCallback RecoverRequest { get; set; }
 }

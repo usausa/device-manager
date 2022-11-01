@@ -6,10 +6,12 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>DeviceManager.Server</title>
+    <title>Device Manager</title>
     <base href="~/" />
     <link href="lib/roboto-fontface-material/fonts/roboto-fontface-material.css" rel="stylesheet" />
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <link href="css/reconnect.min.css" rel="stylesheet" />
+    <link href="css/progress.min.css" rel="stylesheet" />
     <link href="css/site.min.css" rel="stylesheet" />
     <component type="typeof(HeadOutlet)" render-mode="ServerPrerendered" />
 </head>
@@ -27,7 +29,18 @@
         <a class="dismiss">🗙</a>
     </div>
 
+    <div id="components-reconnect-modal">
+        <div class="loading">
+            <div class="loading-message">Server disconnected. Reconnecting...</div>
+            <div class="loading-indicator"></div>
+        </div>
+    </div>
+
     <script src="_framework/blazor.server.js"></script>
+    <script src="js/reconnect.min.js"></script>
+    <script src="js/progress.min.js"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+    <script src="_content/Usa.Smart.Blazor/script.min.js"></script>
+    <script src="js/app.min.js"></script>
 </body>
 </html>

@@ -1,21 +1,26 @@
 using System.Text.Encodings.Web;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using System.Text.Unicode;
 
-using DeviceManager.Server.Components.Storage;
-using DeviceManager.Server.Web.Components;
+using DeviceManager.Server.Accessor;
+using DeviceManager.Server.Web.Application;
 
-using Microsoft.AspNetCore.Components.Web;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Hosting.WindowsServices;
-using Microsoft.Extensions.Options;
 
-using MudBlazor;
 using MudBlazor.Services;
+
+using Prometheus;
 
 using Serilog;
 
 using Smart.AspNetCore;
 using Smart.AspNetCore.ApplicationModels;
+using Smart.AspNetCore.Filters;
+using Smart.Data;
+using Smart.Data.Accessor;
+using Smart.Data.Accessor.Extensions.DependencyInjection;
 
 #pragma warning disable CA1812
 
@@ -56,12 +61,6 @@ builder.Services.Configure<RouteOptions>(options =>
     options.AppendTrailingSlash = true;
 });
 
-// Filter
-builder.Services.AddTimeLogging(options =>
-{
-    options.Threshold = 5000;
-});
-
 // Blazor
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
@@ -73,19 +72,28 @@ builder.Services.AddMudServices(config =>
     config.SnackbarConfiguration.PreventDuplicates = false;
     config.SnackbarConfiguration.NewestOnTop = false;
     config.SnackbarConfiguration.ShowCloseIcon = true;
-    config.SnackbarConfiguration.VisibleStateDuration = 5000;
+    config.SnackbarConfiguration.VisibleStateDuration = 3000;
     config.SnackbarConfiguration.HideTransitionDuration = 500;
     config.SnackbarConfiguration.ShowTransitionDuration = 500;
-    config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
+    config.SnackbarConfiguration.SnackbarVariant = Variant.Outlined;
 });
 
 builder.Services.AddSingleton<IErrorBoundaryLogger, ErrorBoundaryLogger>();
 
 // API
+builder.Services.AddExceptionLogging();
+builder.Services.AddTimeLogging(options =>
+{
+    options.Threshold = 10_000;
+});
+builder.Services.AddSingleton<ExceptionStatusFilter>();
+
 builder.Services
     .AddControllers(options =>
     {
+        options.Filters.AddExceptionLogging();
         options.Filters.AddTimeLogging();
+        options.Filters.AddService<ExceptionStatusFilter>();
         options.Conventions.Add(new LowercaseControllerModelConvention());
     })
     .AddJsonOptions(options =>
@@ -95,18 +103,56 @@ builder.Services
         options.JsonSerializerOptions.Converters.Add(new DeviceManager.Server.Components.Json.DateTimeConverter());
     });
 
+// Health
+builder.Services.AddHealthChecks();
+
 // Swagger
 builder.Services.AddSwaggerGen();
 
-// Storage
-builder.Services.Configure<FileStorageOptions>(builder.Configuration.GetSection("Storage"));
-builder.Services.AddSingleton(p => p.GetRequiredService<IOptions<FileStorageOptions>>().Value);
-builder.Services.AddSingleton<IStorage, FileStorage>();
+// Validation
+ValidatorOptions.Global
+    .UseDisplayName()
+    .UseCustomLocalizeMessage();
+ValidatorOptions.Global.DefaultClassLevelCascadeMode = CascadeMode.Continue;
+ValidatorOptions.Global.DefaultRuleLevelCascadeMode = CascadeMode.Stop;
+
+// HTTP
+builder.Services.AddHttpClient();
+
+// Data
+var connectionStringBuilder = new SqliteConnectionStringBuilder
+{
+    DataSource = "Data.db",
+    Pooling = true,
+    Cache = SqliteCacheMode.Shared
+};
+var connectionString = connectionStringBuilder.ConnectionString;
+builder.Services.AddSingleton<IDbProvider>(new DelegateDbProvider(() => new SqliteConnection(connectionString)));
+builder.Services.AddSingleton<IDialect>(new DelegateDialect(
+    static ex => (ex as SqliteException)?.SqliteErrorCode == 1555,
+    static x => Regex.Replace(x, @"[%_]", "[$0]")));
+builder.Services.AddDataAccessor();
+
+// Mapper
+builder.Services.AddSingleton<IMapper>(new Mapper(new MapperConfiguration(c =>
+{
+    c.AddProfile<MappingProfile>();
+})));
+
+// Service
+builder.Services.AddSingleton<DataService>();
 
 //--------------------------------------------------------------------------------
 // Configure the HTTP request pipeline
 //--------------------------------------------------------------------------------
 var app = builder.Build();
+
+// Prepare
+if (!File.Exists(connectionStringBuilder.DataSource))
+{
+    var accessor = app.Services.GetRequiredService<IAccessorResolver<IDataAccessor>>().Accessor;
+    accessor.Create();
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -116,6 +162,12 @@ if (!app.Environment.IsDevelopment())
 
 // HTTPS redirection
 app.UseHttpsRedirection();
+
+// Health
+app.UseHealthChecks("/health");
+
+// Metrics
+app.UseHttpMetrics();
 
 // Static files
 app.UseStaticFiles();
@@ -127,15 +179,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// Authentication
-app.UseAuthentication();
-app.UseAuthorization();
-
-// Routing
-app.UseRouting();
-
-// API
-app.MapControllers();
+// Metrics
+app.MapMetrics();
 
 // Blazor
 app.MapBlazorHub();
