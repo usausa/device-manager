@@ -4,7 +4,7 @@ using System.ComponentModel;
 
 internal static class ConvertHelper
 {
-    public delegate bool TryConverter<T>(string value, out T result);
+    public delegate bool TryConverter<T>(string? value, out T result);
 
     public static class Converter<T>
     {
@@ -79,7 +79,7 @@ internal static class ConvertHelper
             return AlwaysFailed;
         }
 
-        private static bool AlwaysFailed(string value, out T result)
+        private static bool AlwaysFailed(string? value, out T result)
         {
             result = default!;
             return false;
@@ -91,8 +91,14 @@ internal static class ConvertHelper
         private static readonly TypeConverter Converter = TypeDescriptor.GetConverter(typeof(T));
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Ignore")]
-        public static bool TryConvert(string value, out T result)
+        public static bool TryConvert(string? value, out T result)
         {
+            if (value is null)
+            {
+                result = default!;
+                return true;
+            }
+
             try
             {
                 result = (T)Converter.ConvertFrom(value)!;

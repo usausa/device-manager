@@ -75,12 +75,12 @@ public static class QueryExtensions
     {
         private readonly string name;
 
-        private readonly Action<T, string> setter;
+        private readonly Action<T, string?> setter;
 
         public StringPropertyMapper(PropertyInfo pi)
         {
             name = pi.Name;
-            setter = CreateSetter<T, string>(pi);
+            setter = CreateSetter<T, string?>(pi);
         }
 
         public void Map(T instance, Dictionary<string, StringValues> query)
@@ -135,7 +135,7 @@ public static class QueryExtensions
     public static bool TryGetValue<T>(this Dictionary<string, StringValues> query, string key, out T result)
     {
         if (query.TryGetValue(key, out var value) &&
-            ConvertHelper.Converter<T>.TryConverter((string)value, out result))
+            ConvertHelper.Converter<T>.TryConverter(value, out result))
         {
             return true;
         }
@@ -147,7 +147,7 @@ public static class QueryExtensions
     public static T GetValueOrDefault<T>(this Dictionary<string, StringValues> query, string key, T defaultValue = default!)
     {
         if (query.TryGetValue(key, out var value) &&
-            ConvertHelper.Converter<T>.TryConverter((string)value, out var result))
+            ConvertHelper.Converter<T>.TryConverter(value, out var result))
         {
             return result;
         }
