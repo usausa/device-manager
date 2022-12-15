@@ -146,7 +146,7 @@ public sealed class FluentValidationValidator : ComponentBase, IDisposable
                     // Try to cast the object to array
                     if (obj is object[] array)
                     {
-                        var indexerValue = Int32.Parse(nextToken);
+                        var indexerValue = Int32.Parse(nextToken, CultureInfo.InvariantCulture);
                         newObj = array[indexerValue];
                     }
                     else

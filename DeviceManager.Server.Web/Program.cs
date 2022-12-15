@@ -22,7 +22,7 @@ using Smart.Data;
 using Smart.Data.Accessor;
 using Smart.Data.Accessor.Extensions.DependencyInjection;
 
-#pragma warning disable CA1812
+#pragma warning disable CA1852
 
 //--------------------------------------------------------------------------------
 // Configure builder
