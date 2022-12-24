@@ -6,7 +6,7 @@ public static class DialogServiceExtensions
 {
     public static async ValueTask ShowInformation(this IDialogService dialog, string title, string message)
     {
-        var reference = dialog.Show<AppMessageBox>(
+        var reference = await dialog.ShowAsync<AppMessageBox>(
             string.Empty,
             new DialogParameters
             {
@@ -20,7 +20,7 @@ public static class DialogServiceExtensions
 
     public static async ValueTask<bool> ShowConfirm(this IDialogService dialog, string title, string message)
     {
-        var reference = dialog.Show<AppMessageBox>(
+        var reference = await dialog.ShowAsync<AppMessageBox>(
             string.Empty,
             new DialogParameters
             {
