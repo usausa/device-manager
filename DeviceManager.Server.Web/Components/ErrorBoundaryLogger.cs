@@ -13,7 +13,7 @@ public sealed class ErrorBoundaryLogger : IErrorBoundaryLogger
 
     public ValueTask LogErrorAsync(Exception exception)
     {
-        log.LogError(exception, "Unknown exception.");
+        log.ErrorUnknownException(exception);
         return ValueTask.CompletedTask;
     }
 }
