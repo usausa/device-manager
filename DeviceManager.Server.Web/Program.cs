@@ -27,8 +27,6 @@ using Smart.Data.Accessor.Extensions.DependencyInjection;
 //--------------------------------------------------------------------------------
 // Configure builder
 //--------------------------------------------------------------------------------
-Directory.SetCurrentDirectory(AppContext.BaseDirectory);
-
 // Configure builder
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
