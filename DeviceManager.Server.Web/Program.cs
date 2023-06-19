@@ -27,7 +27,6 @@ using Smart.Data.Accessor.Extensions.DependencyInjection;
 //--------------------------------------------------------------------------------
 // Configure builder
 //--------------------------------------------------------------------------------
-// Configure builder
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
     Args = args,
