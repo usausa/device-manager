@@ -46,7 +46,7 @@ public class StorageController : BaseApiController
         }
 
         var stream = await Storage.ReadAsync(path).ConfigureAwait(false);
-        var index = path.LastIndexOf("/", StringComparison.OrdinalIgnoreCase);
+        var index = path.LastIndexOf('/');
         return File(stream, ContextType, index >= 0 ? path[(index + 1)..] : path);
     }
 
