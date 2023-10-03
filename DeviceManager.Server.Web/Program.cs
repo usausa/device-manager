@@ -97,11 +97,7 @@ builder.Services
         options.JsonSerializerOptions.Converters.Add(new DeviceManager.Server.Components.Json.DateTimeConverter());
     });
 
-// Health
-builder.Services.AddHealthChecks();
-
-// Swagger
-builder.Services.AddSwaggerGen();
+builder.Services.AddEndpointsApiExplorer();
 
 // Validation
 ValidatorOptions.Global
@@ -133,6 +129,16 @@ builder.Services.AddSingleton<IMapper>(new Mapper(new MapperConfiguration(c =>
 // Service
 builder.Services.AddSingleton<DataService>();
 
+// Health
+builder.Services.AddHealthChecks();
+
+// Develop
+if (!builder.Environment.IsProduction())
+{
+    // Swagger
+    builder.Services.AddSwaggerGen();
+}
+
 //--------------------------------------------------------------------------------
 // Configure the HTTP request pipeline
 //--------------------------------------------------------------------------------
@@ -144,6 +150,18 @@ if (!File.Exists(connectionStringBuilder.DataSource))
     var accessor = app.Services.GetRequiredService<IAccessorResolver<IDataAccessor>>().Accessor;
     accessor.Create();
 }
+
+// Serilog
+if (!app.Environment.IsProduction())
+{
+    app.UseSerilogRequestLogging(options =>
+    {
+        options.IncludeQueryInRequestPath = true;
+    });
+}
+
+// Forwarded headers
+app.UseForwardedHeaders();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -160,15 +178,22 @@ app.UseHealthChecks("/health");
 // Metrics
 app.UseHttpMetrics();
 
-// Static files
-app.UseStaticFiles();
-
-// Swagger
+// Develop
 if (app.Environment.IsDevelopment())
 {
+    // Swagger
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// Static files
+app.UseStaticFiles();
+
+// Routing
+app.UseRouting();
+
+// API
+app.MapControllers();
 
 // Metrics
 app.MapMetrics();
