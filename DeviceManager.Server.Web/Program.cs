@@ -43,14 +43,13 @@ builder.Services.AddHttpContextAccessor();
 
 // Log
 builder.Logging.ClearProviders();
-builder.Host
-    .UseSerilog((hostingContext, loggerConfiguration) =>
-    {
-        loggerConfiguration.ReadFrom.Configuration(hostingContext.Configuration);
-    });
+builder.Services.AddSerilog(option =>
+{
+    option.ReadFrom.Configuration(builder.Configuration);
+});
 
 // Route
-builder.Services.Configure<RouteOptions>(options =>
+builder.Services.Configure<RouteOptions>(static options =>
 {
     options.AppendTrailingSlash = true;
 });
@@ -76,21 +75,21 @@ builder.Services.AddSingleton<IErrorBoundaryLogger, ErrorBoundaryLogger>();
 
 // API
 builder.Services.AddExceptionLogging();
-builder.Services.AddTimeLogging(options =>
+builder.Services.AddTimeLogging(static options =>
 {
     options.Threshold = 10_000;
 });
 builder.Services.AddSingleton<ExceptionStatusFilter>();
 
 builder.Services
-    .AddControllers(options =>
+    .AddControllers(static options =>
     {
         options.Filters.AddExceptionLogging();
         options.Filters.AddTimeLogging();
         options.Filters.AddService<ExceptionStatusFilter>();
         options.Conventions.Add(new LowercaseControllerModelConvention());
     })
-    .AddJsonOptions(options =>
+    .AddJsonOptions(static options =>
     {
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
         options.JsonSerializerOptions.Encoder = JavaScriptEncoder.Create(UnicodeRanges.All);
@@ -154,7 +153,7 @@ if (!File.Exists(connectionStringBuilder.DataSource))
 // Serilog
 if (!app.Environment.IsProduction())
 {
-    app.UseSerilogRequestLogging(options =>
+    app.UseSerilogRequestLogging(static options =>
     {
         options.IncludeQueryInRequestPath = true;
     });
