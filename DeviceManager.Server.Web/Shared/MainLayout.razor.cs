@@ -12,9 +12,6 @@ public sealed partial class MainLayout
     [Inject]
     public NavigationManager NavigationManager { get; set; } = default!;
 
-    [CascadingParameter]
-    private Task<AuthenticationState> AuthenticationState { get; set; } = default!;
-
     protected override void OnParametersSet()
     {
         errorBoundary?.Recover();

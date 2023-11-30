@@ -99,7 +99,7 @@ public sealed class FluentValidationValidator : ComponentBase, IDisposable
         EditContext?.NotifyValidationStateChanged();
     }
 
-    private static readonly char[] Separators = { '.', '[' };
+    private static readonly char[] Separators = ['.', '['];
 
     private static FieldIdentifier ToFieldIdentifier(EditContext editContext, string propertyPath)
     {
