@@ -3,7 +3,7 @@ namespace DeviceManager.Server.Web.Api.Controllers;
 using DeviceManager.Server.Web.Api;
 using DeviceManager.Server.Web.Api.Models;
 
-public class ServerController : BaseApiController
+public sealed class ServerController : BaseApiController
 {
     [HttpGet]
     public IActionResult Time()

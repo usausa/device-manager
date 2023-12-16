@@ -1,6 +1,6 @@
 namespace DeviceManager.Server.Models.Entity;
 
-public class DataEntity
+public sealed class DataEntity
 {
     public int Id { get; set; }
 

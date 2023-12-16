@@ -8,7 +8,6 @@ global using System.ComponentModel;
 global using System.ComponentModel.DataAnnotations;
 global using System.Data;
 global using System.Data.Common;
-global using System.Diagnostics.CodeAnalysis;
 global using System.Globalization;
 global using System.IO;
 global using System.Linq;
@@ -30,7 +29,4 @@ global using Smart.Data.Accessor.Builders;
 global using Smart.Text;
 
 global using DeviceManager.Server.Domain;
-//global using DeviceManager.Server.Models.Connector;
 global using DeviceManager.Server.Models.Entity;
-//global using DeviceManager.Server.Models.Paging;
-//global using DeviceManager.Server.Models.View;

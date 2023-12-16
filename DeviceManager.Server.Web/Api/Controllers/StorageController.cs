@@ -4,7 +4,7 @@ using DeviceManager.Server.Components.Storage;
 
 using Smart.AspNetCore.Filters;
 
-public class StorageController : BaseApiController
+public sealed class StorageController : BaseApiController
 {
     private const string ContextType = "application/octet-stream";
 

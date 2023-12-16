@@ -1,6 +1,6 @@
 namespace DeviceManager.Server.Web.Api.Models;
 
-public class ServerTimeResponse
+public sealed class ServerTimeResponse
 {
     public DateTime DateTime { get; set; }
 }

@@ -1,17 +1,16 @@
 namespace DeviceManager.Server.Web.Components;
 
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1032:ImplementStandardExceptionConstructors", Justification = "Ignore")]
-public class AuthorizeException : Exception
+#pragma warning disable CA1032
+public abstract class AuthorizeException : Exception
 {
     public int StatusCode { get; }
 
-    public AuthorizeException(int statusCode)
+    protected AuthorizeException(int statusCode)
     {
         StatusCode = statusCode;
     }
 }
 
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1032:ImplementStandardExceptionConstructors", Justification = "Ignore")]
 public sealed class NotFoundException : AuthorizeException
 {
     public NotFoundException()
@@ -20,7 +19,6 @@ public sealed class NotFoundException : AuthorizeException
     }
 }
 
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1032:ImplementStandardExceptionConstructors", Justification = "Ignore")]
 public sealed class ForbiddenException : AuthorizeException
 {
     public ForbiddenException()
@@ -28,3 +26,4 @@ public sealed class ForbiddenException : AuthorizeException
     {
     }
 }
+#pragma warning restore CA1032

@@ -6,6 +6,6 @@ using DeviceManager.Server.Web.Infrastructure.Filters;
 [Microsoft.AspNetCore.Mvc.Route("[area]/[controller]/[action]")]
 [ApiController]
 [ApiExceptionFilter]
-public class BaseApiController : ControllerBase
+public abstract class BaseApiController : ControllerBase
 {
 }

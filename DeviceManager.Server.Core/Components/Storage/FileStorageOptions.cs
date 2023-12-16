@@ -1,7 +1,6 @@
 namespace DeviceManager.Server.Components.Storage;
 
-public class FileStorageOptions
+public sealed class FileStorageOptions
 {
-    [AllowNull]
-    public string Root { get; set; }
+    public string Root { get; set; } = default!;
 }

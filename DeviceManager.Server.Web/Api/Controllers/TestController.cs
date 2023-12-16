@@ -2,7 +2,7 @@ namespace DeviceManager.Server.Web.Api.Controllers;
 
 using DeviceManager.Server.Web.Api.Models;
 
-public class TestController : BaseApiController
+public sealed class TestController : BaseApiController
 {
     [HttpGet]
     public IActionResult Time()
