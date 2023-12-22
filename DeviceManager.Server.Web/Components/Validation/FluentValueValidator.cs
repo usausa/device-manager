@@ -138,7 +138,7 @@ public sealed class FluentValidationValidator : ComponentBase, IDisposable
                     var indexerType = prop.GetIndexParameters()[0].ParameterType;
                     var indexerValue = Convert.ChangeType(nextToken.ToString(), indexerType, CultureInfo.InvariantCulture);
 
-                    newObj = prop.GetValue(obj, new[] { indexerValue });
+                    newObj = prop.GetValue(obj, [indexerValue]);
                 }
                 else
                 {
