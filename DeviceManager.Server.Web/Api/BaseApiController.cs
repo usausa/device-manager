@@ -1,6 +1,6 @@
 namespace DeviceManager.Server.Web.Api;
 
-using DeviceManager.Server.Web.Infrastructure.Filters;
+using DeviceManager.Server.Web.Application.Filters;
 
 [Area("api")]
 [Microsoft.AspNetCore.Mvc.Route("[area]/[controller]/[action]")]

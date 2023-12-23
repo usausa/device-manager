@@ -5,7 +5,7 @@ using System.Text.Unicode;
 
 using DeviceManager.Server.Accessor;
 using DeviceManager.Server.Web.Application;
-
+using DeviceManager.Server.Web.Application.Validation;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Hosting.WindowsServices;
 

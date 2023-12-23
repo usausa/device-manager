@@ -1,4 +1,4 @@
-namespace DeviceManager.Server.Web.Infrastructure.Validation;
+namespace DeviceManager.Server.Web.Application.Validation;
 
 using System.ComponentModel;
 using System.Reflection;

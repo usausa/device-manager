@@ -1,7 +1,8 @@
-namespace DeviceManager.Server.Web.Infrastructure.Filters;
+namespace DeviceManager.Server.Web.Application.Filters;
 
 using Microsoft.AspNetCore.Mvc.Filters;
 
+// TODO delete
 public sealed class ApiExceptionFilterAttribute : ExceptionFilterAttribute
 {
     public override void OnException(ExceptionContext context)
