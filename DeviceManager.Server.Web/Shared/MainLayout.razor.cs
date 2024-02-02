@@ -7,10 +7,10 @@ public sealed partial class MainLayout
     private bool drawerOpen = true;
 
     [Inject]
-    public IDialogService DialogService { get; set; } = default!;
+    public required IDialogService DialogService { get; set; }
 
     [Inject]
-    public NavigationManager NavigationManager { get; set; } = default!;
+    public required NavigationManager NavigationManager { get; set; }
 
     protected override void OnParametersSet()
     {

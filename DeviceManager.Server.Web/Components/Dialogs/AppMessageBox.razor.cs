@@ -3,16 +3,16 @@ namespace DeviceManager.Server.Web.Components.Dialogs;
 public sealed partial class AppMessageBox
 {
     [Parameter]
-    public MessageBoxType Type { get; set; }
+    public required MessageBoxType Type { get; set; }
 
     [Parameter]
-    public string Title { get; set; } = default!;
+    public required string Title { get; set; }
 
     [Parameter]
-    public string Message { get; set; } = default!;
+    public required string Message { get; set; }
 
     [CascadingParameter]
-    public MudDialogInstance MudDialog { get; set; } = default!;
+    public required MudDialogInstance MudDialog { get; set; }
 
     private void OnCloseClick() => MudDialog.Close();
 

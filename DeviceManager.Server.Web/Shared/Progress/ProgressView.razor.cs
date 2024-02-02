@@ -5,7 +5,7 @@ public sealed partial class ProgressView : IDisposable
     private readonly ProgressState progress = new();
 
     [Inject]
-    public IJSRuntime Script { get; set; } = default!;
+    public required IJSRuntime Script { get; set; }
 
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
