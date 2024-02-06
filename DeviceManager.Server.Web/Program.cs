@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using System.Text.Unicode;
 
 using DeviceManager.Server.Accessor;
+using DeviceManager.Server.Web;
 using DeviceManager.Server.Web.Application;
 
 using Microsoft.Data.Sqlite;
@@ -142,6 +143,13 @@ if (!builder.Environment.IsProduction())
 // Configure the HTTP request pipeline
 //--------------------------------------------------------------------------------
 var app = builder.Build();
+
+// Startup information
+ThreadPool.GetMinThreads(out var workerThreads, out var completionPortThreads);
+app.Logger.InfoServiceStart();
+app.Logger.InfoServiceSettingsEnvironment(typeof(Program).Assembly.GetName().Version, Environment.Version, Environment.CurrentDirectory);
+app.Logger.InfoServiceSettingsGC(GCSettings.IsServerGC, GCSettings.LatencyMode, GCSettings.LargeObjectHeapCompactionMode);
+app.Logger.InfoServiceSettingsThreadPool(workerThreads, completionPortThreads);
 
 // Prepare
 if (!File.Exists(connectionStringBuilder.DataSource))
