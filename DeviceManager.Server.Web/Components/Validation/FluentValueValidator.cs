@@ -80,7 +80,7 @@ public sealed class FluentValidationValidator : ComponentBase, IDisposable
             return;
         }
 
-        var context = new ValidationContext<object>(fieldIdentifier.Model, new PropertyChain(), new MemberNameValidatorSelector(new[] { fieldIdentifier.FieldName }));
+        var context = new ValidationContext<object>(fieldIdentifier.Model, new PropertyChain(), new MemberNameValidatorSelector([fieldIdentifier.FieldName]));
         var result = await validator.ValidateAsync(context);
         messageStore!.Clear(fieldIdentifier);
         messageStore.Add(fieldIdentifier, result.Errors.Select(static error => error.ErrorMessage));
