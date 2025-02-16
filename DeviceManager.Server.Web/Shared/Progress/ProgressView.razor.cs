@@ -22,6 +22,7 @@ public sealed partial class ProgressView : IDisposable
         progress.StateChanged -= OnStateChanged;
     }
 
+    // ReSharper disable once AsyncVoidMethod
     private async void OnStateChanged(object? sender, EventArgs e)
     {
         StateHasChanged();
