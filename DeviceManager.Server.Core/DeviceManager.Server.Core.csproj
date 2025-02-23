@@ -15,11 +15,4 @@
     <PackageReference Include="Usa.Smart.Data.Accessor.Extensions.DependencyInjection" Version="2.5.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Update="Usa.Smart.Analyzers.JapaneseComment" Version="1.2.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
-
 </Project>
