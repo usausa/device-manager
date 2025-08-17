@@ -41,13 +41,13 @@ public sealed class FluentValidationValidator : ComponentBase, IDisposable
         }
     }
 
-    // ReSharper disable once AsyncVoidMethod
+    // ReSharper disable once AsyncVoidEventHandlerMethod
     private async void EditContextOnOnValidationRequested(object? sender, ValidationRequestedEventArgs e)
     {
         await ValidateModel();
     }
 
-    // ReSharper disable once AsyncVoidMethod
+    // ReSharper disable once AsyncVoidEventHandlerMethod
     private async void EditContextOnOnFieldChanged(object? sender, FieldChangedEventArgs e)
     {
         await ValidateField(e.FieldIdentifier);
