@@ -2,22 +2,25 @@ namespace DeviceManager.Server.Web;
 
 internal static partial class Log
 {
-    // Startup
+    // Request
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Service start.")]
-    public static partial void InfoServiceStart(this ILogger logger);
+    [LoggerMessage(Level = LogLevel.Error, Message = "Request failed.")]
+    public static partial void ErrorRequestFailed(this ILogger logger, Exception ex);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Environment: version=[{version}], runtime=[{runtime}], directory=[{directory}]")]
-    public static partial void InfoServiceSettingsEnvironment(this ILogger logger, Version? version, Version runtime, string directory);
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Invalid response.")]
+    public static partial void WarnInvalidResponse(this ILogger logger);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "GCSettings: serverGC=[{isServerGC}], latencyMode=[{latencyMode}], largeObjectHeapCompactionMode=[{largeObjectHeapCompactionMode}]")]
-    public static partial void InfoServiceSettingsGC(this ILogger logger, bool isServerGC, GCLatencyMode latencyMode, GCLargeObjectHeapCompactionMode largeObjectHeapCompactionMode);
+    // Device
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "ThreadPool: workerThreads=[{workerThreads}], completionPortThreads=[{completionPortThreads}]")]
-    public static partial void InfoServiceSettingsThreadPool(this ILogger logger, int workerThreads, int completionPortThreads);
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Connect failed.")]
+    public static partial void WarnConnectFailed(this ILogger logger);
 
-    // Error
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Connection timeout.")]
+    public static partial void WarnConnectionTimeout(this ILogger logger);
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Unknown exception.")]
-    public static partial void ErrorUnknownException(this ILogger logger, Exception ex);
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Connection closed.")]
+    public static partial void WarnConnectionClosed(this ILogger logger);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Device response error. resultCode=[{resultCode}]")]
+    public static partial void WarnDeviceResponseError(this ILogger logger, int resultCode);
 }

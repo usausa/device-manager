@@ -29,5 +29,6 @@ global using Smart.Data.Accessor.Attributes;
 global using Smart.Data.Accessor.Builders;
 global using Smart.Text;
 
-global using DeviceManager.Server.Domain;
-global using DeviceManager.Server.Models.Entity;
+// TODO
+//global using DeviceManager.Server.Domain;
+//global using DeviceManager.Server.Models.Entity;

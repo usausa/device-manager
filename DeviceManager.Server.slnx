@@ -9,7 +9,7 @@
     <File Path="Directory.Build.targets" />
     <File Path="LICENSE" />
     <File Path="README.md" />
+    <Project Path="DeviceManager.Server.Core/DeviceManager.Server.Core.csproj" Id="8d5a2083-c182-44ee-bdd4-62b51bd3e55a" />
+    <Project Path="DeviceManager.Server.Web/DeviceManager.Server.Web.csproj" Id="aa248422-1f42-40f8-bbfe-09604c99ce28" />
   </Folder>
-  <Project Path="DeviceManager.Server.Core/DeviceManager.Server.Core.csproj" />
-  <Project Path="DeviceManager.Server.Web/DeviceManager.Server.Web.csproj" />
 </Solution>
