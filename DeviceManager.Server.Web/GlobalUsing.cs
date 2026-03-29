@@ -6,7 +6,9 @@ global using System.Collections;
 global using System.Collections.Generic;
 global using System.ComponentModel;
 global using System.ComponentModel.DataAnnotations;
+global using System.Data;
 global using System.Data.Common;
+global using System.Diagnostics.CodeAnalysis;
 global using System.Globalization;
 global using System.IO;
 global using System.Linq;
@@ -23,6 +25,8 @@ global using System.Threading.Tasks;
 
 global using AutoMapper;
 
+global using AutoMapperFragmentConfig;
+
 global using FluentValidation;
 
 global using Microsoft.AspNetCore.Authentication;
@@ -33,6 +37,7 @@ global using Microsoft.AspNetCore.Components.Web;
 global using Microsoft.AspNetCore.Http;
 global using Microsoft.AspNetCore.Mvc;
 
+global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Logging;
 global using Microsoft.Extensions.Options;
 
@@ -41,7 +46,9 @@ global using Microsoft.JSInterop;
 global using MudBlazor;
 
 global using Smart;
+global using Smart.AspNetCore.Exceptions;
 global using Smart.Collections.Generic;
+global using Smart.Linq;
 global using Smart.Text;
 
 //global using StringConvertHelper;
@@ -50,15 +57,15 @@ global using Smart.Text;
 
 // TODO
 global using DeviceManager.Server;
-//global using DeviceManager.Server.Domain;
-//global using DeviceManager.Server.Models.Connector;
-//global using DeviceManager.Server.Models.Entity;
-//global using DeviceManager.Server.Models.Paging;
-//global using DeviceManager.Server.Models.View;
-//global using DeviceManager.Server.Services;
-//global using DeviceManager.Server.Web.Application.Validation;
+global using DeviceManager.Server.Domain;
+global using DeviceManager.Server.Models.Entity;
+global using DeviceManager.Server.Services;
+global using DeviceManager.Server.Web.Application.Validation;
 global using DeviceManager.Server.Web.Components;
 //global using DeviceManager.Server.Web.Infrastructure;
 //global using DeviceManager.Server.Web.Pages.Dialogs;
 //global using DeviceManager.Server.Web.Settings;
 //global using DeviceManager.Server.Web.Shared.Progress;
+
+//global using static DeviceManager.Server.Domain.DomainHelper;
+//global using static DeviceManager.Server.ViewHelper;

@@ -8,6 +8,7 @@ global using System.ComponentModel;
 global using System.ComponentModel.DataAnnotations;
 global using System.Data;
 global using System.Data.Common;
+global using System.Diagnostics.CodeAnalysis;
 global using System.Globalization;
 global using System.IO;
 global using System.Linq;
@@ -15,6 +16,7 @@ global using System.Net;
 global using System.Net.Http;
 global using System.Runtime;
 global using System.Runtime.CompilerServices;
+global using System.Security.Claims;
 global using System.Text;
 global using System.Threading;
 global using System.Threading.Tasks;
@@ -29,6 +31,5 @@ global using Smart.Data.Accessor.Attributes;
 global using Smart.Data.Accessor.Builders;
 global using Smart.Text;
 
-// TODO
-//global using DeviceManager.Server.Domain;
-//global using DeviceManager.Server.Models.Entity;
+global using DeviceManager.Server.Domain;
+global using DeviceManager.Server.Models.Entity;
