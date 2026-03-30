@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep:*)",
+      "Bash(dotnet --version)",
+      "Bash(dotnet new:*)",
+      "Bash(dotnet sln:*)",
+      "Bash(dotnet build:*)",
+      "Bash(ls D:/Workspace/DeviceManager/*.sln)",
+      "Bash(ls D:/Workspace/DeviceManager/DeviceManager*)",
+      "Bash(find D:/Workspace/DeviceManager/src -type f -name *.proto -o -name *.cs -o -name *.csproj -o -name *.xaml)",
+      "Bash(dotnet run:*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5178/)",
+      "Bash(timeout 10 tail -f C:/Users/machi/AppData/Local/Temp/claude/D--Workspace-DeviceManager/d804608c-0e5b-4e9c-b0ad-e604d19d5a34/tasks/b0qq8uh5s.output)"
+    ]
+  }
+}

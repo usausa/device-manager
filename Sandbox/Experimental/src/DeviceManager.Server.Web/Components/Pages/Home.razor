@@ -1,0 +1,219 @@
+@page "/"
+@rendermode InteractiveServer
+@inject DeviceService DeviceService
+@inject NavigationManager Navigation
+@implements IAsyncDisposable
+
+<PageTitle>Dashboard - DeviceManager</PageTitle>
+
+<div class="page-header">
+    <h1>Dashboard</h1>
+</div>
+
+@if (_summary is not null)
+{
+    <div class="status-cards">
+        <div class="status-card active">
+            <div class="status-icon">&#x2705;</div>
+            <div class="status-info">
+                <div class="status-count">@_summary.Active</div>
+                <div class="status-label">Active</div>
+            </div>
+        </div>
+        <div class="status-card inactive">
+            <div class="status-icon">&#x23F8;&#xFE0F;</div>
+            <div class="status-info">
+                <div class="status-count">@_summary.Inactive</div>
+                <div class="status-label">Inactive</div>
+            </div>
+        </div>
+        <div class="status-card warning">
+            <div class="status-icon">&#x26A0;&#xFE0F;</div>
+            <div class="status-info">
+                <div class="status-count">@_summary.Warning</div>
+                <div class="status-label">Warning</div>
+            </div>
+        </div>
+        <div class="status-card error">
+            <div class="status-icon">&#x274C;</div>
+            <div class="status-info">
+                <div class="status-count">@_summary.Error</div>
+                <div class="status-label">Error</div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="card">
+    <div class="card-header">
+        <span>Devices (@(_filteredDevices?.Count ?? 0))</span>
+    </div>
+
+    <div class="toolbar" style="padding: 1rem 1.25rem 0;">
+        <div class="search-input">
+            <input type="text" placeholder="Search devices..." @bind="_searchText" @bind:event="oninput" />
+        </div>
+    </div>
+
+    <div class="table-container" style="padding: 0 0.25rem;">
+        @if (_devices is null)
+        {
+            <div class="loading">
+                <div class="spinner"></div>
+                Loading devices...
+            </div>
+        }
+        else if (_filteredDevices!.Count == 0)
+        {
+            <div class="empty-state">
+                <div class="empty-icon">&#x1F4F1;</div>
+                <p>No devices found.</p>
+            </div>
+        }
+        else
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:50px;">Status</th>
+                        <th>Name</th>
+                        <th>Group</th>
+                        <th style="width:80px;">Level</th>
+                        <th style="min-width:140px;">Progress</th>
+                        <th style="width:80px;">Battery</th>
+                        <th>Last Connected</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var device in _filteredDevices)
+                    {
+                        <tr class="clickable" @onclick="() => NavigateToDevice(device.DeviceId)">
+                            <td>
+                                <span class="status-dot @GetStatusClass(device.Status)"></span>
+                            </td>
+                            <td><strong>@device.Name</strong></td>
+                            <td>@(device.Group ?? "-")</td>
+                            <td>@device.Level</td>
+                            <td>
+                                <div class="progress-cell">
+                                    <progress value="@device.Progress" max="100"></progress>
+                                    <span>@device.Progress.ToString("0")%</span>
+                                </div>
+                            </td>
+                            <td>
+                                @if (device.Battery.HasValue)
+                                {
+                                    <span>@(device.Battery)%</span>
+                                }
+                                else
+                                {
+                                    <span class="text-secondary">-</span>
+                                }
+                            </td>
+                            <td class="text-secondary">
+                                @FormatDateTime(device.LastConnectedAt)
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@code {
+    private StatusSummary? _summary;
+    private List<DeviceSummary>? _devices;
+    private string _searchText = string.Empty;
+    private HubConnection? _hubConnection;
+
+    private List<DeviceSummary>? _filteredDevices => _devices?
+        .Where(d => string.IsNullOrEmpty(_searchText)
+            || d.Name.Contains(_searchText, StringComparison.OrdinalIgnoreCase)
+            || (d.Group?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false)
+            || d.DeviceId.Contains(_searchText, StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+        await StartSignalR();
+    }
+
+    private async Task LoadData()
+    {
+        _summary = await DeviceService.GetStatusSummaryAsync();
+        _devices = await DeviceService.GetAllDevicesAsync();
+    }
+
+    private async Task StartSignalR()
+    {
+        try
+        {
+            _hubConnection = new HubConnectionBuilder()
+                .WithUrl(Navigation.ToAbsoluteUri(HubConstants.DeviceHubPath))
+                .WithAutomaticReconnect()
+                .Build();
+
+            _hubConnection.On<string>(HubConstants.DashboardMethods.DeviceConnected, async (_) =>
+            {
+                await LoadData();
+                await InvokeAsync(StateHasChanged);
+            });
+
+            _hubConnection.On<string>(HubConstants.DashboardMethods.DeviceDisconnected, async (_) =>
+            {
+                await LoadData();
+                await InvokeAsync(StateHasChanged);
+            });
+
+            _hubConnection.On<string>(HubConstants.DashboardMethods.DeviceStatusUpdated, async (_) =>
+            {
+                await LoadData();
+                await InvokeAsync(StateHasChanged);
+            });
+
+            await _hubConnection.StartAsync();
+            await _hubConnection.InvokeAsync("JoinGroup", HubConstants.Groups.Dashboard);
+        }
+        catch
+        {
+            // SignalR connection failure is non-fatal for the dashboard
+        }
+    }
+
+    private void NavigateToDevice(string deviceId)
+    {
+        Navigation.NavigateTo($"/devices/{deviceId}");
+    }
+
+    private static string GetStatusClass(DeviceConnectionStatus status) => status switch
+    {
+        DeviceConnectionStatus.Active => "active",
+        DeviceConnectionStatus.Warning => "warning",
+        DeviceConnectionStatus.Error => "error",
+        _ => "inactive"
+    };
+
+    private static string FormatDateTime(DateTime? dt)
+    {
+        if (dt is null) return "Never";
+        var local = dt.Value.ToLocalTime();
+        var diff = DateTime.Now - local;
+        if (diff.TotalMinutes < 1) return "Just now";
+        if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes}m ago";
+        if (diff.TotalHours < 24) return $"{(int)diff.TotalHours}h ago";
+        return local.ToString("MMM dd, HH:mm");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_hubConnection is not null)
+        {
+            await _hubConnection.DisposeAsync();
+        }
+    }
+}
+
+@using Microsoft.AspNetCore.SignalR.Client
+@using DeviceManager.Shared

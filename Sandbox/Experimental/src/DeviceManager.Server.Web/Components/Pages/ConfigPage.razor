@@ -1,0 +1,391 @@
+@page "/config"
+@rendermode InteractiveServer
+@inject ConfigService ConfigService
+@inject DeviceService DeviceService
+
+<PageTitle>Config - DeviceManager</PageTitle>
+
+<div class="page-header">
+    <h1>Configuration</h1>
+</div>
+
+@if (_successMessage is not null)
+{
+    <div class="alert alert-success">@_successMessage</div>
+}
+@if (_errorMessage is not null)
+{
+    <div class="alert alert-danger">@_errorMessage</div>
+}
+
+<div class="tabs">
+    <button class="tab @(_activeTab == "common" ? "active" : "")" @onclick='() => SwitchTab("common")'>Common Config</button>
+    <button class="tab @(_activeTab == "device" ? "active" : "")" @onclick='() => SwitchTab("device")'>Device Config</button>
+</div>
+
+@if (_activeTab == "common")
+{
+    <div class="card">
+        <div class="card-header">
+            <span>Common Configuration</span>
+            <button class="btn btn-primary btn-sm" @onclick="ShowAddCommon">+ Add Entry</button>
+        </div>
+        <div class="table-container">
+            @if (_commonConfig is null)
+            {
+                <div class="loading"><div class="spinner"></div> Loading...</div>
+            }
+            else if (_commonConfig.Count == 0)
+            {
+                <div class="empty-state">
+                    <p>No common configuration entries.</p>
+                    <button class="btn btn-primary btn-sm" @onclick="ShowAddCommon">Add Entry</button>
+                </div>
+            }
+            else
+            {
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Key</th>
+                            <th>Value</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th style="width:140px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var entry in _commonConfig)
+                        {
+                            <tr>
+                                <td class="mono">@entry.Key</td>
+                                <td class="mono" style="max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">@entry.Value</td>
+                                <td>@entry.ValueType</td>
+                                <td class="text-secondary">@(entry.Description ?? "-")</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <button class="btn btn-outline btn-sm" @onclick="() => ShowEditCommon(entry)">Edit</button>
+                                        <button class="btn btn-danger btn-sm" @onclick="() => DeleteCommon(entry.Key)">Delete</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+}
+
+@if (_activeTab == "device")
+{
+    <div class="toolbar">
+        <div class="form-group" style="margin-bottom:0;">
+            <select class="form-control" @bind="_selectedDeviceId" @bind:after="LoadDeviceConfig" style="min-width: 220px;">
+                <option value="">-- Select Device --</option>
+                @if (_devices is not null)
+                {
+                    @foreach (var d in _devices)
+                    {
+                        <option value="@d.DeviceId">@d.Name (@d.DeviceId)</option>
+                    }
+                }
+            </select>
+        </div>
+        @if (!string.IsNullOrEmpty(_selectedDeviceId))
+        {
+            <button class="btn btn-primary btn-sm" @onclick="ShowAddDevice">+ Add Override</button>
+        }
+    </div>
+
+    @if (string.IsNullOrEmpty(_selectedDeviceId))
+    {
+        <div class="card">
+            <div class="empty-state">
+                <p>Select a device to manage its configuration.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card mb-3">
+            <div class="card-header">
+                <span>Resolved Config for @_selectedDeviceId</span>
+                <button class="btn btn-outline btn-sm" @onclick="LoadDeviceConfig">Refresh</button>
+            </div>
+            <div class="table-container">
+                @if (_resolvedConfig is null)
+                {
+                    <div class="loading"><div class="spinner"></div> Loading...</div>
+                }
+                else if (_resolvedConfig.Count == 0)
+                {
+                    <div class="empty-state"><p>No configuration entries.</p></div>
+                }
+                else
+                {
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Key</th>
+                                <th>Value</th>
+                                <th>Type</th>
+                                <th>Source</th>
+                                <th style="width:100px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var entry in _resolvedConfig)
+                            {
+                                var isOverridden = _deviceConfig?.Any(d => d.Key == entry.Key) ?? false;
+                                <tr>
+                                    <td class="mono">@entry.Key</td>
+                                    <td class="mono" style="max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">@entry.Value</td>
+                                    <td>@entry.ValueType</td>
+                                    <td>
+                                        @if (isOverridden)
+                                        {
+                                            <span class="status-badge active">Device</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="status-badge inactive">Common</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (isOverridden)
+                                        {
+                                            <button class="btn btn-danger btn-sm" @onclick="() => DeleteDeviceOverride(entry.Key)">Remove</button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    }
+}
+
+@* Add/Edit Modal *@
+@if (_showForm)
+{
+    <div class="modal-backdrop" @onclick="CloseForm">
+        <div class="modal" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h3>@(_isEditing ? "Edit Config" : "Add Config")</h3>
+                <button class="btn btn-icon btn-outline" @onclick="CloseForm">X</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Key</label>
+                    <input class="form-control" @bind="_formKey" placeholder="config.key.name" disabled="@_isEditing" />
+                </div>
+                <div class="form-group">
+                    <label>Value</label>
+                    <textarea class="form-control" @bind="_formValue" placeholder="Config value..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Type</label>
+                    <select class="form-control" @bind="_formValueType">
+                        <option value="string">string</option>
+                        <option value="number">number</option>
+                        <option value="boolean">boolean</option>
+                        <option value="json">json</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <input class="form-control" @bind="_formDescription" placeholder="Optional description..." />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" @onclick="CloseForm">Cancel</button>
+                <button class="btn btn-primary" @onclick="SaveConfig" disabled="@_saving">
+                    @(_saving ? "Saving..." : "Save")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private string _activeTab = "common";
+    private List<ConfigEntry>? _commonConfig;
+    private List<ConfigEntry>? _deviceConfig;
+    private List<ConfigEntry>? _resolvedConfig;
+    private List<DeviceSummary>? _devices;
+    private string _selectedDeviceId = string.Empty;
+
+    private string? _successMessage;
+    private string? _errorMessage;
+
+    // Form state
+    private bool _showForm;
+    private bool _isEditing;
+    private bool _isDeviceScope;
+    private string _formKey = string.Empty;
+    private string _formValue = string.Empty;
+    private string _formValueType = "string";
+    private string _formDescription = string.Empty;
+    private bool _saving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _devices = await DeviceService.GetAllDevicesAsync();
+        await LoadCommonConfig();
+    }
+
+    private async Task SwitchTab(string tab)
+    {
+        _activeTab = tab;
+        ClearMessages();
+        if (tab == "common" && _commonConfig is null)
+            await LoadCommonConfig();
+    }
+
+    private async Task LoadCommonConfig()
+    {
+        _commonConfig = await ConfigService.GetCommonConfigAsync();
+    }
+
+    private async Task LoadDeviceConfig()
+    {
+        if (string.IsNullOrEmpty(_selectedDeviceId))
+        {
+            _deviceConfig = null;
+            _resolvedConfig = null;
+            return;
+        }
+        try
+        {
+            _deviceConfig = await ConfigService.GetDeviceConfigAsync(_selectedDeviceId);
+            _resolvedConfig = await ConfigService.GetResolvedConfigAsync(_selectedDeviceId);
+        }
+        catch
+        {
+            _deviceConfig = [];
+            _resolvedConfig = [];
+        }
+    }
+
+    private void ShowAddCommon()
+    {
+        ClearMessages();
+        _isEditing = false;
+        _isDeviceScope = false;
+        ResetForm();
+        _showForm = true;
+    }
+
+    private void ShowEditCommon(ConfigEntry entry)
+    {
+        ClearMessages();
+        _isEditing = true;
+        _isDeviceScope = false;
+        _formKey = entry.Key;
+        _formValue = entry.Value;
+        _formValueType = entry.ValueType;
+        _formDescription = entry.Description ?? string.Empty;
+        _showForm = true;
+    }
+
+    private void ShowAddDevice()
+    {
+        ClearMessages();
+        _isEditing = false;
+        _isDeviceScope = true;
+        ResetForm();
+        _showForm = true;
+    }
+
+    private void CloseForm() => _showForm = false;
+
+    private void ResetForm()
+    {
+        _formKey = string.Empty;
+        _formValue = string.Empty;
+        _formValueType = "string";
+        _formDescription = string.Empty;
+    }
+
+    private async Task SaveConfig()
+    {
+        if (string.IsNullOrWhiteSpace(_formKey))
+        {
+            _errorMessage = "Key is required.";
+            return;
+        }
+        _saving = true;
+        ClearMessages();
+
+        try
+        {
+            var entry = new ConfigEntry
+            {
+                Key = _formKey,
+                Value = _formValue,
+                ValueType = _formValueType,
+                Description = string.IsNullOrWhiteSpace(_formDescription) ? null : _formDescription
+            };
+
+            if (_isDeviceScope)
+            {
+                await ConfigService.SetDeviceConfigAsync(_selectedDeviceId, _formKey, entry);
+                await LoadDeviceConfig();
+            }
+            else
+            {
+                await ConfigService.SetCommonConfigAsync(_formKey, entry);
+                await LoadCommonConfig();
+            }
+            _successMessage = $"Config '{_formKey}' saved.";
+            _showForm = false;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task DeleteCommon(string key)
+    {
+        ClearMessages();
+        try
+        {
+            await ConfigService.DeleteCommonConfigAsync(key);
+            _successMessage = $"Config '{key}' deleted.";
+            await LoadCommonConfig();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Error: {ex.Message}";
+        }
+    }
+
+    private async Task DeleteDeviceOverride(string key)
+    {
+        ClearMessages();
+        try
+        {
+            await ConfigService.DeleteDeviceConfigAsync(_selectedDeviceId, key);
+            _successMessage = $"Device override for '{key}' removed.";
+            await LoadDeviceConfig();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Error: {ex.Message}";
+        }
+    }
+
+    private void ClearMessages()
+    {
+        _successMessage = null;
+        _errorMessage = null;
+    }
+}

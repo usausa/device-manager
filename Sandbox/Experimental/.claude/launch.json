@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "device-manager",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "src/DeviceManager.Server.Web/DeviceManager.Server.Web.csproj"],
+      "port": 5178
+    }
+  ]
+}

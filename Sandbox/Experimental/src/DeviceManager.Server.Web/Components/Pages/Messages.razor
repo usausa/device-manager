@@ -1,0 +1,256 @@
+@page "/messages"
+@rendermode InteractiveServer
+@inject MessageService MessageService
+@inject DeviceService DeviceService
+@implements IAsyncDisposable
+
+<PageTitle>Messages - DeviceManager</PageTitle>
+
+<div class="page-header">
+    <h1>Messages</h1>
+</div>
+
+@if (_successMessage is not null)
+{
+    <div class="alert alert-success">@_successMessage</div>
+}
+@if (_errorMessage is not null)
+{
+    <div class="alert alert-danger">@_errorMessage</div>
+}
+
+@* Send Message Form *@
+<div class="card mb-3">
+    <div class="card-header">Send Message</div>
+    <div class="card-body">
+        <div class="form-inline">
+            <div class="form-group">
+                <label>Device</label>
+                <select class="form-control" @bind="_sendDeviceId" style="min-width: 180px;">
+                    <option value="">(Broadcast)</option>
+                    @if (_devices is not null)
+                    {
+                        @foreach (var device in _devices)
+                        {
+                            <option value="@device.DeviceId">@device.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="form-group" style="flex:1; min-width:150px;">
+                <label>Type</label>
+                <input class="form-control" @bind="_sendType" placeholder="message.type" />
+            </div>
+            <div class="form-group" style="flex:2; min-width:200px;">
+                <label>Content</label>
+                <input class="form-control" @bind="_sendContent" placeholder="Message content..." />
+            </div>
+            <button class="btn btn-primary" @onclick="SendMessage" disabled="@_sending">
+                @(_sending ? "Sending..." : "Send")
+            </button>
+        </div>
+    </div>
+</div>
+
+@* Message History *@
+<div class="card">
+    <div class="card-header">
+        <span>Message History</span>
+        <button class="btn btn-outline btn-sm" @onclick="LoadMessages">Refresh</button>
+    </div>
+
+    <div class="toolbar" style="padding: 1rem 1.25rem 0;">
+        <div class="form-group" style="margin-bottom:0;">
+            <select class="form-control" @bind="_filterDeviceId" @bind:after="LoadMessages" style="min-width: 180px;">
+                <option value="">All Devices</option>
+                @if (_devices is not null)
+                {
+                    @foreach (var device in _devices)
+                    {
+                        <option value="@device.DeviceId">@device.Name</option>
+                    }
+                }
+            </select>
+        </div>
+    </div>
+
+    <div class="table-container">
+        @if (_messages is null)
+        {
+            <div class="loading"><div class="spinner"></div> Loading...</div>
+        }
+        else if (_messages.Count == 0)
+        {
+            <div class="empty-state">
+                <div class="empty-icon">&#x1F4E8;</div>
+                <p>No messages found.</p>
+            </div>
+        }
+        else
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>Direction</th>
+                        <th>Device</th>
+                        <th>Type</th>
+                        <th>Content</th>
+                        <th>Status</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var msg in _messages)
+                    {
+                        <tr>
+                            <td>
+                                <span class="direction-badge @(msg.Direction == MessageDirection.ServerToDevice ? "outgoing" : "incoming")">
+                                    @(msg.Direction == MessageDirection.ServerToDevice ? "-> Device" : "<- Device")
+                                </span>
+                            </td>
+                            <td class="mono">@(msg.DeviceId ?? "(broadcast)")</td>
+                            <td class="mono">@msg.MessageType</td>
+                            <td style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                @msg.Content
+                            </td>
+                            <td>
+                                <span class="status-badge @GetMessageStatusClass(msg.Status)">
+                                    @msg.Status
+                                </span>
+                            </td>
+                            <td class="text-secondary">@msg.CreatedAt.ToLocalTime().ToString("MMM dd, HH:mm:ss")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (_messages.Count >= _pageSize)
+            {
+                <div style="padding: 1rem; text-align: center;">
+                    <button class="btn btn-outline btn-sm" @onclick="LoadMore">Load More</button>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    private List<DeviceSummary>? _devices;
+    private List<ServerMessage>? _messages;
+    private string? _successMessage;
+    private string? _errorMessage;
+
+    // Send form
+    private string _sendDeviceId = string.Empty;
+    private string _sendType = string.Empty;
+    private string _sendContent = string.Empty;
+    private bool _sending;
+
+    // Filter
+    private string _filterDeviceId = string.Empty;
+    private int _pageSize = 50;
+    private int _currentPage = 0;
+
+    private HubConnection? _hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _devices = await DeviceService.GetAllDevicesAsync();
+        await LoadMessages();
+        await StartSignalR();
+    }
+
+    private async Task LoadMessages()
+    {
+        _currentPage = 0;
+        var deviceFilter = string.IsNullOrEmpty(_filterDeviceId) ? null : _filterDeviceId;
+        _messages = await MessageService.GetMessagesAsync(deviceFilter, 0, _pageSize);
+    }
+
+    private async Task LoadMore()
+    {
+        _currentPage++;
+        var deviceFilter = string.IsNullOrEmpty(_filterDeviceId) ? null : _filterDeviceId;
+        var more = await MessageService.GetMessagesAsync(deviceFilter, _currentPage * _pageSize, _pageSize);
+        _messages?.AddRange(more);
+    }
+
+    private async Task SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(_sendType) || string.IsNullOrWhiteSpace(_sendContent))
+        {
+            _errorMessage = "Type and Content are required.";
+            return;
+        }
+
+        _sending = true;
+        _errorMessage = null;
+        _successMessage = null;
+
+        try
+        {
+            var msg = new ServerMessage
+            {
+                DeviceId = string.IsNullOrEmpty(_sendDeviceId) ? null : _sendDeviceId,
+                Direction = MessageDirection.ServerToDevice,
+                MessageType = _sendType,
+                Content = _sendContent,
+                Status = MessageStatus.Sent,
+                CreatedAt = DateTime.UtcNow
+            };
+            await MessageService.AddMessageAsync(msg);
+            _successMessage = "Message sent successfully.";
+            _sendType = string.Empty;
+            _sendContent = string.Empty;
+            await LoadMessages();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Error sending message: {ex.Message}";
+        }
+        finally
+        {
+            _sending = false;
+        }
+    }
+
+    private async Task StartSignalR()
+    {
+        try
+        {
+            _hubConnection = new HubConnectionBuilder()
+                .WithUrl(Navigation.ToAbsoluteUri(HubConstants.DeviceHubPath))
+                .WithAutomaticReconnect()
+                .Build();
+
+            _hubConnection.On<string>(HubConstants.DashboardMethods.MessageReceived, async (_) =>
+            {
+                await LoadMessages();
+                await InvokeAsync(StateHasChanged);
+            });
+
+            await _hubConnection.StartAsync();
+            await _hubConnection.InvokeAsync("JoinGroup", HubConstants.Groups.Dashboard);
+        }
+        catch { }
+    }
+
+    private static string GetMessageStatusClass(MessageStatus status) => status switch
+    {
+        MessageStatus.Sent => "active",
+        MessageStatus.Delivered => "active",
+        MessageStatus.Read => "inactive",
+        MessageStatus.Failed => "error",
+        _ => "inactive"
+    };
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_hubConnection is not null)
+            await _hubConnection.DisposeAsync();
+    }
+}
+
+@inject NavigationManager Navigation
+@using Microsoft.AspNetCore.SignalR.Client
+@using DeviceManager.Shared

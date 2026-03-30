@@ -1,0 +1,47 @@
+@inherits LayoutComponentBase
+
+<div class="app-layout">
+    <aside class="sidebar @(SidebarOpen ? "open" : "")">
+        <div class="sidebar-header">
+            <span class="sidebar-logo">DM</span>
+            <span class="sidebar-title">DeviceManager</span>
+        </div>
+        <NavMenu />
+    </aside>
+
+    <div class="main-area">
+        <header class="topbar">
+            <button class="sidebar-toggle" @onclick="ToggleSidebar" aria-label="Toggle navigation">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <h1 class="topbar-title">DeviceManager</h1>
+            <div class="topbar-spacer"></div>
+        </header>
+
+        <main class="content">
+            @Body
+        </main>
+    </div>
+
+    @if (SidebarOpen)
+    {
+        <div class="sidebar-overlay" @onclick="ToggleSidebar"></div>
+    }
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">X</span>
+</div>
+
+@code {
+    private bool SidebarOpen;
+
+    private void ToggleSidebar()
+    {
+        SidebarOpen = !SidebarOpen;
+    }
+}
