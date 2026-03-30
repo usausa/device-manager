@@ -1,0 +1,171 @@
+@page "/"
+@inject DataService DataService
+
+<MudGrid Spacing="1">
+    <MudItem xs="3">
+        <MudCard Class="border-b-4 border-solid mud-border-info">
+            <MudCardContent Class="pa-2">
+                <MudContainer Class="d-flex flex-row pa-0">
+                    <MudIcon Icon="@Icons.Material.Filled.Power" Color="Color.Info" Class="align-self-center"/>
+                    <MudText Typo="Typo.h6" Align="Align.Justify">稼働</MudText>
+                </MudContainer>
+                <MudContainer Class="d-flex justify-center pa-0">
+                    <MudText Typo="Typo.h3">99,999</MudText>
+                </MudContainer>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="3">
+        <MudCard Class="border-b-4 border-solid mud-border-success">
+            <MudCardContent Class="pa-2">
+                <MudContainer Class="d-flex flex-row justify-content-start pa-0">
+                    <MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Success" Class="align-self-center"/>
+                    <MudText Typo="Typo.h6" Align="Align.Justify">台数</MudText>
+                </MudContainer>
+                <MudContainer Class="d-flex justify-center pa-0">
+                    <MudText Typo="Typo.h3">99,999</MudText>
+                </MudContainer>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="3">
+        <MudCard Class="border-b-4 border-solid mud-border-warning">
+            <MudCardContent Class="pa-2">
+                <MudContainer Class="d-flex flex-row justify-content-start pa-0">
+                    <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Class="align-self-center"/>
+                    <MudText Typo="Typo.h6" Align="Align.Justify">警告</MudText>
+                </MudContainer>
+                <MudContainer Class="d-flex justify-center pa-0">
+                    <MudText Typo="Typo.h3">99,999</MudText>
+                </MudContainer>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="3">
+        <MudCard Class="border-b-4 border-solid mud-border-error">
+            <MudCardContent Class="pa-2">
+                <MudContainer Class="d-flex flex-row justify-content-start pa-0">
+                    <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" Class="align-self-center"/>
+                    <MudText Typo="Typo.h6" Align="Align.Justify">異常</MudText>
+                </MudContainer>
+                <MudContainer Class="d-flex justify-center pa-0">
+                    <MudText Typo="Typo.h3">99,999</MudText>
+                </MudContainer>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12">
+        <MudTable Items="@list" Hover="true" Dense="true" Striped="true">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">イベント</MudText>
+                <MudSpacer />
+                <MudTextField @bind-Value="searchText" Placeholder="絞り込み" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh Class="mud-table-cell-align-center" Style="width: 1px; white-space: nowrap;">レベル</MudTh>
+                <MudTh Style="width: 1px; white-space: nowrap;">時刻</MudTh>
+                <MudTh Style="width: 1px; white-space: nowrap;">顧客</MudTh>
+                <MudTh Style="width: 1px; white-space: nowrap;">機器</MudTh>
+                <MudTh Style="width: 1px; white-space: nowrap;">種別</MudTh>
+                <MudTh Class="mud-table-cell-align-center" Style="width: 1px; white-space: nowrap;">項目</MudTh>
+                <MudTh Style="width: 1px; white-space: nowrap;">値</MudTh>
+                <MudTh>情報</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd Class="mud-table-cell-align-center py-0" Style="white-space: nowrap;">
+                    @{
+                        switch (context.Level)
+                        {
+                            case 0:
+                                <MudChip Color="Color.Default" Variant="Variant.Outlined" Size="Size.Small">情報</MudChip>
+                                break;
+                            case 1:
+                                <MudChip Color="Color.Warning" Size="Size.Small">警告</MudChip>
+                                break;
+                            case 2:
+                                <MudChip Color="Color.Error" Size="Size.Small">異常</MudChip>
+                                break;
+                        }
+                    }
+                </MudTd>
+                <MudTd Style="white-space: nowrap;">@context.DateTime.ToString("MM/dd HH:mm:ss")</MudTd>
+                <MudTd Style="white-space: nowrap;"><MudLink Href="#" Typo="Typo.body2">@context.Customer</MudLink></MudTd>
+                <MudTd Style="white-space: nowrap;">@context.Device</MudTd>
+                <MudTd Style="white-space: nowrap;">@($"{context.Type + 1:D2}型")</MudTd>
+                <MudTd Class="mud-table-cell-align-center py-0" Style="white-space: nowrap;">
+                    @{
+                        switch (context.Parts)
+                        {
+                            case 0:
+                                <MudContainer Class="d-flex flex-row justify-content-start pa-0">
+                                    <MudIcon Icon="@Icons.Material.Filled.Videocam" Size="Size.Small" Class="align-self-center"/>
+                                    <MudText Typo="Typo.body2" Align="Align.Justify">項目1</MudText>
+                                </MudContainer>
+                                break;
+                            case 1:
+                                <MudContainer Class="d-flex flex-row justify-content-start pa-0">
+                                    <MudIcon Icon="@Icons.Material.Filled.Wifi" Size="Size.Small" Class="align-self-center"/>
+                                    <MudText Typo="Typo.body2" Align="Align.Justify">項目2</MudText>
+                                </MudContainer>
+                                break;
+                            case 2:
+                                <MudContainer Class="d-flex flex-row justify-content-start pa-0">
+                                    <MudIcon Icon="@Icons.Material.Filled.Sensors" Size="Size.Small" Class="align-self-center"/>
+                                    <MudText Typo="Typo.body2" Align="Align.Justify">項目3</MudText>
+                                </MudContainer>
+                                break;
+                            case 3:
+                                <MudContainer Class="d-flex flex-row justify-content-start pa-0">
+                                    <MudIcon Icon="@Icons.Material.Filled.ElectricalServices" Size="Size.Small" Class="align-self-center"/>
+                                    <MudText Typo="Typo.body2" Align="Align.Justify">項目4</MudText>
+                                </MudContainer>
+                                break;
+                            case 4:
+                                <MudContainer Class="d-flex flex-row justify-content-start pa-0">
+                                    <MudIcon Icon="@Icons.Material.Filled.Thermostat" Size="Size.Small" Class="align-self-center"/>
+                                    <MudText Typo="Typo.body2" Align="Align.Justify">項目5</MudText>
+                                </MudContainer>
+                                break;
+                        }
+                    }
+                </MudTd>
+                <MudTd Class="mud-table-cell-align-right" Style="white-space: nowrap;">@context.Value.ToString("F2")</MudTd>
+                <MudTd Style="white-space: nowrap;">@context.Description</MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+        </MudTable>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private readonly System.Timers.Timer timer = new(10000);
+
+    private List<LogEntry> list = default!;
+
+    private string searchText = default!;
+
+    protected override void OnInitialized()
+    {
+        list = DataService.QueryLogList();
+
+        timer.Elapsed += (_, _) => OnTimerCallback();
+        timer.Start();
+    }
+
+    public void Dispose()
+    {
+        timer.Dispose();
+    }
+
+    private void OnTimerCallback()
+    {
+        _ = InvokeAsync(() =>
+        {
+            list.Insert(0, DataService.CreateLog());
+            StateHasChanged();
+        });
+    }
+}

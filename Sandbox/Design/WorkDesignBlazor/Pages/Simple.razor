@@ -1,0 +1,97 @@
+@page "/simple"
+
+<Chart Config="config" @ref="chart"></Chart>
+
+<MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Refresh" OnClick="UpdateData">Random</MudButton>
+
+@code {
+    private const int Unit = 30;
+    private const int DataCount = (60 / Unit) * Unit;
+    private const int MinValue = -100;
+    private const int MaxValue = 100;
+
+    private LineConfig config = default!;
+    private Chart chart = default!;
+
+    protected override void OnInitialized()
+    {
+        config = new LineConfig
+        {
+            Options = new LineOptions
+            {
+                Responsive = true,
+                Title = new OptionsTitle
+                {
+                    Display = true,
+                    Text = "サンプルチャート"
+                },
+                Tooltips = new Tooltips
+                {
+                    Mode = InteractionMode.Nearest,
+                    Intersect = true
+                },
+                Hover = new Hover
+                {
+                    Mode = InteractionMode.Nearest,
+                    Intersect = true
+                },
+                Scales = new Scales
+                {
+                    XAxes = new List<CartesianAxis>
+                    {
+                        new CategoryAxis
+                        {
+                            ScaleLabel = new ScaleLabel
+                            {
+                                LabelString = "時刻"
+                            }
+                        }
+                    },
+                    YAxes = new List<CartesianAxis>
+                    {
+                        new LinearCartesianAxis
+                        {
+                            ScaleLabel = new ScaleLabel
+                            {
+                                LabelString = "値"
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        IDataset<int> dataset1 = new LineDataset<int>(DataHelper.CreateRandomData(DataCount, MinValue, MaxValue))
+        {
+            Label = "データ1",
+            BackgroundColor = ColorUtil.FromDrawingColor(ChartColors.Green),
+            BorderColor = ColorUtil.FromDrawingColor(ChartColors.Green),
+            Fill = FillingMode.Disabled
+        };
+
+        IDataset<int> dataset2 = new LineDataset<int>(DataHelper.CreateRandomData(DataCount, MinValue, MaxValue))
+        {
+            Label = "データ2",
+            BackgroundColor = ColorUtil.FromDrawingColor(ChartColors.Blue),
+            BorderColor = ColorUtil.FromDrawingColor(ChartColors.Blue),
+            Fill = FillingMode.Disabled
+        };
+
+        var now = DateTime.Now;
+        var current = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute >= 30 ? 30 : 0, 0);
+        config.Data.Labels.AddRange(Enumerable.Range(1, DataCount).Select(x => current.AddMinutes((DataCount - x) * -Unit).ToString("HH:mm")));
+        config.Data.Datasets.Add(dataset1);
+        config.Data.Datasets.Add(dataset2);
+    }
+
+    private void UpdateData()
+    {
+        foreach (var dataset in config.Data.Datasets.Cast<IDataset<int>>())
+        {
+            dataset.Clear();
+            dataset.AddRange(DataHelper.CreateRandomData(DataCount, MinValue, MaxValue));
+        }
+
+        chart.Update();
+    }
+}

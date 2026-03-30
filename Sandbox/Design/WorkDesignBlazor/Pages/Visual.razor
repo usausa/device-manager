@@ -1,0 +1,40 @@
+@page "/visual"
+@inject IJSRuntime Js
+
+<MudGrid Spacing="1">
+    <MudItem xs="12">
+        <MudText Typo="Typo.h4">CLOCK</MudText>
+        <canvas id="digital-clock" width="400" height="48"></canvas>
+    </MudItem>
+    <MudItem xs="6">
+        <MudText Typo="Typo.h4">SPEED</MudText>
+        <canvas id="round-fan1" width="160" height="160"></canvas>
+        <canvas id="round-fan2" width="160" height="160"></canvas>
+    </MudItem>
+    <MudItem xs="6">
+        <MudText Typo="Typo.h4">BAR</MudText>
+        <canvas id="bar-meter1" width="64" height="200"></canvas>
+        <canvas id="bar-meter2" width="64" height="200"></canvas>
+        <canvas id="bar-meter3" width="64" height="200"></canvas>
+        <canvas id="bar-meter4" width="64" height="200"></canvas>
+    </MudItem>
+    <MudItem xs="6">
+        <MudText Typo="Typo.h4">METER</MudText>
+        <canvas id="text-meter1" width="320" height="80"></canvas>
+        <canvas id="text-meter2" width="320" height="80"></canvas>
+    </MudItem>
+    <MudItem xs="6">
+        <MudText Typo="Typo.h4">STATUS</MudText>
+        <canvas id="hex-grid" width="320" height="320"></canvas>
+    </MudItem>
+</MudGrid>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Js.InvokeVoidAsync("initVisual");
+        }
+    }
+}
