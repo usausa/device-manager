@@ -1,9 +1,0 @@
-<Solution>
-  <Folder Name="/src/">
-    <Project Path="src/DeviceManager.Client.Sdk/DeviceManager.Client.Sdk.csproj" />
-    <Project Path="src/DeviceManager.Server.Core/DeviceManager.Server.Core.csproj" />
-    <Project Path="src/DeviceManager.Server.Web/DeviceManager.Server.Web.csproj" />
-    <Project Path="src/DeviceManager.Shared/DeviceManager.Shared.csproj" />
-    <Project Path="src/DeviceManager.TestClient/DeviceManager.TestClient.csproj" />
-  </Folder>
-</Solution>
