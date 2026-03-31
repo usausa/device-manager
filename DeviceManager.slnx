@@ -12,4 +12,5 @@
     <File Path="LICENSE" />
     <File Path="README.md" />
   </Folder>
+  <Project Path="DeviceManager/DeviceManager.csproj" Id="01e051bf-6a46-42d0-ba8b-8925ca160e58" />
 </Solution>
