@@ -1,0 +1,184 @@
+@page "/config"
+@rendermode InteractiveServer
+@inject ConfigService ConfigService
+
+<PageTitle>Configuration - DeviceManager</PageTitle>
+
+<div class="page-header">
+    <h1>⚙️ Configuration</h1>
+    <button class="btn btn-primary" @onclick="ShowAddForm">+ Add Entry</button>
+</div>
+
+@if (errorMessage is not null)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+@if (successMessage is not null)
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+
+<div class="card">
+    <div class="toolbar" style="padding: 1rem 1.25rem;">
+        <div class="search-input">
+            <input type="text" placeholder="Filter by key..." @bind="searchText" @bind:event="oninput" />
+        </div>
+    </div>
+    <div class="table-container">
+        @if (entries is null)
+        {
+            <div class="loading"><div class="spinner"></div> Loading configuration...</div>
+        }
+        else if (filteredEntries!.Count == 0)
+        {
+            <div class="empty-state"><div class="empty-icon">⚙️</div><p>No configuration entries.</p></div>
+        }
+        else
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th style="width:140px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var entry in filteredEntries)
+                    {
+                        <tr>
+                            <td class="mono">@entry.Key</td>
+                            <td class="mono">@entry.Value</td>
+                            <td>@entry.ValueType</td>
+                            <td class="text-secondary">@(entry.Description ?? "-")</td>
+                            <td>
+                                <div class="btn-group">
+                                    <button class="btn btn-outline btn-sm" @onclick="() => ShowEditForm(entry)">Edit</button>
+                                    <button class="btn btn-danger btn-sm" @onclick="() => DeleteEntry(entry)">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@if (showForm)
+{
+    <div class="modal-backdrop" @onclick="CloseForm">
+        <div class="modal" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h3>@(isEditing ? "Edit Configuration" : "Add Configuration")</h3>
+                <button class="btn btn-icon btn-outline" @onclick="CloseForm">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group"><label>Key</label><input class="form-control" @bind="formKey" placeholder="config.key" disabled="@isEditing" /></div>
+                <div class="form-group"><label>Value</label><input class="form-control" @bind="formValue" /></div>
+                <div class="form-group"><label>Type</label>
+                    <select class="form-control" @bind="formType"><option value="String">String</option><option value="Int">Int</option><option value="Bool">Bool</option><option value="Json">Json</option></select>
+                </div>
+                <div class="form-group"><label>Description</label><input class="form-control" @bind="formDescription" /></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" @onclick="CloseForm">Cancel</button>
+                <button class="btn btn-primary" @onclick="SaveEntry" disabled="@saving">@(saving ? "Saving..." : "Save")</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<ConfigEntry>? entries;
+    private string searchText = string.Empty;
+    private string? errorMessage;
+    private string? successMessage;
+
+    private bool showForm;
+    private bool isEditing;
+    private bool saving;
+    private string formKey = string.Empty;
+    private string formValue = string.Empty;
+    private string formType = "String";
+    private string formDescription = string.Empty;
+
+    private List<ConfigEntry>? filteredEntries => entries?
+        .Where(e => string.IsNullOrEmpty(searchText)
+            || e.Key.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    protected override async Task OnInitializedAsync() => await LoadEntries();
+
+    private async Task LoadEntries()
+    {
+        try { entries = await ConfigService.GetCommonConfigAsync(); }
+        catch (Exception ex) { errorMessage = ex.Message; entries = []; }
+    }
+
+    private void ShowAddForm()
+    {
+        isEditing = false;
+        formKey = formValue = formDescription = string.Empty;
+        formType = "String";
+        showForm = true;
+        ClearMessages();
+    }
+
+    private void ShowEditForm(ConfigEntry entry)
+    {
+        isEditing = true;
+        formKey = entry.Key;
+        formValue = entry.Value;
+        formType = entry.ValueType;
+        formDescription = entry.Description ?? string.Empty;
+        showForm = true;
+        ClearMessages();
+    }
+
+    private void CloseForm() => showForm = false;
+
+    private async Task SaveEntry()
+    {
+        saving = true;
+        ClearMessages();
+        try
+        {
+            var key = formKey.Trim();
+            var entry = new ConfigEntry
+            {
+                Key = key,
+                Value = formValue,
+                ValueType = formType,
+                Description = string.IsNullOrWhiteSpace(formDescription) ? null : formDescription.Trim()
+            };
+
+            await ConfigService.SetCommonConfigAsync(key, entry);
+
+            showForm = false;
+            successMessage = $"Configuration entry '{key}' saved.";
+            await LoadEntries();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally { saving = false; }
+    }
+
+    private async Task DeleteEntry(ConfigEntry entry)
+    {
+        ClearMessages();
+        try
+        {
+            await ConfigService.DeleteCommonConfigAsync(entry.Key);
+            successMessage = $"Deleted '{entry.Key}'.";
+            await LoadEntries();
+        }
+        catch (Exception ex) { errorMessage = ex.Message; }
+    }
+
+    private void ClearMessages() { errorMessage = null; successMessage = null; }
+}

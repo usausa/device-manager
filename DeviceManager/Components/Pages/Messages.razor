@@ -1,0 +1,161 @@
+@page "/messages"
+@rendermode InteractiveServer
+@inject MessageService MessageService
+@inject DeviceService DeviceService
+
+<PageTitle>Messages - DeviceManager</PageTitle>
+
+<div class="page-header">
+    <h1>📨 Messages</h1>
+    <button class="btn btn-primary" @onclick="ShowSendForm">+ Send Message</button>
+</div>
+
+@if (successMessage is not null)
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+
+<div class="card">
+    <div class="toolbar" style="padding: 1rem 1.25rem;">
+        <div class="search-input">
+            <input type="text" placeholder="Filter by device ID..." @bind="filterDeviceId" @bind:event="oninput" />
+        </div>
+        <button class="btn btn-outline btn-sm" @onclick="LoadMessages">Refresh</button>
+    </div>
+    <div class="table-container">
+        @if (messages is null)
+        {
+            <div class="loading"><div class="spinner"></div> Loading messages...</div>
+        }
+        else if (messages.Count == 0)
+        {
+            <div class="empty-state"><div class="empty-icon">📨</div><p>No messages found.</p></div>
+        }
+        else
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>Device</th>
+                        <th>Direction</th>
+                        <th>Type</th>
+                        <th>Content</th>
+                        <th>Status</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var msg in filteredMessages!)
+                    {
+                        <tr>
+                            <td><a href="/devices/@msg.DeviceId" class="mono">@msg.DeviceId</a></td>
+                            <td>
+                                <span class="direction-badge @(msg.Direction == MessageDirection.ServerToDevice ? "outgoing" : "incoming")">
+                                    @(msg.Direction == MessageDirection.ServerToDevice ? "→ Device" : "← Server")
+                                </span>
+                            </td>
+                            <td class="mono">@msg.MessageType</td>
+                            <td style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">@msg.Content</td>
+                            <td>@msg.Status</td>
+                            <td class="text-secondary">@msg.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@if (showSendForm)
+{
+    <div class="modal-backdrop" @onclick="CloseSendForm">
+        <div class="modal" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h3>Send Message</h3>
+                <button class="btn btn-icon btn-outline" @onclick="CloseSendForm">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Device ID</label>
+                    <input class="form-control" @bind="sendDeviceId" placeholder="device-id" />
+                </div>
+                <div class="form-group">
+                    <label>Message Type</label>
+                    <input class="form-control" @bind="sendType" placeholder="message.type" />
+                </div>
+                <div class="form-group">
+                    <label>Content</label>
+                    <textarea class="form-control" @bind="sendContent" placeholder="Message content..." rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" @onclick="CloseSendForm">Cancel</button>
+                <button class="btn btn-primary" @onclick="SendMessage" disabled="@sending">
+                    @(sending ? "Sending..." : "Send")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<ServerMessage>? messages;
+    private string filterDeviceId = string.Empty;
+    private string? successMessage;
+    private bool showSendForm;
+    private bool sending;
+    private string sendDeviceId = string.Empty;
+    private string sendType = string.Empty;
+    private string sendContent = string.Empty;
+
+    private List<ServerMessage>? filteredMessages => messages?
+        .Where(m => string.IsNullOrEmpty(filterDeviceId)
+            || (m.DeviceId?.Contains(filterDeviceId, StringComparison.OrdinalIgnoreCase) ?? false))
+        .ToList();
+
+    protected override async Task OnInitializedAsync() => await LoadMessages();
+
+    private async Task LoadMessages()
+    {
+        try { messages = await MessageService.GetMessagesAsync(null, 0, 200); }
+        catch { messages = []; }
+    }
+
+    private void ShowSendForm()
+    {
+        sendDeviceId = sendType = sendContent = string.Empty;
+        showSendForm = true;
+        successMessage = null;
+    }
+
+    private void CloseSendForm() => showSendForm = false;
+
+    private async Task SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(sendDeviceId) || string.IsNullOrWhiteSpace(sendType))
+        {
+            return;
+        }
+
+        sending = true;
+        try
+        {
+            await MessageService.AddMessageAsync(new ServerMessage
+            {
+                DeviceId = sendDeviceId.Trim(),
+                Direction = MessageDirection.ServerToDevice,
+                MessageType = sendType.Trim(),
+                Content = sendContent,
+                Status = MessageStatus.Sent,
+                CreatedAt = DateTime.UtcNow
+            });
+            showSendForm = false;
+            successMessage = "Message sent successfully.";
+            await LoadMessages();
+        }
+        finally
+        {
+            sending = false;
+        }
+    }
+}

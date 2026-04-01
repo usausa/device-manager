@@ -1,0 +1,294 @@
+@page "/devices"
+@rendermode InteractiveServer
+@inject DeviceService DeviceService
+@inject NavigationManager Navigation
+
+<PageTitle>Devices - DeviceManager</PageTitle>
+
+<div class="page-header">
+    <h1>📱 Devices</h1>
+    <button class="btn btn-primary" @onclick="ShowAddForm">+ Add Device</button>
+</div>
+
+@if (errorMessage is not null)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+@if (successMessage is not null)
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+
+<div class="card">
+    <div class="toolbar" style="padding: 1rem 1.25rem;">
+        <div class="search-input">
+            <input type="text" placeholder="Search devices..." @bind="searchText" @bind:event="oninput" />
+        </div>
+    </div>
+    <div class="table-container">
+        @if (devices is null)
+        {
+            <div class="loading"><div class="spinner"></div> Loading devices...</div>
+        }
+        else if (filteredDevices!.Count == 0)
+        {
+            <div class="empty-state">
+                <div class="empty-icon">📱</div>
+                <p>No devices found.</p>
+                <button class="btn btn-primary" @onclick="ShowAddForm">Add Device</button>
+            </div>
+        }
+        else
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Name</th>
+                        <th>Group</th>
+                        <th>Battery</th>
+                        <th>Last Connected</th>
+                        <th style="width:140px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var device in filteredDevices)
+                    {
+                        <tr>
+                            <td>
+                                <span class="status-badge @GetStatusClass(device.Status)">
+                                    <span class="status-dot @GetStatusClass(device.Status)"></span>
+                                    @device.Status
+                                </span>
+                            </td>
+                            <td><a href="/devices/@device.DeviceId">@device.Name</a></td>
+                            <td>@(device.Group ?? "-")</td>
+                            <td>@(device.Battery.HasValue ? $"{device.Battery}%" : "-")</td>
+                            <td class="text-secondary">@FormatDate(device.LastConnectedAt)</td>
+                            <td>
+                                <div class="btn-group">
+                                    <button class="btn btn-outline btn-sm" @onclick="() => ShowEditForm(device)">Edit</button>
+                                    <button class="btn btn-danger btn-sm" @onclick="() => ConfirmDelete(device)">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@if (showForm)
+{
+    <div class="modal-backdrop" @onclick="CloseForm">
+        <div class="modal" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h3>@(isEditing ? "Edit Device" : "Add Device")</h3>
+                <button class="btn btn-icon btn-outline" @onclick="CloseForm">✕</button>
+            </div>
+            <div class="modal-body">
+                @if (!isEditing)
+                {
+                    <div class="form-group">
+                        <label>Device ID</label>
+                        <input class="form-control" @bind="formDeviceId" placeholder="unique-device-id" />
+                    </div>
+                    <div class="form-group">
+                        <label>Platform</label>
+                        <input class="form-control" @bind="formPlatform" placeholder="Android, iOS, etc." />
+                    </div>
+                }
+                <div class="form-group">
+                    <label>Name</label>
+                    <input class="form-control" @bind="formName" placeholder="Device name" />
+                </div>
+                <div class="form-group">
+                    <label>Group</label>
+                    <input class="form-control" @bind="formGroup" placeholder="Group name" />
+                </div>
+                <div class="form-group">
+                    <label>Tags (comma-separated)</label>
+                    <input class="form-control" @bind="formTags" placeholder="tag1, tag2" />
+                </div>
+                <div class="form-group">
+                    <label>Note</label>
+                    <textarea class="form-control" @bind="formNote" placeholder="Notes..."></textarea>
+                </div>
+                @if (isEditing)
+                {
+                    <div class="form-group">
+                        <label class="toggle-switch">
+                            <input type="checkbox" @bind="formIsEnabled" />
+                            <span>Enabled</span>
+                        </label>
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" @onclick="CloseForm">Cancel</button>
+                <button class="btn btn-primary" @onclick="SaveDevice" disabled="@saving">
+                    @(saving ? "Saving..." : (isEditing ? "Update" : "Add"))
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (deviceToDelete is not null)
+{
+    <div class="modal-backdrop" @onclick="CancelDelete">
+        <div class="modal" @onclick:stopPropagation="true">
+            <div class="modal-header"><h3>Confirm Delete</h3></div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong>@deviceToDelete.Name</strong>?</p>
+                <p class="text-secondary">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" @onclick="CancelDelete">Cancel</button>
+                <button class="btn btn-danger" @onclick="DeleteDevice" disabled="@saving">
+                    @(saving ? "Deleting..." : "Delete")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<DeviceSummary>? devices;
+    private string searchText = string.Empty;
+    private string? errorMessage;
+    private string? successMessage;
+    private bool saving;
+
+    private bool showForm;
+    private bool isEditing;
+    private string editingDeviceId = string.Empty;
+    private string formDeviceId = string.Empty;
+    private string formName = string.Empty;
+    private string formPlatform = string.Empty;
+    private string formGroup = string.Empty;
+    private string formTags = string.Empty;
+    private string formNote = string.Empty;
+    private bool formIsEnabled = true;
+
+    private DeviceSummary? deviceToDelete;
+
+    private List<DeviceSummary>? filteredDevices => devices?
+        .Where(d => string.IsNullOrEmpty(searchText)
+            || d.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+            || (d.Group?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false)
+            || d.DeviceId.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        devices = await DeviceService.GetAllDevicesAsync();
+    }
+
+    private void ShowAddForm()
+    {
+        isEditing = false;
+        formDeviceId = formName = formPlatform = formGroup = formTags = formNote = string.Empty;
+        formIsEnabled = true;
+        showForm = true;
+        ClearMessages();
+    }
+
+    private async Task ShowEditForm(DeviceSummary summary)
+    {
+        ClearMessages();
+        var detail = await DeviceService.GetDeviceAsync(summary.DeviceId);
+        if (detail is null) return;
+
+        isEditing = true;
+        editingDeviceId = detail.DeviceId;
+        formName = detail.Name;
+        formGroup = detail.Group ?? string.Empty;
+        formTags = detail.Tags is not null ? string.Join(", ", detail.Tags) : string.Empty;
+        formNote = detail.Note ?? string.Empty;
+        formIsEnabled = detail.IsEnabled;
+        showForm = true;
+    }
+
+    private void CloseForm() => showForm = false;
+
+    private async Task SaveDevice()
+    {
+        saving = true;
+        ClearMessages();
+        try
+        {
+            if (isEditing)
+            {
+                await DeviceService.UpdateDeviceAsync(editingDeviceId, new DeviceUpdateRequest
+                {
+                    Name = formName,
+                    Group = string.IsNullOrWhiteSpace(formGroup) ? null : formGroup,
+                    Tags = string.IsNullOrWhiteSpace(formTags) ? null : formTags.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries),
+                    Note = formNote,
+                    IsEnabled = formIsEnabled
+                });
+                successMessage = $"Device '{formName}' updated.";
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(formDeviceId) || string.IsNullOrWhiteSpace(formName))
+                {
+                    errorMessage = "Device ID and Name are required.";
+                    saving = false;
+                    return;
+                }
+
+                await DeviceService.RegisterDeviceAsync(new DeviceRegistration
+                {
+                    DeviceId = formDeviceId.Trim(),
+                    Name = formName.Trim(),
+                    Platform = string.IsNullOrWhiteSpace(formPlatform) ? null : formPlatform.Trim(),
+                    Group = string.IsNullOrWhiteSpace(formGroup) ? null : formGroup.Trim()
+                });
+                successMessage = $"Device '{formName}' added.";
+            }
+
+            showForm = false;
+            devices = await DeviceService.GetAllDevicesAsync();
+        }
+        catch (Exception ex) { errorMessage = $"Error: {ex.Message}"; }
+        finally { saving = false; }
+    }
+
+    private void ConfirmDelete(DeviceSummary device)
+    {
+        ClearMessages();
+        deviceToDelete = device;
+    }
+
+    private void CancelDelete() => deviceToDelete = null;
+
+    private async Task DeleteDevice()
+    {
+        if (deviceToDelete is null) return;
+        saving = true;
+        try
+        {
+            await DeviceService.DeleteDeviceAsync(deviceToDelete.DeviceId);
+            successMessage = $"Device '{deviceToDelete.Name}' deleted.";
+            deviceToDelete = null;
+            devices = await DeviceService.GetAllDevicesAsync();
+        }
+        catch (Exception ex) { errorMessage = $"Error: {ex.Message}"; }
+        finally { saving = false; }
+    }
+
+    private void ClearMessages() { errorMessage = null; successMessage = null; }
+
+    private static string GetStatusClass(DeviceConnectionStatus status) => status switch
+    {
+        DeviceConnectionStatus.Active => "active",
+        DeviceConnectionStatus.Warning => "warning",
+        DeviceConnectionStatus.Error => "error",
+        _ => "inactive"
+    };
+
+    private static string FormatDate(DateTime? dt) => dt is null ? "Never" : dt.Value.ToLocalTime().ToString("MMM dd, HH:mm");
+}

@@ -1,0 +1,84 @@
+@page "/storage"
+@rendermode InteractiveServer
+@inject DataStoreService DataStoreService
+
+<PageTitle>Storage - DeviceManager</PageTitle>
+
+<div class="page-header">
+    <h1>📁 Storage Overview</h1>
+    <button class="btn btn-outline" @onclick="LoadData">Refresh</button>
+</div>
+
+<div class="stats-grid mb-3">
+    <div class="stat-card">
+        <div class="stat-value">@totalEntries</div>
+        <div class="stat-label">Total Entries</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">Common Storage Entries</div>
+    <div class="toolbar" style="padding: 1rem 1.25rem;">
+        <div class="search-input">
+            <input type="text" placeholder="Filter by key..." @bind="searchText" @bind:event="oninput" />
+        </div>
+    </div>
+    <div class="table-container">
+        @if (entries is null)
+        {
+            <div class="loading"><div class="spinner"></div> Loading storage...</div>
+        }
+        else if (filteredEntries!.Count == 0)
+        {
+            <div class="empty-state"><div class="empty-icon">📁</div><p>No storage entries found.</p></div>
+        }
+        else
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                        <th>Updated</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var e in filteredEntries)
+                    {
+                        <tr>
+                            <td class="mono">@e.Key</td>
+                            <td class="mono" style="max-width:400px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="@e.Value">@e.Value</td>
+                            <td class="text-secondary">@e.UpdatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@code {
+    private List<DataStoreEntry>? entries;
+    private string searchText = string.Empty;
+    private int totalEntries;
+
+    private List<DataStoreEntry>? filteredEntries => entries?
+        .Where(e => string.IsNullOrEmpty(searchText)
+            || e.Key.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    protected override async Task OnInitializedAsync() => await LoadData();
+
+    private async Task LoadData()
+    {
+        try
+        {
+            entries = await DataStoreService.GetCommonEntriesAsync();
+            totalEntries = entries.Count;
+        }
+        catch
+        {
+            entries = [];
+        }
+    }
+}

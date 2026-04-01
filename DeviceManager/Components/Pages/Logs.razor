@@ -1,0 +1,92 @@
+@page "/logs"
+@rendermode InteractiveServer
+@inject LogService LogService
+
+<PageTitle>Logs - DeviceManager</PageTitle>
+
+<div class="page-header">
+    <h1>📋 System Logs</h1>
+    <button class="btn btn-outline" @onclick="LoadLogs">Refresh</button>
+</div>
+
+<div class="card">
+    <div class="toolbar" style="padding: 1rem 1.25rem;">
+        <div class="search-input" style="flex: 1;">
+            <input type="text" placeholder="Filter by device or message..." @bind="searchText" @bind:event="oninput" />
+        </div>
+        <select class="form-control" style="width: auto;" @bind="levelFilter">
+            <option value="">All Levels</option>
+            <option value="2">Information</option>
+            <option value="3">Warning</option>
+            <option value="4">Error</option>
+            <option value="1">Debug</option>
+            <option value="0">Trace</option>
+        </select>
+    </div>
+    <div class="table-container">
+        @if (logs is null)
+        {
+            <div class="loading"><div class="spinner"></div> Loading logs...</div>
+        }
+        else if (filteredLogs!.Count == 0)
+        {
+            <div class="empty-state"><div class="empty-icon">📋</div><p>No logs found.</p></div>
+        }
+        else
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Level</th>
+                        <th>Device</th>
+                        <th>Category</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var log in filteredLogs)
+                    {
+                        <tr class="log-@GetLevelCss(log.Level)">
+                            <td class="text-secondary" style="white-space: nowrap;">@log.Timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
+                            <td><span class="log-level @GetLevelCss(log.Level)">@log.Level</span></td>
+                            <td><a href="/devices/@log.DeviceId" class="mono">@log.DeviceId</a></td>
+                            <td class="mono">@log.Category</td>
+                            <td>@log.Message</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@code {
+    private List<LogEntry>? logs;
+    private string searchText = string.Empty;
+    private string levelFilter = string.Empty;
+
+    private List<LogEntry>? filteredLogs => logs?
+        .Where(l =>
+            (string.IsNullOrEmpty(searchText)
+                || l.DeviceId.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+                || l.Message.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+            && (string.IsNullOrEmpty(levelFilter) || ((int)l.Level).ToString() == levelFilter))
+        .ToList();
+
+    protected override async Task OnInitializedAsync() => await LoadLogs();
+
+    private async Task LoadLogs()
+    {
+        try { logs = await LogService.GetLogsAsync(null, null, 0, 500); }
+        catch { logs = []; }
+    }
+
+    private static string GetLevelCss(Shared.Models.LogLevel level) => level switch
+    {
+        Shared.Models.LogLevel.Information => "info",
+        Shared.Models.LogLevel.Warning => "warning",
+        Shared.Models.LogLevel.Error or Shared.Models.LogLevel.Critical => "error",
+        _ => "debug"
+    };
+}

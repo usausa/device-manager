@@ -1,0 +1,384 @@
+@page "/devices/{DeviceId}"
+@rendermode InteractiveServer
+@inject DeviceService DeviceService
+@inject MessageService MessageService
+@inject ConfigService ConfigService
+@inject DataStoreService DataStoreService
+@inject NavigationManager Navigation
+@implements IAsyncDisposable
+
+<PageTitle>@(device?.Name ?? "Device") - DeviceManager</PageTitle>
+
+<div class="page-header">
+    <div class="d-flex align-center" style="gap: 1rem;">
+        <button class="btn btn-outline btn-sm" @onclick="GoBack">← Back</button>
+        <h1>@(device?.Name ?? "Device Detail")</h1>
+        @if (device is not null)
+        {
+            <span class="status-badge @GetStatusClass(device.Status)">
+                <span class="status-dot @GetStatusClass(device.Status)"></span>
+                @device.Status
+            </span>
+        }
+    </div>
+</div>
+
+@if (device is null)
+{
+    <div class="loading"><div class="spinner"></div> Loading device details...</div>
+}
+else
+{
+    <div class="card mb-3">
+        <div class="card-header">📋 Device Information</div>
+        <div class="card-body">
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <div class="detail-label">Device ID</div>
+                    <div class="detail-value mono">@device.DeviceId</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Platform</div>
+                    <div class="detail-value">@(device.Platform ?? "-")</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Group</div>
+                    <div class="detail-value">@(device.Group ?? "-")</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Enabled</div>
+                    <div class="detail-value">@(device.IsEnabled ? "✅ Yes" : "⛔ No")</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Level</div>
+                    <div class="detail-value">@device.Level</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Progress</div>
+                    <div class="detail-value">
+                        <div class="progress-cell">
+                            <progress value="@device.Progress" max="100"></progress>
+                            <span>@device.Progress.ToString("0.0")%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Battery</div>
+                    <div class="detail-value">@(device.Battery.HasValue ? $"🔋 {device.Battery}%" : "-")</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Registered At</div>
+                    <div class="detail-value">@device.RegisteredAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Last Connected</div>
+                    <div class="detail-value">@(device.LastConnectedAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") ?? "Never")</div>
+                </div>
+                @if (device.Latitude.HasValue && device.Longitude.HasValue)
+                {
+                    <div class="detail-item">
+                        <div class="detail-label">📍 Location</div>
+                        <div class="detail-value">@device.Latitude.Value.ToString("F4"), @device.Longitude.Value.ToString("F4")</div>
+                    </div>
+                }
+            </div>
+            @if (device.Tags is { Length: > 0 })
+            {
+                <div class="detail-item">
+                    <div class="detail-label">Tags</div>
+                    <div class="tags mt-1">
+                        @foreach (var tag in device.Tags)
+                        {
+                            <span class="tag">@tag</span>
+                        }
+                    </div>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(device.Note))
+            {
+                <div class="detail-item mt-2">
+                    <div class="detail-label">Note</div>
+                    <div class="detail-value">@device.Note</div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab @(activeTab == "history" ? "active" : "")" @onclick='() => SwitchTab("history")'>📈 Status History</button>
+        <button class="tab @(activeTab == "messages" ? "active" : "")" @onclick='() => SwitchTab("messages")'>📨 Messages</button>
+        <button class="tab @(activeTab == "config" ? "active" : "")" @onclick='() => SwitchTab("config")'>⚙️ Config</button>
+        <button class="tab @(activeTab == "datastore" ? "active" : "")" @onclick='() => SwitchTab("datastore")'>💾 DataStore</button>
+    </div>
+
+    @if (activeTab == "history")
+    {
+        <div class="card">
+            <div class="card-header">Recent Status History</div>
+            <div class="table-container">
+                @if (statusHistory is null)
+                {
+                    <div class="loading"><div class="spinner"></div> Loading...</div>
+                }
+                else if (statusHistory.Count == 0)
+                {
+                    <div class="empty-state"><p>No status history.</p></div>
+                }
+                else
+                {
+                    <table>
+                        <thead><tr><th>Timestamp</th><th>Level</th><th>Progress</th><th>Battery</th><th>Location</th></tr></thead>
+                        <tbody>
+                            @foreach (var entry in statusHistory.Take(50))
+                            {
+                                <tr>
+                                    <td class="text-secondary">@entry.Timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                    <td>@entry.Level</td>
+                                    <td><div class="progress-cell"><progress value="@entry.Progress" max="100"></progress><span>@entry.Progress.ToString("0")%</span></div></td>
+                                    <td>@(entry.Battery.HasValue ? $"{entry.Battery}%" : "-")</td>
+                                    <td class="text-secondary">@(entry.Latitude.HasValue ? $"{entry.Latitude.Value:F2}, {entry.Longitude!.Value:F2}" : "-")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    }
+
+    @if (activeTab == "messages")
+    {
+        <div class="card mb-3">
+            <div class="card-header">Send Message</div>
+            <div class="card-body">
+                <div class="form-inline">
+                    <div class="form-group" style="flex:1;"><label>Type</label><input class="form-control" @bind="msgType" placeholder="message.type" /></div>
+                    <div class="form-group" style="flex:2;"><label>Content</label><input class="form-control" @bind="msgContent" placeholder="Message content..." /></div>
+                    <button class="btn btn-primary" @onclick="SendMessage" disabled="@sending">Send</button>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">Message History</div>
+            <div class="table-container">
+                @if (messages is null)
+                {
+                    <div class="loading"><div class="spinner"></div> Loading...</div>
+                }
+                else if (messages.Count == 0)
+                {
+                    <div class="empty-state"><p>No messages.</p></div>
+                }
+                else
+                {
+                    <table>
+                        <thead><tr><th>Direction</th><th>Type</th><th>Content</th><th>Status</th><th>Time</th></tr></thead>
+                        <tbody>
+                            @foreach (var msg in messages)
+                            {
+                                <tr>
+                                    <td><span class="direction-badge @(msg.Direction == MessageDirection.ServerToDevice ? "outgoing" : "incoming")">@(msg.Direction == MessageDirection.ServerToDevice ? "→ Device" : "← Device")</span></td>
+                                    <td class="mono">@msg.MessageType</td>
+                                    <td style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">@msg.Content</td>
+                                    <td>@msg.Status</td>
+                                    <td class="text-secondary">@msg.CreatedAt.ToLocalTime().ToString("HH:mm:ss")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    }
+
+    @if (activeTab == "config")
+    {
+        <div class="card">
+            <div class="card-header"><span>Resolved Configuration</span><button class="btn btn-outline btn-sm" @onclick="LoadConfig">Refresh</button></div>
+            <div class="table-container">
+                @if (resolvedConfig is null)
+                {
+                    <div class="loading"><div class="spinner"></div> Loading...</div>
+                }
+                else if (resolvedConfig.Count == 0)
+                {
+                    <div class="empty-state"><p>No configuration entries.</p></div>
+                }
+                else
+                {
+                    <table>
+                        <thead><tr><th>Key</th><th>Value</th><th>Type</th><th>Description</th></tr></thead>
+                        <tbody>
+                            @foreach (var e in resolvedConfig)
+                            {
+                                <tr>
+                                    <td class="mono">@e.Key</td><td class="mono">@e.Value</td><td>@e.ValueType</td><td class="text-secondary">@(e.Description ?? "-")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    }
+
+    @if (activeTab == "datastore")
+    {
+        <div class="card">
+            <div class="card-header"><span>Device Data Store</span><button class="btn btn-outline btn-sm" @onclick="LoadDataStore">Refresh</button></div>
+            <div class="table-container">
+                @if (dataEntries is null)
+                {
+                    <div class="loading"><div class="spinner"></div> Loading...</div>
+                }
+                else if (dataEntries.Count == 0)
+                {
+                    <div class="empty-state"><p>No data store entries.</p></div>
+                }
+                else
+                {
+                    <table>
+                        <thead><tr><th>Key</th><th>Value</th><th>Updated</th></tr></thead>
+                        <tbody>
+                            @foreach (var e in dataEntries)
+                            {
+                                <tr>
+                                    <td class="mono">@e.Key</td>
+                                    <td class="mono" style="max-width:400px; overflow:hidden; text-overflow:ellipsis;">@e.Value</td>
+                                    <td class="text-secondary">@e.UpdatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    }
+}
+
+@code {
+    [Parameter]
+    public string DeviceId { get; set; } = string.Empty;
+
+    private DeviceDetail? device;
+    private string activeTab = "history";
+    private List<DeviceStatusReport>? statusHistory;
+    private List<ServerMessage>? messages;
+    private List<ConfigEntry>? resolvedConfig;
+    private List<DataStoreEntry>? dataEntries;
+
+    private string msgType = string.Empty;
+    private string msgContent = string.Empty;
+    private bool sending;
+
+    private HubConnection? hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        device = await DeviceService.GetDeviceAsync(DeviceId);
+        if (device is null) return;
+        await LoadStatusHistory();
+        await StartSignalR();
+    }
+
+    private async Task SwitchTab(string tab)
+    {
+        activeTab = tab;
+        switch (tab)
+        {
+            case "history" when statusHistory is null: await LoadStatusHistory(); break;
+            case "messages" when messages is null: await LoadMessages(); break;
+            case "config" when resolvedConfig is null: await LoadConfig(); break;
+            case "datastore" when dataEntries is null: await LoadDataStore(); break;
+        }
+    }
+
+    private async Task LoadStatusHistory()
+    {
+        try { statusHistory = await DeviceService.GetStatusHistoryAsync(DeviceId); }
+        catch { statusHistory = []; }
+    }
+
+    private async Task LoadMessages()
+    {
+        try { messages = await MessageService.GetMessagesAsync(DeviceId, 0, 100); }
+        catch { messages = []; }
+    }
+
+    private async Task LoadConfig()
+    {
+        try { resolvedConfig = await ConfigService.GetResolvedConfigAsync(DeviceId); }
+        catch { resolvedConfig = []; }
+    }
+
+    private async Task LoadDataStore()
+    {
+        try { dataEntries = await DataStoreService.GetDeviceEntriesAsync(DeviceId); }
+        catch { dataEntries = []; }
+    }
+
+    private async Task SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(msgType) || string.IsNullOrWhiteSpace(msgContent)) return;
+        sending = true;
+        try
+        {
+            await MessageService.AddMessageAsync(new ServerMessage
+            {
+                DeviceId = DeviceId,
+                Direction = MessageDirection.ServerToDevice,
+                MessageType = msgType,
+                Content = msgContent,
+                Status = MessageStatus.Sent,
+                CreatedAt = DateTime.UtcNow
+            });
+            msgType = msgContent = string.Empty;
+            await LoadMessages();
+        }
+        finally { sending = false; }
+    }
+
+    private async Task StartSignalR()
+    {
+        try
+        {
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(Navigation.ToAbsoluteUri(HubConstants.DeviceHubPath))
+                .WithAutomaticReconnect()
+                .Build();
+
+            hubConnection.On<string>(HubConstants.DashboardMethods.DeviceStatusUpdated, async id =>
+            {
+                if (id == DeviceId)
+                {
+                    device = await DeviceService.GetDeviceAsync(DeviceId);
+                    statusHistory = null;
+                    await LoadStatusHistory();
+                    await InvokeAsync(StateHasChanged);
+                }
+            });
+
+            await hubConnection.StartAsync();
+            await hubConnection.InvokeAsync("JoinGroup", HubConstants.Groups.Dashboard);
+        }
+        catch { /* Non-fatal */ }
+    }
+
+    private void GoBack() => Navigation.NavigateTo("/devices");
+
+    private static string GetStatusClass(DeviceConnectionStatus status) => status switch
+    {
+        DeviceConnectionStatus.Active => "active",
+        DeviceConnectionStatus.Warning => "warning",
+        DeviceConnectionStatus.Error => "error",
+        _ => "inactive"
+    };
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+}
