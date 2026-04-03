@@ -7,7 +7,7 @@ Console.WriteLine("║  DeviceManager Test Client           ║");
 Console.WriteLine("╚══════════════════════════════════════╝");
 Console.WriteLine();
 
-var serverUrl = args.Length > 0 ? args[0] : "https://localhost:7125";
+var serverUrl = args.Length > 0 ? args[0] : "https://localhost:7400";
 var useGrpc = args.Any(a => a.Equals("--grpc", StringComparison.OrdinalIgnoreCase));
 
 using var loggerFactory = LoggerFactory.Create(builder =>

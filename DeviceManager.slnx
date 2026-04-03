@@ -16,5 +16,5 @@
   <Project Path="DeviceManager.Server.Core/DeviceManager.Server.Core.csproj" />
   <Project Path="DeviceManager.Shared/DeviceManager.Shared.csproj" />
   <Project Path="DeviceManager.TestClient/DeviceManager.TestClient.csproj" />
-  <Project Path="DeviceManager/DeviceManager.csproj" Id="01e051bf-6a46-42d0-ba8b-8925ca160e58" />
+  <Project Path="DeviceManager/DeviceManager.csproj" />
 </Solution>
