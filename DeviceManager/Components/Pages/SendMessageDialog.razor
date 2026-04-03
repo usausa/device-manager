@@ -1,0 +1,15 @@
+@* Send message dialog *@
+<MudDialog>
+    <DialogContent>
+        <MudTextField @bind-Value="deviceId" Label="Device ID (blank=broadcast)"
+                      Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-2" />
+        <MudTextField @bind-Value="messageType" Label="Message Type" Required="true"
+                      Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-2" />
+        <MudTextField @bind-Value="content" Label="Content" Required="true" Lines="4"
+                      Variant="Variant.Outlined" Margin="Margin.Dense" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SendAsync">Send</MudButton>
+    </DialogActions>
+</MudDialog>

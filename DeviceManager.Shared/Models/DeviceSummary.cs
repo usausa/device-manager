@@ -9,6 +9,8 @@ public sealed class DeviceSummary
     public int Level { get; init; }
     public double Progress { get; init; }
     public int? Battery { get; init; }
+    public int? WifiRssi { get; init; }
+    public IDictionary<string, double>? ProgressValues { get; init; }
     public DateTime? LastConnectedAt { get; init; }
     public DateTime? StatusTimestamp { get; init; }
 }

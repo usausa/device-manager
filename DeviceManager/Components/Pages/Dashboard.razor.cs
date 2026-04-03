@@ -1,0 +1,117 @@
+namespace DeviceManager.Components.Pages;
+
+using Microsoft.AspNetCore.Components;
+
+public partial class Dashboard : IDisposable
+{
+    [Inject] public DeviceService DeviceService { get; set; } = default!;
+    [Inject] public NavigationManager Navigation { get; set; } = default!;
+    [Inject] public IDialogService DialogService { get; set; } = default!;
+    [Inject] public ISnackbar Snackbar { get; set; } = default!;
+    [Inject] public AppEventBus EventBus { get; set; } = default!;
+
+    private StatusSummary? summary;
+    private List<DeviceSummary>? devices;
+    private string searchText = string.Empty;
+
+    private IDisposable? connectedSub;
+    private IDisposable? disconnectedSub;
+    private IDisposable? statusSub;
+
+    private IEnumerable<DeviceSummary> FilteredDevices => devices ?? [];
+
+    private bool DeviceFilter(DeviceSummary d) =>
+        string.IsNullOrEmpty(searchText)
+        || d.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+        || (d.Group?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false)
+        || d.DeviceId.Contains(searchText, StringComparison.OrdinalIgnoreCase);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+
+        connectedSub = EventBus.Subscribe(AppEvents.DeviceConnected, _ => ReloadAsync());
+        disconnectedSub = EventBus.Subscribe(AppEvents.DeviceDisconnected, _ => ReloadAsync());
+        statusSub = EventBus.Subscribe(AppEvents.DeviceStatusUpdated, _ => ReloadAsync());
+    }
+
+    private async Task ReloadAsync()
+    {
+        await LoadDataAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadDataAsync()
+    {
+        summary = await DeviceService.GetStatusSummaryAsync();
+        devices = await DeviceService.GetAllDevicesAsync();
+    }
+
+    private void NavigateToDevice(string deviceId) => Navigation.NavigateTo($"/devices/{deviceId}");
+
+    private async Task ShowAddDialog()
+    {
+        var dialog = await DialogService.ShowAsync<DeviceEditDialog>("Add Device");
+        var result = await dialog.Result;
+        if (result is { Canceled: false })
+        {
+            await LoadDataAsync();
+        }
+    }
+
+    internal static string GetStatusIcon(DeviceConnectionStatus status) => status switch
+    {
+        DeviceConnectionStatus.Active => Icons.Material.Filled.CheckCircle,
+        DeviceConnectionStatus.Warning => Icons.Material.Filled.Warning,
+        DeviceConnectionStatus.Error => Icons.Material.Filled.Error,
+        _ => Icons.Material.Filled.RadioButtonUnchecked
+    };
+
+    internal static Color GetStatusColor(DeviceConnectionStatus status) => status switch
+    {
+        DeviceConnectionStatus.Active => Color.Success,
+        DeviceConnectionStatus.Warning => Color.Warning,
+        DeviceConnectionStatus.Error => Color.Error,
+        _ => Color.Default
+    };
+
+    internal static string GetWifiStyle(int rssi)
+    {
+        var color = rssi switch
+        {
+            > -50 => "#43A047",
+            > -70 => "#FB8C00",
+            _ => "#E53935"
+        };
+        return $"color:{color};font-size:0.75rem";
+    }
+
+    internal static string GetBatteryStyle(int battery)
+    {
+        var color = battery switch
+        {
+            > 50 => "#43A047",
+            > 20 => "#FB8C00",
+            _ => "#E53935"
+        };
+        return $"color:{color};font-size:0.75rem";
+    }
+
+    private static string FormatDateTime(DateTime? dt)
+    {
+        if (dt is null) return "-";
+        var local = dt.Value.ToLocalTime();
+        var diff = DateTime.Now - local;
+        if (diff.TotalMinutes < 1) return "Just now";
+        if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes}m ago";
+        if (diff.TotalHours < 24) return $"{(int)diff.TotalHours}h ago";
+        return local.ToString("MM/dd HH:mm");
+    }
+
+    public void Dispose()
+    {
+        connectedSub?.Dispose();
+        disconnectedSub?.Dispose();
+        statusSub?.Dispose();
+    }
+}

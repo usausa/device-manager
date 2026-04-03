@@ -28,6 +28,9 @@ builder.Services.AddRazorComponents()
 // MudBlazor
 builder.Services.AddMudServices();
 
+// Application event bus (replaces per-page SignalR client connections)
+builder.Services.AddSingleton<AppEventBus>();
+
 // SignalR
 builder.Services.AddSignalR();
 

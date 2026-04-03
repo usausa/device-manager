@@ -1,0 +1,21 @@
+@* Config entry add/edit dialog *@
+<MudDialog>
+    <DialogContent>
+        <MudTextField @bind-Value="key" Label="Key" Required="true" Disabled="!IsNew"
+                      Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-2" />
+        <MudTextField @bind-Value="value" Label="Value" Required="true" Lines="3"
+                      Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-2" />
+        <MudSelect @bind-Value="valueType" Label="Type" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-2">
+            <MudSelectItem Value="@("string")">string</MudSelectItem>
+            <MudSelectItem Value="@("int")">int</MudSelectItem>
+            <MudSelectItem Value="@("bool")">bool</MudSelectItem>
+            <MudSelectItem Value="@("json")">json</MudSelectItem>
+        </MudSelect>
+        <MudTextField @bind-Value="description" Label="Description"
+                      Variant="Variant.Outlined" Margin="Margin.Dense" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAsync">Save</MudButton>
+    </DialogActions>
+</MudDialog>

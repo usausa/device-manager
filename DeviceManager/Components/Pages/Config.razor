@@ -1,180 +1,36 @@
 @page "/config"
 @rendermode InteractiveServer
-@inject ConfigService ConfigService
-@inject ISnackbar Snackbar
 
-<PageTitle>Configuration - DeviceManager</PageTitle>
+<PageTitle>Config - DeviceManager</PageTitle>
 
-<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4">
-    <MudText Typo="Typo.h5">
-        <MudIcon Icon="@Icons.Material.Filled.Tune" Class="mr-2" />Configuration
-    </MudText>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
-               OnClick="ShowAddForm">Add Entry</MudButton>
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+    <MudTextField @bind-Value="searchText" Placeholder="Search..." Immediate="true"
+                  Variant="Variant.Outlined" Margin="Margin.Dense" Style="max-width:250px"
+                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Small" />
+    <MudSpacer />
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+               StartIcon="@Icons.Material.Filled.Add" OnClick="ShowAddDialogAsync">Add Config</MudButton>
 </MudStack>
 
-@if (_showForm)
-{
-    <MudPaper Class="pa-4 mb-4" Elevation="2">
-        <MudText Typo="Typo.h6" Class="mb-4">@(_isEditing ? "Edit Configuration" : "Add Configuration")</MudText>
-        <MudGrid Spacing="2">
-            <MudItem xs="12" sm="6">
-                <MudTextField @bind-Value="_formKey" Label="Key" Placeholder="config.key"
-                              Variant="Variant.Outlined" Required="true" Disabled="_isEditing" />
-            </MudItem>
-            <MudItem xs="12" sm="6">
-                <MudTextField @bind-Value="_formValue" Label="Value" Variant="Variant.Outlined" />
-            </MudItem>
-            <MudItem xs="12" sm="6">
-                <MudSelect @bind-Value="_formType" Label="Type" Variant="Variant.Outlined">
-                    <MudSelectItem Value="@("String")">String</MudSelectItem>
-                    <MudSelectItem Value="@("Int")">Int</MudSelectItem>
-                    <MudSelectItem Value="@("Bool")">Bool</MudSelectItem>
-                    <MudSelectItem Value="@("Json")">Json</MudSelectItem>
-                </MudSelect>
-            </MudItem>
-            <MudItem xs="12" sm="6">
-                <MudTextField @bind-Value="_formDescription" Label="Description"
-                              Variant="Variant.Outlined" />
-            </MudItem>
-        </MudGrid>
-        <MudStack Row="true" Spacing="2" Class="mt-4">
-            <MudButton Variant="Variant.Outlined" OnClick="CloseForm">Cancel</MudButton>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveEntry"
-                       Disabled="_saving" StartIcon="@Icons.Material.Filled.Save">
-                @(_saving ? "Saving..." : "Save")
-            </MudButton>
-        </MudStack>
-    </MudPaper>
-}
-
-<MudCard>
-    <MudCardContent Class="pa-0">
-        <MudTable Items="@FilteredEntries" Hover="true" Dense="true" Elevation="0"
-                  QuickFilter="FilterEntry" T="ConfigEntry">
-            <ToolBarContent>
-                <MudTextField @bind-Value="_searchText" Placeholder="Filter by key..."
-                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
-                              IconSize="Size.Medium" Class="mt-0" Immediate="true" />
-                <MudSpacer />
-                <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" OnClick="LoadEntries" />
-            </ToolBarContent>
-            <HeaderContent>
-                <MudTh>Key</MudTh>
-                <MudTh>Value</MudTh>
-                <MudTh>Type</MudTh>
-                <MudTh>Description</MudTh>
-                <MudTh Style="width:100px;">Actions</MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd DataLabel="Key">
-                    <MudText Typo="Typo.body2" Style="font-family:monospace">@context.Key</MudText>
-                </MudTd>
-                <MudTd DataLabel="Value">
-                    <MudText Typo="Typo.body2" Style="font-family:monospace">@context.Value</MudText>
-                </MudTd>
-                <MudTd DataLabel="Type">
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default">
-                        @context.ValueType
-                    </MudChip>
-                </MudTd>
-                <MudTd DataLabel="Description">
-                    <MudText Typo="Typo.body2" Class="mud-text-secondary">@(context.Description ?? "-")</MudText>
-                </MudTd>
-                <MudTd>
-                    <MudStack Row="true" Spacing="0">
-                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Primary"
-                                       OnClick="() => ShowEditForm(context)" />
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
-                                       OnClick="() => DeleteEntry(context)" />
-                    </MudStack>
-                </MudTd>
-            </RowTemplate>
-            <NoRecordsContent>
-                <MudText Class="pa-4 mud-text-secondary">No configuration entries.</MudText>
-            </NoRecordsContent>
-        </MudTable>
-    </MudCardContent>
-</MudCard>
-
-@code {
-    private List<ConfigEntry>? _entries;
-    private string _searchText = string.Empty;
-    private bool _showForm;
-    private bool _isEditing;
-    private bool _saving;
-    private string _formKey = string.Empty;
-    private string _formValue = string.Empty;
-    private string _formType = "String";
-    private string _formDescription = string.Empty;
-
-    private IEnumerable<ConfigEntry> FilteredEntries => _entries ?? [];
-
-    private bool FilterEntry(ConfigEntry e) =>
-        string.IsNullOrEmpty(_searchText)
-        || e.Key.Contains(_searchText, StringComparison.OrdinalIgnoreCase);
-
-    protected override async Task OnInitializedAsync() => await LoadEntries();
-
-    private async Task LoadEntries()
-    {
-        try { _entries = await ConfigService.GetCommonConfigAsync(); }
-        catch (Exception ex)
-        {
-            Snackbar.Add(ex.Message, Severity.Error);
-            _entries = [];
-        }
-    }
-
-    private void ShowAddForm()
-    {
-        _isEditing = false;
-        _formKey = _formValue = _formDescription = string.Empty;
-        _formType = "String";
-        _showForm = true;
-    }
-
-    private void ShowEditForm(ConfigEntry entry)
-    {
-        _isEditing = true;
-        _formKey = entry.Key;
-        _formValue = entry.Value;
-        _formType = entry.ValueType;
-        _formDescription = entry.Description ?? string.Empty;
-        _showForm = true;
-    }
-
-    private void CloseForm() => _showForm = false;
-
-    private async Task SaveEntry()
-    {
-        _saving = true;
-        try
-        {
-            var key = _formKey.Trim();
-            await ConfigService.SetCommonConfigAsync(key, new ConfigEntry
-            {
-                Key = key,
-                Value = _formValue,
-                ValueType = _formType,
-                Description = string.IsNullOrWhiteSpace(_formDescription) ? null : _formDescription.Trim()
-            });
-            _showForm = false;
-            Snackbar.Add($"Configuration entry '{key}' saved.", Severity.Success);
-            await LoadEntries();
-        }
-        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
-        finally { _saving = false; }
-    }
-
-    private async Task DeleteEntry(ConfigEntry entry)
-    {
-        try
-        {
-            await ConfigService.DeleteCommonConfigAsync(entry.Key);
-            Snackbar.Add($"Deleted '{entry.Key}'.", Severity.Success);
-            await LoadEntries();
-        }
-        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
-    }
-}
+<MudTable Items="FilteredEntries" Dense="true" Hover="true" Elevation="1" Loading="isLoading" T="ConfigEntry">
+    <HeaderContent>
+        <MudTh>Key</MudTh>
+        <MudTh>Value</MudTh>
+        <MudTh Style="width:80px">Type</MudTh>
+        <MudTh>Description</MudTh>
+        <MudTh Style="width:100px"></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd Style="font-family:monospace">@context.Key</MudTd>
+        <MudTd Style="font-family:monospace">@context.Value</MudTd>
+        <MudTd>@context.ValueType</MudTd>
+        <MudTd Class="mud-text-secondary">@(context.Description ?? "")</MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => ShowEditDialogAsync(context)" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="() => DeleteAsync(context)" />
+        </MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText Class="pa-4 mud-text-secondary">No config entries.</MudText>
+    </NoRecordsContent>
+</MudTable>

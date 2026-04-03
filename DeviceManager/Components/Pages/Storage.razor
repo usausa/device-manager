@@ -1,89 +1,57 @@
 @page "/storage"
+@page "/storage/{*SubPath}"
 @rendermode InteractiveServer
-@inject DataStoreService DataStoreService
 
 <PageTitle>Storage - DeviceManager</PageTitle>
 
-<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4">
-    <MudText Typo="Typo.h5">
-        <MudIcon Icon="@Icons.Material.Filled.Folder" Class="mr-2" />Storage
-    </MudText>
-    <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" OnClick="LoadData" />
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+    <MudBreadcrumbs Items="breadcrumbs" Class="pa-0" />
+    <MudSpacer />
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+               StartIcon="@Icons.Material.Filled.CreateNewFolder" OnClick="ShowNewFolderDialogAsync">New Folder</MudButton>
+    <MudFileUpload T="IReadOnlyList<IBrowserFile>" FilesChanged="UploadFilesAsync" MaximumFileCount="20">
+        <ActivatorContent>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                       StartIcon="@Icons.Material.Filled.Upload">Upload</MudButton>
+        </ActivatorContent>
+    </MudFileUpload>
 </MudStack>
 
-<MudGrid Spacing="2" Class="mb-4">
-    <MudItem xs="12" sm="4">
-        <MudCard Class="border-b-4 border-solid mud-border-primary">
-            <MudCardContent Class="pa-3">
-                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                    <MudIcon Icon="@Icons.Material.Filled.Storage" Color="Color.Primary" />
-                    <MudText Typo="Typo.subtitle1">Total Entries</MudText>
-                </MudStack>
-                <MudText Typo="Typo.h3" Align="Align.Center" Class="mt-1">@_totalEntries</MudText>
-            </MudCardContent>
-        </MudCard>
-    </MudItem>
-</MudGrid>
-
-<MudCard>
-    <MudCardHeader>
-        <CardHeaderContent>
-            <MudText Typo="Typo.h6">Common Storage Entries</MudText>
-        </CardHeaderContent>
-    </MudCardHeader>
-    <MudCardContent Class="pa-0">
-        <MudTable Items="@FilteredEntries" Hover="true" Dense="true" Elevation="0"
-                  QuickFilter="FilterEntry" T="DataStoreEntry">
-            <ToolBarContent>
-                <MudTextField @bind-Value="_searchText" Placeholder="Filter by key..."
-                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
-                              IconSize="Size.Medium" Class="mt-0" Immediate="true" />
-            </ToolBarContent>
-            <HeaderContent>
-                <MudTh>Key</MudTh>
-                <MudTh>Value</MudTh>
-                <MudTh>Updated</MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd DataLabel="Key">
-                    <MudText Typo="Typo.body2" Style="font-family:monospace">@context.Key</MudText>
-                </MudTd>
-                <MudTd DataLabel="Value" Style="max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                    <MudText Typo="Typo.body2" Style="font-family:monospace" title="@context.Value">@context.Value</MudText>
-                </MudTd>
-                <MudTd DataLabel="Updated">
-                    <MudText Typo="Typo.body2" Class="mud-text-secondary">
-                        @context.UpdatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
-                    </MudText>
-                </MudTd>
-            </RowTemplate>
-            <NoRecordsContent>
-                <MudText Class="pa-4 mud-text-secondary">No storage entries found.</MudText>
-            </NoRecordsContent>
-        </MudTable>
-    </MudCardContent>
-</MudCard>
-
-@code {
-    private List<DataStoreEntry>? _entries;
-    private string _searchText = string.Empty;
-    private int _totalEntries;
-
-    private IEnumerable<DataStoreEntry> FilteredEntries => _entries ?? [];
-
-    private bool FilterEntry(DataStoreEntry e) =>
-        string.IsNullOrEmpty(_searchText)
-        || e.Key.Contains(_searchText, StringComparison.OrdinalIgnoreCase);
-
-    protected override async Task OnInitializedAsync() => await LoadData();
-
-    private async Task LoadData()
-    {
-        try
-        {
-            _entries = await DataStoreService.GetCommonEntriesAsync();
-            _totalEntries = _entries.Count;
-        }
-        catch { _entries = []; _totalEntries = 0; }
-    }
+@if (isLoading)
+{
+    <MudProgressLinear Indeterminate="true" />
+}
+else
+{
+    <MudTable Items="entries" Dense="true" Hover="true" Elevation="1" T="StorageEntry"
+              OnRowClick="row => OnRowClickAsync(row.Item!)">
+        <HeaderContent>
+            <MudTh Style="width:36px"></MudTh>
+            <MudTh>Name</MudTh>
+            <MudTh Style="width:100px">Size</MudTh>
+            <MudTh Style="width:150px">Modified</MudTh>
+            <MudTh Style="width:80px"></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>
+                <MudIcon Icon="@(context.IsDirectory ? Icons.Material.Filled.Folder : Icons.Material.Filled.InsertDriveFile)"
+                         Color="@(context.IsDirectory ? Color.Warning : Color.Default)" Size="Size.Small" />
+            </MudTd>
+            <MudTd>@context.Name</MudTd>
+            <MudTd><MudText Typo="Typo.body2" Class="mud-text-secondary">@(context.IsDirectory ? "" : FormatSize(context.Length))</MudText></MudTd>
+            <MudTd><MudText Typo="Typo.body2" Class="mud-text-secondary">@context.LastModified?.ToLocalTime().ToString("MM/dd HH:mm")</MudText></MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                               OnClick="() => DeleteAsync(context)" />
+                @if (!context.IsDirectory)
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.Download" Size="Size.Small"
+                                   Href="@GetDownloadUrl(context)" Target="_blank" />
+                }
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Class="pa-4 mud-text-secondary">Empty folder.</MudText>
+        </NoRecordsContent>
+    </MudTable>
 }

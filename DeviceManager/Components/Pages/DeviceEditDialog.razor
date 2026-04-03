@@ -1,0 +1,26 @@
+@* Device add/edit dialog *@
+<MudDialog>
+    <TitleContent>@(string.IsNullOrEmpty(DeviceId) ? "Add Device" : "Edit Device")</TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="formDeviceId" Label="Device ID" Disabled="IsEdit" Required="true"
+                      Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-2" />
+        <MudTextField @bind-Value="formName" Label="Name" Required="true"
+                      Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-2" />
+        <MudTextField @bind-Value="formPlatform" Label="Platform"
+                      Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-2" />
+        <MudTextField @bind-Value="formGroup" Label="Group"
+                      Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-2" />
+        <MudTextField @bind-Value="formTags" Label="Tags (comma-separated)"
+                      Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-2" />
+        <MudTextField @bind-Value="formNote" Label="Note"
+                      Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-2" />
+        @if (IsEdit)
+        {
+            <MudSwitch @bind-Value="formIsEnabled" Color="Color.Primary" Label="Enabled" />
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAsync">Save</MudButton>
+    </DialogActions>
+</MudDialog>

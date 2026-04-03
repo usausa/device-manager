@@ -1,255 +1,114 @@
 @page "/"
 @rendermode InteractiveServer
-@inject DeviceService DeviceService
-@inject NavigationManager Navigation
-@implements IAsyncDisposable
 
 <PageTitle>Dashboard - DeviceManager</PageTitle>
 
 @if (summary is null)
 {
-    <MudProgressCircular Indeterminate="true" Class="ma-4" />
+    <MudProgressLinear Indeterminate="true" />
 }
 else
 {
-    <MudGrid Spacing="2" Class="mb-4">
-        <MudItem xs="12" sm="6" md="3">
-            <MudCard Class="border-b-4 border-solid mud-border-primary">
-                <MudCardContent Class="pa-3">
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                        <MudIcon Icon="@Icons.Material.Filled.Devices" Color="Color.Primary" />
-                        <MudText Typo="Typo.subtitle1">Total Devices</MudText>
-                    </MudStack>
-                    <MudText Typo="Typo.h3" Align="Align.Center" Class="mt-1">@summary.Total</MudText>
-                </MudCardContent>
-            </MudCard>
+    <MudGrid Spacing="1" Class="mb-2">
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-2 d-flex align-center gap-2">
+                <MudIcon Icon="@Icons.Material.Filled.Devices" Color="Color.Primary" />
+                <div>
+                    <MudText Typo="Typo.caption">Total</MudText>
+                    <MudText Typo="Typo.h6">@summary.Total</MudText>
+                </div>
+            </MudPaper>
         </MudItem>
-        <MudItem xs="12" sm="6" md="3">
-            <MudCard Class="border-b-4 border-solid mud-border-success">
-                <MudCardContent Class="pa-3">
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
-                        <MudText Typo="Typo.subtitle1">Active</MudText>
-                    </MudStack>
-                    <MudText Typo="Typo.h3" Align="Align.Center" Class="mt-1">@summary.Active</MudText>
-                </MudCardContent>
-            </MudCard>
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-2 d-flex align-center gap-2">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+                <div>
+                    <MudText Typo="Typo.caption">Active</MudText>
+                    <MudText Typo="Typo.h6">@summary.Active</MudText>
+                </div>
+            </MudPaper>
         </MudItem>
-        <MudItem xs="12" sm="6" md="3">
-            <MudCard Class="border-b-4 border-solid mud-border-warning">
-                <MudCardContent Class="pa-3">
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                        <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" />
-                        <MudText Typo="Typo.subtitle1">Warning</MudText>
-                    </MudStack>
-                    <MudText Typo="Typo.h3" Align="Align.Center" Class="mt-1">@summary.Warning</MudText>
-                </MudCardContent>
-            </MudCard>
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-2 d-flex align-center gap-2">
+                <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" />
+                <div>
+                    <MudText Typo="Typo.caption">Warning</MudText>
+                    <MudText Typo="Typo.h6">@summary.Warning</MudText>
+                </div>
+            </MudPaper>
         </MudItem>
-        <MudItem xs="12" sm="6" md="3">
-            <MudCard Class="border-b-4 border-solid mud-border-error">
-                <MudCardContent Class="pa-3">
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                        <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" />
-                        <MudText Typo="Typo.subtitle1">Error</MudText>
-                    </MudStack>
-                    <MudText Typo="Typo.h3" Align="Align.Center" Class="mt-1">@summary.Error</MudText>
-                </MudCardContent>
-            </MudCard>
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-2 d-flex align-center gap-2">
+                <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error" />
+                <div>
+                    <MudText Typo="Typo.caption">Error</MudText>
+                    <MudText Typo="Typo.h6">@summary.Error</MudText>
+                </div>
+            </MudPaper>
         </MudItem>
     </MudGrid>
 
-    <MudGrid Spacing="2">
-        <MudItem xs="12" md="4">
-            <MudCard>
-                <MudCardHeader>
-                    <CardHeaderContent>
-                        <MudText Typo="Typo.h6">Device Status</MudText>
-                    </CardHeaderContent>
-                </MudCardHeader>
-                <MudCardContent>
-                    <MudChart ChartType="ChartType.Bar"
-                              ChartSeries="_chartSeries"
-                              XAxisLabels="_chartLabels"
-                              ChartOptions="_chartOptions"
-                              Width="100%" Height="240px" />
-                </MudCardContent>
-            </MudCard>
-        </MudItem>
-        <MudItem xs="12" md="8">
-            <MudCard>
-                <MudCardHeader>
-                    <CardHeaderContent>
-                        <MudText Typo="Typo.h6">Recent Devices</MudText>
-                    </CardHeaderContent>
-                    <CardHeaderActions>
-                        <MudButton Href="/devices" Variant="Variant.Text" Color="Color.Primary" Size="Size.Small"
-                                   EndIcon="@Icons.Material.Filled.ArrowForward">View All</MudButton>
-                    </CardHeaderActions>
-                </MudCardHeader>
-                <MudCardContent Class="pa-0">
-                    <MudTable Items="FilteredDevices" Hover="true" Dense="true" Elevation="0"
-                              OnRowClick="@(row => { if (row.Item is not null) NavigateToDevice(row.Item.DeviceId); })"
-                              T="DeviceSummary">
-                        <ToolBarContent>
-                            <MudTextField @bind-Value="_searchText" Placeholder="Search devices..."
-                                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
-                                          IconSize="Size.Medium" Class="mt-0" Immediate="true" />
-                        </ToolBarContent>
-                        <HeaderContent>
-                            <MudTh>Status</MudTh>
-                            <MudTh>Name</MudTh>
-                            <MudTh>Group</MudTh>
-                            <MudTh>Battery</MudTh>
-                            <MudTh>Last Connected</MudTh>
-                        </HeaderContent>
-                        <RowTemplate>
-                            <MudTd DataLabel="Status">
-                                <MudChip T="string" Color="@GetStatusColor(context.Status)" Size="Size.Small" Variant="Variant.Filled">
-                                    @context.Status
-                                </MudChip>
-                            </MudTd>
-                            <MudTd DataLabel="Name">@context.Name</MudTd>
-                            <MudTd DataLabel="Group">@(context.Group ?? "-")</MudTd>
-                            <MudTd DataLabel="Battery">
-                                @if (context.Battery.HasValue)
-                                {
-                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                                        <MudIcon Icon="@Icons.Material.Filled.Battery4Bar" Size="Size.Small" Color="@GetBatteryColor(context.Battery.Value)" />
-                                        <MudText Typo="Typo.body2">@context.Battery%</MudText>
-                                    </MudStack>
-                                }
-                                else
-                                {
-                                    <MudText Typo="Typo.body2" Class="mud-text-secondary">-</MudText>
-                                }
-                            </MudTd>
-                            <MudTd DataLabel="Last Connected">
-                                <MudText Typo="Typo.body2" Class="mud-text-secondary">@FormatDateTime(context.LastConnectedAt)</MudText>
-                            </MudTd>
-                        </RowTemplate>
-                        <NoRecordsContent>
-                            <MudText Class="pa-4 mud-text-secondary">No devices registered yet.</MudText>
-                        </NoRecordsContent>
-                    </MudTable>
-                </MudCardContent>
-            </MudCard>
-        </MudItem>
-    </MudGrid>
-}
-
-@code {
-    private StatusSummary? summary;
-    private List<DeviceSummary>? devices;
-    private string _searchText = string.Empty;
-    private HubConnection? hubConnection;
-
-    private List<ChartSeries<double>> _chartSeries = new();
-    private readonly string[] _chartLabels = ["Active", "Warning", "Error", "Inactive"];
-    private readonly BarChartOptions _chartOptions = new()
-    {
-        ChartPalette = ["#43A047", "#FB8C00", "#E53935", "#90A4AE"]
-    };
-
-    private IEnumerable<DeviceSummary> FilteredDevices => devices?
-        .Where(d => string.IsNullOrEmpty(_searchText)
-            || d.Name.Contains(_searchText, StringComparison.OrdinalIgnoreCase)
-            || (d.Group?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false)
-            || d.DeviceId.Contains(_searchText, StringComparison.OrdinalIgnoreCase))
-        .Take(20) ?? [];
-
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadData();
-        await StartSignalR();
-    }
-
-    private async Task LoadData()
-    {
-        summary = await DeviceService.GetStatusSummaryAsync();
-        devices = await DeviceService.GetAllDevicesAsync();
-        UpdateChart();
-    }
-
-    private void UpdateChart()
-    {
-        if (summary is null) return;
-        _chartSeries =
-        [
-            new ChartSeries<double>
-            {
-                Name = "Devices",
-                Data = new ChartData<double>([summary.Active, summary.Warning, summary.Error, summary.Inactive])
-            }
-        ];
-    }
-
-    private async Task StartSignalR()
-    {
-        try
-        {
-            hubConnection = new HubConnectionBuilder()
-                .WithUrl(Navigation.ToAbsoluteUri(HubConstants.DeviceHubPath))
-                .WithAutomaticReconnect()
-                .Build();
-
-            hubConnection.On<string>(HubConstants.DashboardMethods.DeviceConnected, async _ =>
-            {
-                await LoadData();
-                await InvokeAsync(StateHasChanged);
-            });
-
-            hubConnection.On<string>(HubConstants.DashboardMethods.DeviceDisconnected, async _ =>
-            {
-                await LoadData();
-                await InvokeAsync(StateHasChanged);
-            });
-
-            hubConnection.On<string>(HubConstants.DashboardMethods.DeviceStatusUpdated, async _ =>
-            {
-                await LoadData();
-                await InvokeAsync(StateHasChanged);
-            });
-
-            await hubConnection.StartAsync();
-            await hubConnection.InvokeAsync("JoinGroup", HubConstants.Groups.Dashboard);
-        }
-        catch
-        {
-            // SignalR connection failure is non-fatal
-        }
-    }
-
-    private void NavigateToDevice(string deviceId) => Navigation.NavigateTo($"/devices/{deviceId}");
-
-    private static Color GetStatusColor(DeviceConnectionStatus status) => status switch
-    {
-        DeviceConnectionStatus.Active => Color.Success,
-        DeviceConnectionStatus.Warning => Color.Warning,
-        DeviceConnectionStatus.Error => Color.Error,
-        _ => Color.Default
-    };
-
-    private static Color GetBatteryColor(int battery) => battery switch
-    {
-        > 50 => Color.Success,
-        > 20 => Color.Warning,
-        _ => Color.Error
-    };
-
-    private static string FormatDateTime(DateTime? dt)
-    {
-        if (dt is null) return "Never";
-        var local = dt.Value.ToLocalTime();
-        var diff = DateTime.Now - local;
-        if (diff.TotalMinutes < 1) return "Just now";
-        if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes}m ago";
-        if (diff.TotalHours < 24) return $"{(int)diff.TotalHours}h ago";
-        return local.ToString("MMM dd, HH:mm");
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (hubConnection is not null) await hubConnection.DisposeAsync();
-    }
+    <MudTable Items="FilteredDevices" Dense="true" Hover="true" Elevation="1"
+              QuickFilter="DeviceFilter" T="DeviceSummary"
+              OnRowClick="row => NavigateToDevice(row.Item!.DeviceId)">
+        <ToolBarContent>
+            <MudTextField @bind-Value="searchText" Placeholder="Search..." Immediate="true"
+                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                          IconSize="Size.Small" Class="mt-0" Style="max-width:300px" />
+            <MudSpacer />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                       StartIcon="@Icons.Material.Filled.Add" OnClick="ShowAddDialog">Add Device</MudButton>
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh Style="width:36px"></MudTh>
+            <MudTh>Name</MudTh>
+            <MudTh>Group</MudTh>
+            <MudTh Style="width:40px"><MudIcon Icon="@Icons.Material.Filled.Wifi" Size="Size.Small" /></MudTh>
+            <MudTh Style="width:40px"><MudIcon Icon="@Icons.Material.Filled.BatteryFull" Size="Size.Small" /></MudTh>
+            <MudTh>Progress</MudTh>
+            <MudTh>Last Connected</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>
+                <MudIcon Icon="@GetStatusIcon(context.Status)" Color="@GetStatusColor(context.Status)" Size="Size.Small" />
+            </MudTd>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="Group">@(context.Group ?? "-")</MudTd>
+            <MudTd DataLabel="WiFi">
+                @if (context.WifiRssi.HasValue)
+                {
+                    <MudText Typo="Typo.body2" Style="@GetWifiStyle(context.WifiRssi.Value)">@context.WifiRssi dBm</MudText>
+                }
+            </MudTd>
+            <MudTd DataLabel="Battery">
+                @if (context.Battery.HasValue)
+                {
+                    <MudText Typo="Typo.body2" Style="@GetBatteryStyle(context.Battery.Value)">@context.Battery%</MudText>
+                }
+            </MudTd>
+            <MudTd DataLabel="Progress">
+                @if (context.ProgressValues is { Count: > 0 })
+                {
+                    @foreach (var kv in context.ProgressValues)
+                    {
+                        <MudTooltip Text="@kv.Key">
+                            <MudProgressLinear Value="kv.Value" Max="100" Color="Color.Primary"
+                                               Style="min-width:60px;height:6px" Class="my-1" />
+                        </MudTooltip>
+                    }
+                }
+                else
+                {
+                    <MudProgressLinear Value="context.Progress" Max="100" Color="Color.Primary"
+                                       Style="min-width:60px;height:6px" />
+                }
+            </MudTd>
+            <MudTd DataLabel="Last Connected">
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">@FormatDateTime(context.LastConnectedAt)</MudText>
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Class="pa-4 mud-text-secondary">No devices.</MudText>
+        </NoRecordsContent>
+    </MudTable>
 }

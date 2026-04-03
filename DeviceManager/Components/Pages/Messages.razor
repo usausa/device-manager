@@ -1,151 +1,36 @@
 @page "/messages"
 @rendermode InteractiveServer
-@inject MessageService MessageService
-@inject DeviceService DeviceService
-@inject ISnackbar Snackbar
 
 <PageTitle>Messages - DeviceManager</PageTitle>
 
-<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4">
-    <MudText Typo="Typo.h5">
-        <MudIcon Icon="@Icons.Material.Filled.Message" Class="mr-2" />Messages
-    </MudText>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Send"
-               OnClick="ShowSendForm">Send Message</MudButton>
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+    <MudTextField @bind-Value="filterDeviceId" Placeholder="Filter by Device ID" Immediate="true"
+                  Variant="Variant.Outlined" Margin="Margin.Dense" Style="max-width:250px"
+                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.FilterList" IconSize="Size.Small" />
+    <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="LoadAsync">Refresh</MudButton>
+    <MudSpacer />
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+               StartIcon="@Icons.Material.Filled.Send" OnClick="ShowSendDialogAsync">Send Message</MudButton>
 </MudStack>
 
-@if (_showSendForm)
-{
-    <MudPaper Class="pa-4 mb-4" Elevation="2">
-        <MudText Typo="Typo.h6" Class="mb-4">Send Message to Device</MudText>
-        <MudGrid Spacing="2">
-            <MudItem xs="12" sm="4">
-                <MudTextField @bind-Value="_sendDeviceId" Label="Device ID" Placeholder="device-id"
-                              Variant="Variant.Outlined" Required="true" />
-            </MudItem>
-            <MudItem xs="12" sm="4">
-                <MudTextField @bind-Value="_sendType" Label="Message Type" Placeholder="message.type"
-                              Variant="Variant.Outlined" Required="true" />
-            </MudItem>
-            <MudItem xs="12" sm="4">
-                <MudTextField @bind-Value="_sendContent" Label="Content" Placeholder="Message content..."
-                              Variant="Variant.Outlined" Lines="1" />
-            </MudItem>
-        </MudGrid>
-        <MudStack Row="true" Spacing="2" Class="mt-4">
-            <MudButton Variant="Variant.Outlined" OnClick="CloseSendForm">Cancel</MudButton>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SendMessage"
-                       Disabled="_sending" StartIcon="@Icons.Material.Filled.Send">
-                @(_sending ? "Sending..." : "Send")
-            </MudButton>
-        </MudStack>
-    </MudPaper>
-}
-
-<MudCard>
-    <MudCardContent Class="pa-0">
-        <MudTable Items="@FilteredMessages" Hover="true" Dense="true" Elevation="0" T="ServerMessage">
-            <ToolBarContent>
-                <MudTextField @bind-Value="_filterDeviceId" Placeholder="Filter by device ID..."
-                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
-                              IconSize="Size.Medium" Class="mt-0" Immediate="true" />
-                <MudSpacer />
-                <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" OnClick="LoadMessages" />
-            </ToolBarContent>
-            <HeaderContent>
-                <MudTh>Device</MudTh>
-                <MudTh>Direction</MudTh>
-                <MudTh>Type</MudTh>
-                <MudTh>Content</MudTh>
-                <MudTh>Status</MudTh>
-                <MudTh>Time</MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd DataLabel="Device">
-                    <MudLink Href="@($"/devices/{context.DeviceId}")" Typo="Typo.body2"
-                             Style="font-family:monospace">@context.DeviceId</MudLink>
-                </MudTd>
-                <MudTd DataLabel="Direction">
-                    <MudChip T="string"
-                             Color="@(context.Direction == MessageDirection.ServerToDevice ? Color.Primary : Color.Secondary)"
-                             Size="Size.Small" Variant="Variant.Outlined">
-                        @(context.Direction == MessageDirection.ServerToDevice ? "→ Device" : "← Server")
-                    </MudChip>
-                </MudTd>
-                <MudTd DataLabel="Type">
-                    <MudText Typo="Typo.body2" Style="font-family:monospace">@context.MessageType</MudText>
-                </MudTd>
-                <MudTd DataLabel="Content" Style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                    @context.Content
-                </MudTd>
-                <MudTd DataLabel="Status">@context.Status</MudTd>
-                <MudTd DataLabel="Time">
-                    <MudText Typo="Typo.body2" Class="mud-text-secondary" Style="white-space:nowrap">
-                        @context.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
-                    </MudText>
-                </MudTd>
-            </RowTemplate>
-            <NoRecordsContent>
-                <MudText Class="pa-4 mud-text-secondary">No messages found.</MudText>
-            </NoRecordsContent>
-        </MudTable>
-    </MudCardContent>
-</MudCard>
-
-@code {
-    private List<ServerMessage>? _messages;
-    private string _filterDeviceId = string.Empty;
-    private bool _showSendForm;
-    private bool _sending;
-    private string _sendDeviceId = string.Empty;
-    private string _sendType = string.Empty;
-    private string _sendContent = string.Empty;
-
-    private IEnumerable<ServerMessage> FilteredMessages => _messages?
-        .Where(m => string.IsNullOrEmpty(_filterDeviceId)
-            || (m.DeviceId?.Contains(_filterDeviceId, StringComparison.OrdinalIgnoreCase) ?? false))
-        ?? [];
-
-    protected override async Task OnInitializedAsync() => await LoadMessages();
-
-    private async Task LoadMessages()
-    {
-        try { _messages = await MessageService.GetMessagesAsync(null, 0, 200); }
-        catch { _messages = []; }
-    }
-
-    private void ShowSendForm()
-    {
-        _sendDeviceId = _sendType = _sendContent = string.Empty;
-        _showSendForm = true;
-    }
-
-    private void CloseSendForm() => _showSendForm = false;
-
-    private async Task SendMessage()
-    {
-        if (string.IsNullOrWhiteSpace(_sendDeviceId) || string.IsNullOrWhiteSpace(_sendType))
-        {
-            Snackbar.Add("Device ID and Message Type are required.", Severity.Warning);
-            return;
-        }
-
-        _sending = true;
-        try
-        {
-            await MessageService.AddMessageAsync(new ServerMessage
-            {
-                DeviceId = _sendDeviceId.Trim(),
-                Direction = MessageDirection.ServerToDevice,
-                MessageType = _sendType.Trim(),
-                Content = _sendContent,
-                Status = MessageStatus.Sent,
-                CreatedAt = DateTime.UtcNow
-            });
-            _showSendForm = false;
-            Snackbar.Add("Message sent successfully.", Severity.Success);
-            await LoadMessages();
-        }
-        finally { _sending = false; }
-    }
-}
+<MudTable Items="messages" Dense="true" Hover="true" Elevation="1" Loading="isLoading" T="ServerMessage">
+    <HeaderContent>
+        <MudTh>Direction</MudTh>
+        <MudTh>Device</MudTh>
+        <MudTh>Type</MudTh>
+        <MudTh>Content</MudTh>
+        <MudTh>Status</MudTh>
+        <MudTh>Time</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd><MudIcon Icon="@(context.Direction == MessageDirection.ServerToDevice ? Icons.Material.Filled.CallMade : Icons.Material.Filled.CallReceived)" Size="Size.Small" /></MudTd>
+        <MudTd Style="font-family:monospace;font-size:0.75rem">@(context.DeviceId ?? "*")</MudTd>
+        <MudTd Style="font-family:monospace">@context.MessageType</MudTd>
+        <MudTd Style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">@context.Content</MudTd>
+        <MudTd>@context.Status</MudTd>
+        <MudTd><MudText Typo="Typo.body2" Class="mud-text-secondary">@context.CreatedAt.ToLocalTime().ToString("MM/dd HH:mm:ss")</MudText></MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText Class="pa-4 mud-text-secondary">No messages.</MudText>
+    </NoRecordsContent>
+</MudTable>

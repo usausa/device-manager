@@ -1,6 +1,7 @@
 namespace DeviceManager.Hubs;
 
 using System.Collections.Concurrent;
+using DeviceManager.Services;
 using Microsoft.AspNetCore.SignalR;
 
 public sealed class DeviceHub(
@@ -8,6 +9,7 @@ public sealed class DeviceHub(
     ConfigService configService,
     MessageService messageService,
     LogService logService,
+    AppEventBus eventBus,
     ILogger<DeviceHub> logger) : Hub
 {
     private static readonly ConcurrentDictionary<string, string> ConnectionToDevice = new();
@@ -33,6 +35,7 @@ public sealed class DeviceHub(
             await deviceService.UpdateConnectionStatusAsync(deviceId, DeviceConnectionStatus.Inactive);
             await Clients.Group(HubConstants.Groups.Dashboard)
                 .SendAsync(HubConstants.DashboardMethods.DeviceDisconnected, deviceId);
+            await eventBus.PublishAsync(AppEvents.DeviceDisconnected, deviceId);
             logger.LogInformation("Device disconnected: {DeviceId} ({ConnectionId})", deviceId, Context.ConnectionId);
         }
 
@@ -54,6 +57,7 @@ public sealed class DeviceHub(
 
         await Clients.Group(HubConstants.Groups.Dashboard)
             .SendAsync(HubConstants.DashboardMethods.DeviceConnected, registration);
+        await eventBus.PublishAsync(AppEvents.DeviceConnected, registration.DeviceId);
 
         var config = await configService.GetResolvedConfigAsync(registration.DeviceId);
         await Clients.Caller.SendAsync(HubConstants.ServerMethods.ConfigReload, config);
@@ -72,6 +76,7 @@ public sealed class DeviceHub(
         await deviceService.UpdateStatusAsync(deviceId, report);
         await Clients.Group(HubConstants.Groups.Dashboard)
             .SendAsync(HubConstants.DashboardMethods.DeviceStatusUpdated, deviceId, report);
+        await eventBus.PublishAsync(AppEvents.DeviceStatusUpdated, deviceId);
     }
 
     public async Task SendMessage(string messageType, string content)
@@ -91,6 +96,7 @@ public sealed class DeviceHub(
         await messageService.AddMessageAsync(message);
         await Clients.Group(HubConstants.Groups.Dashboard)
             .SendAsync(HubConstants.DashboardMethods.MessageReceived, message);
+        await eventBus.PublishAsync(AppEvents.MessageReceived, message);
     }
 
     public async Task SendLog(LogEntry entry)
@@ -113,6 +119,7 @@ public sealed class DeviceHub(
         await logService.AddLogEntryAsync(logEntry);
         await Clients.Group(HubConstants.Groups.Dashboard)
             .SendAsync(HubConstants.DashboardMethods.LogReceived, logEntry);
+        await eventBus.PublishAsync(AppEvents.LogReceived, logEntry);
     }
 
     public async Task CommandResult(string commandId, bool success, string? result)

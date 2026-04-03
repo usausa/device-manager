@@ -1,6 +1,6 @@
 @inherits LayoutComponentBase
 
-<MudThemeProvider Theme="_theme" />
+<MudThemeProvider Theme="theme" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
@@ -10,38 +10,13 @@
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer" />
         <MudText Typo="Typo.h6" Class="ml-2">DeviceManager</MudText>
         <MudSpacer />
-        <MudIconButton Icon="@Icons.Material.Filled.Person" Color="Color.Inherit" />
     </MudAppBar>
-    <MudDrawer @bind-Open="_drawerOpen" Elevation="1" ClipMode="DrawerClipMode.Always">
-        <MudDrawerHeader Dense="true">
-            <MudIcon Icon="@Icons.Material.Filled.DeviceHub" Class="mr-2" Color="Color.Primary" />
-            <MudText Typo="Typo.subtitle1"><strong>DeviceManager</strong></MudText>
-        </MudDrawerHeader>
+    <MudDrawer @bind-Open="drawerOpen" Elevation="1" ClipMode="DrawerClipMode.Always">
         <NavMenu />
     </MudDrawer>
     <MudMainContent>
-        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4 px-4">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-2 pt-2">
             @Body
         </MudContainer>
     </MudMainContent>
 </MudLayout>
-
-@code {
-    private bool _drawerOpen = true;
-
-    private readonly MudTheme _theme = new()
-    {
-        PaletteLight = new PaletteLight
-        {
-            Primary = Colors.Blue.Default,
-            Secondary = "#00C853",
-            AppbarBackground = Colors.Blue.Darken4,
-            AppbarText = Colors.Shades.White,
-            DrawerBackground = Colors.Shades.White,
-            Background = "#FAFAFA",
-            Surface = Colors.Shades.White,
-        }
-    };
-
-    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
-}
