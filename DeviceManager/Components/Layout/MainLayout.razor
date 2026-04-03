@@ -1,38 +1,47 @@
 @inherits LayoutComponentBase
 
-<div class="app-layout">
-    <aside class="sidebar @(sidebarOpen ? "open" : "")">
-        <div class="sidebar-header">
-            <span class="sidebar-logo">📱</span>
-            <span class="sidebar-title">DeviceManager</span>
-        </div>
+<MudThemeProvider Theme="_theme" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar Dense="true" Elevation="2">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer" />
+        <MudText Typo="Typo.h6" Class="ml-2">DeviceManager</MudText>
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Filled.Person" Color="Color.Inherit" />
+    </MudAppBar>
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="1" ClipMode="DrawerClipMode.Always">
+        <MudDrawerHeader Dense="true">
+            <MudIcon Icon="@Icons.Material.Filled.DeviceHub" Class="mr-2" Color="Color.Primary" />
+            <MudText Typo="Typo.subtitle1"><strong>DeviceManager</strong></MudText>
+        </MudDrawerHeader>
         <NavMenu />
-    </aside>
-
-    <div class="main-area">
-        <header class="topbar">
-            <button class="sidebar-toggle" @onclick="ToggleSidebar" aria-label="Toggle navigation">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-            <h1 class="topbar-title">DeviceManager</h1>
-            <div class="topbar-spacer"></div>
-        </header>
-
-        <main class="content">
+    </MudDrawer>
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4 px-4">
             @Body
-        </main>
-    </div>
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
 
-    @if (sidebarOpen)
+@code {
+    private bool _drawerOpen = true;
+
+    private readonly MudTheme _theme = new()
     {
-        <div class="sidebar-overlay" @onclick="ToggleSidebar"></div>
-    }
-</div>
+        PaletteLight = new PaletteLight
+        {
+            Primary = Colors.Blue.Default,
+            Secondary = "#00C853",
+            AppbarBackground = Colors.Blue.Darken4,
+            AppbarText = Colors.Shades.White,
+            DrawerBackground = Colors.Shades.White,
+            Background = "#FAFAFA",
+            Surface = Colors.Shades.White,
+        }
+    };
 
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
-</div>
+    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+}

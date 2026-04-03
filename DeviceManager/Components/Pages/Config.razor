@@ -1,184 +1,180 @@
 @page "/config"
 @rendermode InteractiveServer
 @inject ConfigService ConfigService
+@inject ISnackbar Snackbar
 
 <PageTitle>Configuration - DeviceManager</PageTitle>
 
-<div class="page-header">
-    <h1>⚙️ Configuration</h1>
-    <button class="btn btn-primary" @onclick="ShowAddForm">+ Add Entry</button>
-</div>
+<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4">
+    <MudText Typo="Typo.h5">
+        <MudIcon Icon="@Icons.Material.Filled.Tune" Class="mr-2" />Configuration
+    </MudText>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+               OnClick="ShowAddForm">Add Entry</MudButton>
+</MudStack>
 
-@if (errorMessage is not null)
+@if (_showForm)
 {
-    <div class="alert alert-danger">@errorMessage</div>
-}
-@if (successMessage is not null)
-{
-    <div class="alert alert-success">@successMessage</div>
+    <MudPaper Class="pa-4 mb-4" Elevation="2">
+        <MudText Typo="Typo.h6" Class="mb-4">@(_isEditing ? "Edit Configuration" : "Add Configuration")</MudText>
+        <MudGrid Spacing="2">
+            <MudItem xs="12" sm="6">
+                <MudTextField @bind-Value="_formKey" Label="Key" Placeholder="config.key"
+                              Variant="Variant.Outlined" Required="true" Disabled="_isEditing" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField @bind-Value="_formValue" Label="Value" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudSelect @bind-Value="_formType" Label="Type" Variant="Variant.Outlined">
+                    <MudSelectItem Value="@("String")">String</MudSelectItem>
+                    <MudSelectItem Value="@("Int")">Int</MudSelectItem>
+                    <MudSelectItem Value="@("Bool")">Bool</MudSelectItem>
+                    <MudSelectItem Value="@("Json")">Json</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField @bind-Value="_formDescription" Label="Description"
+                              Variant="Variant.Outlined" />
+            </MudItem>
+        </MudGrid>
+        <MudStack Row="true" Spacing="2" Class="mt-4">
+            <MudButton Variant="Variant.Outlined" OnClick="CloseForm">Cancel</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveEntry"
+                       Disabled="_saving" StartIcon="@Icons.Material.Filled.Save">
+                @(_saving ? "Saving..." : "Save")
+            </MudButton>
+        </MudStack>
+    </MudPaper>
 }
 
-<div class="card">
-    <div class="toolbar" style="padding: 1rem 1.25rem;">
-        <div class="search-input">
-            <input type="text" placeholder="Filter by key..." @bind="searchText" @bind:event="oninput" />
-        </div>
-    </div>
-    <div class="table-container">
-        @if (entries is null)
-        {
-            <div class="loading"><div class="spinner"></div> Loading configuration...</div>
-        }
-        else if (filteredEntries!.Count == 0)
-        {
-            <div class="empty-state"><div class="empty-icon">⚙️</div><p>No configuration entries.</p></div>
-        }
-        else
-        {
-            <table>
-                <thead>
-                    <tr>
-                        <th>Key</th>
-                        <th>Value</th>
-                        <th>Type</th>
-                        <th>Description</th>
-                        <th style="width:140px;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var entry in filteredEntries)
-                    {
-                        <tr>
-                            <td class="mono">@entry.Key</td>
-                            <td class="mono">@entry.Value</td>
-                            <td>@entry.ValueType</td>
-                            <td class="text-secondary">@(entry.Description ?? "-")</td>
-                            <td>
-                                <div class="btn-group">
-                                    <button class="btn btn-outline btn-sm" @onclick="() => ShowEditForm(entry)">Edit</button>
-                                    <button class="btn btn-danger btn-sm" @onclick="() => DeleteEntry(entry)">Delete</button>
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        }
-    </div>
-</div>
-
-@if (showForm)
-{
-    <div class="modal-backdrop" @onclick="CloseForm">
-        <div class="modal" @onclick:stopPropagation="true">
-            <div class="modal-header">
-                <h3>@(isEditing ? "Edit Configuration" : "Add Configuration")</h3>
-                <button class="btn btn-icon btn-outline" @onclick="CloseForm">✕</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group"><label>Key</label><input class="form-control" @bind="formKey" placeholder="config.key" disabled="@isEditing" /></div>
-                <div class="form-group"><label>Value</label><input class="form-control" @bind="formValue" /></div>
-                <div class="form-group"><label>Type</label>
-                    <select class="form-control" @bind="formType"><option value="String">String</option><option value="Int">Int</option><option value="Bool">Bool</option><option value="Json">Json</option></select>
-                </div>
-                <div class="form-group"><label>Description</label><input class="form-control" @bind="formDescription" /></div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" @onclick="CloseForm">Cancel</button>
-                <button class="btn btn-primary" @onclick="SaveEntry" disabled="@saving">@(saving ? "Saving..." : "Save")</button>
-            </div>
-        </div>
-    </div>
-}
+<MudCard>
+    <MudCardContent Class="pa-0">
+        <MudTable Items="@FilteredEntries" Hover="true" Dense="true" Elevation="0"
+                  QuickFilter="FilterEntry" T="ConfigEntry">
+            <ToolBarContent>
+                <MudTextField @bind-Value="_searchText" Placeholder="Filter by key..."
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                              IconSize="Size.Medium" Class="mt-0" Immediate="true" />
+                <MudSpacer />
+                <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" OnClick="LoadEntries" />
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Key</MudTh>
+                <MudTh>Value</MudTh>
+                <MudTh>Type</MudTh>
+                <MudTh>Description</MudTh>
+                <MudTh Style="width:100px;">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Key">
+                    <MudText Typo="Typo.body2" Style="font-family:monospace">@context.Key</MudText>
+                </MudTd>
+                <MudTd DataLabel="Value">
+                    <MudText Typo="Typo.body2" Style="font-family:monospace">@context.Value</MudText>
+                </MudTd>
+                <MudTd DataLabel="Type">
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default">
+                        @context.ValueType
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Description">
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">@(context.Description ?? "-")</MudText>
+                </MudTd>
+                <MudTd>
+                    <MudStack Row="true" Spacing="0">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Primary"
+                                       OnClick="() => ShowEditForm(context)" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                                       OnClick="() => DeleteEntry(context)" />
+                    </MudStack>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText Class="pa-4 mud-text-secondary">No configuration entries.</MudText>
+            </NoRecordsContent>
+        </MudTable>
+    </MudCardContent>
+</MudCard>
 
 @code {
-    private List<ConfigEntry>? entries;
-    private string searchText = string.Empty;
-    private string? errorMessage;
-    private string? successMessage;
+    private List<ConfigEntry>? _entries;
+    private string _searchText = string.Empty;
+    private bool _showForm;
+    private bool _isEditing;
+    private bool _saving;
+    private string _formKey = string.Empty;
+    private string _formValue = string.Empty;
+    private string _formType = "String";
+    private string _formDescription = string.Empty;
 
-    private bool showForm;
-    private bool isEditing;
-    private bool saving;
-    private string formKey = string.Empty;
-    private string formValue = string.Empty;
-    private string formType = "String";
-    private string formDescription = string.Empty;
+    private IEnumerable<ConfigEntry> FilteredEntries => _entries ?? [];
 
-    private List<ConfigEntry>? filteredEntries => entries?
-        .Where(e => string.IsNullOrEmpty(searchText)
-            || e.Key.Contains(searchText, StringComparison.OrdinalIgnoreCase))
-        .ToList();
+    private bool FilterEntry(ConfigEntry e) =>
+        string.IsNullOrEmpty(_searchText)
+        || e.Key.Contains(_searchText, StringComparison.OrdinalIgnoreCase);
 
     protected override async Task OnInitializedAsync() => await LoadEntries();
 
     private async Task LoadEntries()
     {
-        try { entries = await ConfigService.GetCommonConfigAsync(); }
-        catch (Exception ex) { errorMessage = ex.Message; entries = []; }
+        try { _entries = await ConfigService.GetCommonConfigAsync(); }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+            _entries = [];
+        }
     }
 
     private void ShowAddForm()
     {
-        isEditing = false;
-        formKey = formValue = formDescription = string.Empty;
-        formType = "String";
-        showForm = true;
-        ClearMessages();
+        _isEditing = false;
+        _formKey = _formValue = _formDescription = string.Empty;
+        _formType = "String";
+        _showForm = true;
     }
 
     private void ShowEditForm(ConfigEntry entry)
     {
-        isEditing = true;
-        formKey = entry.Key;
-        formValue = entry.Value;
-        formType = entry.ValueType;
-        formDescription = entry.Description ?? string.Empty;
-        showForm = true;
-        ClearMessages();
+        _isEditing = true;
+        _formKey = entry.Key;
+        _formValue = entry.Value;
+        _formType = entry.ValueType;
+        _formDescription = entry.Description ?? string.Empty;
+        _showForm = true;
     }
 
-    private void CloseForm() => showForm = false;
+    private void CloseForm() => _showForm = false;
 
     private async Task SaveEntry()
     {
-        saving = true;
-        ClearMessages();
+        _saving = true;
         try
         {
-            var key = formKey.Trim();
-            var entry = new ConfigEntry
+            var key = _formKey.Trim();
+            await ConfigService.SetCommonConfigAsync(key, new ConfigEntry
             {
                 Key = key,
-                Value = formValue,
-                ValueType = formType,
-                Description = string.IsNullOrWhiteSpace(formDescription) ? null : formDescription.Trim()
-            };
-
-            await ConfigService.SetCommonConfigAsync(key, entry);
-
-            showForm = false;
-            successMessage = $"Configuration entry '{key}' saved.";
+                Value = _formValue,
+                ValueType = _formType,
+                Description = string.IsNullOrWhiteSpace(_formDescription) ? null : _formDescription.Trim()
+            });
+            _showForm = false;
+            Snackbar.Add($"Configuration entry '{key}' saved.", Severity.Success);
             await LoadEntries();
         }
-        catch (Exception ex)
-        {
-            errorMessage = ex.Message;
-        }
-        finally { saving = false; }
+        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
+        finally { _saving = false; }
     }
 
     private async Task DeleteEntry(ConfigEntry entry)
     {
-        ClearMessages();
         try
         {
             await ConfigService.DeleteCommonConfigAsync(entry.Key);
-            successMessage = $"Deleted '{entry.Key}'.";
+            Snackbar.Add($"Deleted '{entry.Key}'.", Severity.Success);
             await LoadEntries();
         }
-        catch (Exception ex) { errorMessage = ex.Message; }
+        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
     }
-
-    private void ClearMessages() { errorMessage = null; successMessage = null; }
 }

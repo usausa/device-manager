@@ -2,293 +2,260 @@
 @rendermode InteractiveServer
 @inject DeviceService DeviceService
 @inject NavigationManager Navigation
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
 
 <PageTitle>Devices - DeviceManager</PageTitle>
 
-<div class="page-header">
-    <h1>📱 Devices</h1>
-    <button class="btn btn-primary" @onclick="ShowAddForm">+ Add Device</button>
-</div>
+<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4">
+    <MudText Typo="Typo.h5">
+        <MudIcon Icon="@Icons.Material.Filled.Devices" Class="mr-2" />Devices
+    </MudText>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+               OnClick="ShowAddForm">Add Device</MudButton>
+</MudStack>
 
-@if (errorMessage is not null)
+@if (_showForm)
 {
-    <div class="alert alert-danger">@errorMessage</div>
-}
-@if (successMessage is not null)
-{
-    <div class="alert alert-success">@successMessage</div>
+    <MudPaper Class="pa-4 mb-4" Elevation="2">
+        <MudText Typo="Typo.h6" Class="mb-4">@(_isEditing ? "Edit Device" : "Add Device")</MudText>
+        <MudGrid Spacing="2">
+            @if (!_isEditing)
+            {
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="_formDeviceId" Label="Device ID" Placeholder="unique-device-id"
+                                  Variant="Variant.Outlined" Required="true" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="_formPlatform" Label="Platform" Placeholder="Android, iOS, etc."
+                                  Variant="Variant.Outlined" />
+                </MudItem>
+            }
+            <MudItem xs="12" sm="6">
+                <MudTextField @bind-Value="_formName" Label="Name" Placeholder="Device name"
+                              Variant="Variant.Outlined" Required="true" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField @bind-Value="_formGroup" Label="Group" Placeholder="Group name"
+                              Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField @bind-Value="_formTags" Label="Tags" Placeholder="tag1, tag2 (comma-separated)"
+                              Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField @bind-Value="_formNote" Label="Note" Placeholder="Notes..."
+                              Variant="Variant.Outlined" />
+            </MudItem>
+            @if (_isEditing)
+            {
+                <MudItem xs="12">
+                    <MudSwitch @bind-Value="_formIsEnabled" Color="Color.Primary" Label="Enabled" />
+                </MudItem>
+            }
+        </MudGrid>
+        <MudStack Row="true" Spacing="2" Class="mt-4">
+            <MudButton Variant="Variant.Outlined" OnClick="CloseForm">Cancel</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveDevice"
+                       Disabled="_saving" StartIcon="@Icons.Material.Filled.Save">
+                @(_saving ? "Saving..." : (_isEditing ? "Update" : "Add"))
+            </MudButton>
+        </MudStack>
+    </MudPaper>
 }
 
-<div class="card">
-    <div class="toolbar" style="padding: 1rem 1.25rem;">
-        <div class="search-input">
-            <input type="text" placeholder="Search devices..." @bind="searchText" @bind:event="oninput" />
-        </div>
-    </div>
-    <div class="table-container">
-        @if (devices is null)
-        {
-            <div class="loading"><div class="spinner"></div> Loading devices...</div>
-        }
-        else if (filteredDevices!.Count == 0)
-        {
-            <div class="empty-state">
-                <div class="empty-icon">📱</div>
-                <p>No devices found.</p>
-                <button class="btn btn-primary" @onclick="ShowAddForm">Add Device</button>
-            </div>
-        }
-        else
-        {
-            <table>
-                <thead>
-                    <tr>
-                        <th>Status</th>
-                        <th>Name</th>
-                        <th>Group</th>
-                        <th>Battery</th>
-                        <th>Last Connected</th>
-                        <th style="width:140px;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var device in filteredDevices)
+<MudCard>
+    <MudCardContent Class="pa-0">
+        <MudTable Items="@FilteredDevices" Hover="true" Dense="true" Elevation="0"
+                  QuickFilter="FilterDevice" T="DeviceSummary">
+            <ToolBarContent>
+                <MudTextField @bind-Value="_searchText" Placeholder="Search devices..."
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                              IconSize="Size.Medium" Class="mt-0" Immediate="true" />
+                <MudSpacer />
+                <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default"
+                               OnClick="LoadDevices" />
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Status</MudTh>
+                <MudTh>Name</MudTh>
+                <MudTh>Group</MudTh>
+                <MudTh>Battery</MudTh>
+                <MudTh>Last Connected</MudTh>
+                <MudTh Style="width:120px;">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Status">
+                    <MudChip T="string" Color="@GetStatusColor(context.Status)" Size="Size.Small" Variant="Variant.Filled">
+                        @context.Status
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Name">
+                    <MudLink Href="@($"/devices/{context.DeviceId}")" Typo="Typo.body2">@context.Name</MudLink>
+                </MudTd>
+                <MudTd DataLabel="Group">@(context.Group ?? "-")</MudTd>
+                <MudTd DataLabel="Battery">
+                    @if (context.Battery.HasValue)
                     {
-                        <tr>
-                            <td>
-                                <span class="status-badge @GetStatusClass(device.Status)">
-                                    <span class="status-dot @GetStatusClass(device.Status)"></span>
-                                    @device.Status
-                                </span>
-                            </td>
-                            <td><a href="/devices/@device.DeviceId">@device.Name</a></td>
-                            <td>@(device.Group ?? "-")</td>
-                            <td>@(device.Battery.HasValue ? $"{device.Battery}%" : "-")</td>
-                            <td class="text-secondary">@FormatDate(device.LastConnectedAt)</td>
-                            <td>
-                                <div class="btn-group">
-                                    <button class="btn btn-outline btn-sm" @onclick="() => ShowEditForm(device)">Edit</button>
-                                    <button class="btn btn-danger btn-sm" @onclick="() => ConfirmDelete(device)">Delete</button>
-                                </div>
-                            </td>
-                        </tr>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <MudIcon Icon="@Icons.Material.Filled.Battery4Bar" Size="Size.Small" Color="@GetBatteryColor(context.Battery.Value)" />
+                            <MudText Typo="Typo.body2">@context.Battery%</MudText>
+                        </MudStack>
                     }
-                </tbody>
-            </table>
-        }
-    </div>
-</div>
-
-@if (showForm)
-{
-    <div class="modal-backdrop" @onclick="CloseForm">
-        <div class="modal" @onclick:stopPropagation="true">
-            <div class="modal-header">
-                <h3>@(isEditing ? "Edit Device" : "Add Device")</h3>
-                <button class="btn btn-icon btn-outline" @onclick="CloseForm">✕</button>
-            </div>
-            <div class="modal-body">
-                @if (!isEditing)
-                {
-                    <div class="form-group">
-                        <label>Device ID</label>
-                        <input class="form-control" @bind="formDeviceId" placeholder="unique-device-id" />
-                    </div>
-                    <div class="form-group">
-                        <label>Platform</label>
-                        <input class="form-control" @bind="formPlatform" placeholder="Android, iOS, etc." />
-                    </div>
-                }
-                <div class="form-group">
-                    <label>Name</label>
-                    <input class="form-control" @bind="formName" placeholder="Device name" />
-                </div>
-                <div class="form-group">
-                    <label>Group</label>
-                    <input class="form-control" @bind="formGroup" placeholder="Group name" />
-                </div>
-                <div class="form-group">
-                    <label>Tags (comma-separated)</label>
-                    <input class="form-control" @bind="formTags" placeholder="tag1, tag2" />
-                </div>
-                <div class="form-group">
-                    <label>Note</label>
-                    <textarea class="form-control" @bind="formNote" placeholder="Notes..."></textarea>
-                </div>
-                @if (isEditing)
-                {
-                    <div class="form-group">
-                        <label class="toggle-switch">
-                            <input type="checkbox" @bind="formIsEnabled" />
-                            <span>Enabled</span>
-                        </label>
-                    </div>
-                }
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" @onclick="CloseForm">Cancel</button>
-                <button class="btn btn-primary" @onclick="SaveDevice" disabled="@saving">
-                    @(saving ? "Saving..." : (isEditing ? "Update" : "Add"))
-                </button>
-            </div>
-        </div>
-    </div>
-}
-
-@if (deviceToDelete is not null)
-{
-    <div class="modal-backdrop" @onclick="CancelDelete">
-        <div class="modal" @onclick:stopPropagation="true">
-            <div class="modal-header"><h3>Confirm Delete</h3></div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete <strong>@deviceToDelete.Name</strong>?</p>
-                <p class="text-secondary">This action cannot be undone.</p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" @onclick="CancelDelete">Cancel</button>
-                <button class="btn btn-danger" @onclick="DeleteDevice" disabled="@saving">
-                    @(saving ? "Deleting..." : "Delete")
-                </button>
-            </div>
-        </div>
-    </div>
-}
+                    else { <MudText Typo="Typo.body2" Class="mud-text-secondary">-</MudText> }
+                </MudTd>
+                <MudTd DataLabel="Last Connected">
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">@FormatDate(context.LastConnectedAt)</MudText>
+                </MudTd>
+                <MudTd>
+                    <MudStack Row="true" Spacing="0">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Primary"
+                                       OnClick="() => ShowEditForm(context)" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                                       OnClick="() => ConfirmDelete(context)" />
+                    </MudStack>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudStack AlignItems="AlignItems.Center" Class="pa-8">
+                    <MudIcon Icon="@Icons.Material.Filled.DevicesOther" Size="Size.Large" Class="mud-text-secondary" />
+                    <MudText Class="mud-text-secondary">No devices found.</MudText>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="ShowAddForm">Add Device</MudButton>
+                </MudStack>
+            </NoRecordsContent>
+        </MudTable>
+    </MudCardContent>
+</MudCard>
 
 @code {
-    private List<DeviceSummary>? devices;
-    private string searchText = string.Empty;
-    private string? errorMessage;
-    private string? successMessage;
-    private bool saving;
+    private List<DeviceSummary>? _devices;
+    private string _searchText = string.Empty;
+    private bool _saving;
 
-    private bool showForm;
-    private bool isEditing;
-    private string editingDeviceId = string.Empty;
-    private string formDeviceId = string.Empty;
-    private string formName = string.Empty;
-    private string formPlatform = string.Empty;
-    private string formGroup = string.Empty;
-    private string formTags = string.Empty;
-    private string formNote = string.Empty;
-    private bool formIsEnabled = true;
+    private bool _showForm;
+    private bool _isEditing;
+    private string _editingDeviceId = string.Empty;
+    private string _formDeviceId = string.Empty;
+    private string _formName = string.Empty;
+    private string _formPlatform = string.Empty;
+    private string _formGroup = string.Empty;
+    private string _formTags = string.Empty;
+    private string _formNote = string.Empty;
+    private bool _formIsEnabled = true;
 
-    private DeviceSummary? deviceToDelete;
+    private IEnumerable<DeviceSummary> FilteredDevices => _devices ?? [];
 
-    private List<DeviceSummary>? filteredDevices => devices?
-        .Where(d => string.IsNullOrEmpty(searchText)
-            || d.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase)
-            || (d.Group?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false)
-            || d.DeviceId.Contains(searchText, StringComparison.OrdinalIgnoreCase))
-        .ToList();
+    private bool FilterDevice(DeviceSummary d) =>
+        string.IsNullOrEmpty(_searchText)
+        || d.Name.Contains(_searchText, StringComparison.OrdinalIgnoreCase)
+        || (d.Group?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false)
+        || d.DeviceId.Contains(_searchText, StringComparison.OrdinalIgnoreCase);
 
-    protected override async Task OnInitializedAsync()
-    {
-        devices = await DeviceService.GetAllDevicesAsync();
-    }
+    protected override async Task OnInitializedAsync() => await LoadDevices();
+
+    private async Task LoadDevices() => _devices = await DeviceService.GetAllDevicesAsync();
 
     private void ShowAddForm()
     {
-        isEditing = false;
-        formDeviceId = formName = formPlatform = formGroup = formTags = formNote = string.Empty;
-        formIsEnabled = true;
-        showForm = true;
-        ClearMessages();
+        _isEditing = false;
+        _formDeviceId = _formName = _formPlatform = _formGroup = _formTags = _formNote = string.Empty;
+        _formIsEnabled = true;
+        _showForm = true;
     }
 
     private async Task ShowEditForm(DeviceSummary summary)
     {
-        ClearMessages();
         var detail = await DeviceService.GetDeviceAsync(summary.DeviceId);
         if (detail is null) return;
 
-        isEditing = true;
-        editingDeviceId = detail.DeviceId;
-        formName = detail.Name;
-        formGroup = detail.Group ?? string.Empty;
-        formTags = detail.Tags is not null ? string.Join(", ", detail.Tags) : string.Empty;
-        formNote = detail.Note ?? string.Empty;
-        formIsEnabled = detail.IsEnabled;
-        showForm = true;
+        _isEditing = true;
+        _editingDeviceId = detail.DeviceId;
+        _formName = detail.Name;
+        _formGroup = detail.Group ?? string.Empty;
+        _formTags = detail.Tags is not null ? string.Join(", ", detail.Tags) : string.Empty;
+        _formNote = detail.Note ?? string.Empty;
+        _formIsEnabled = detail.IsEnabled;
+        _showForm = true;
     }
 
-    private void CloseForm() => showForm = false;
+    private void CloseForm() => _showForm = false;
 
     private async Task SaveDevice()
     {
-        saving = true;
-        ClearMessages();
+        _saving = true;
         try
         {
-            if (isEditing)
+            if (_isEditing)
             {
-                await DeviceService.UpdateDeviceAsync(editingDeviceId, new DeviceUpdateRequest
+                await DeviceService.UpdateDeviceAsync(_editingDeviceId, new DeviceUpdateRequest
                 {
-                    Name = formName,
-                    Group = string.IsNullOrWhiteSpace(formGroup) ? null : formGroup,
-                    Tags = string.IsNullOrWhiteSpace(formTags) ? null : formTags.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries),
-                    Note = formNote,
-                    IsEnabled = formIsEnabled
+                    Name = _formName,
+                    Group = string.IsNullOrWhiteSpace(_formGroup) ? null : _formGroup,
+                    Tags = string.IsNullOrWhiteSpace(_formTags) ? null : _formTags.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries),
+                    Note = _formNote,
+                    IsEnabled = _formIsEnabled
                 });
-                successMessage = $"Device '{formName}' updated.";
+                Snackbar.Add($"Device '{_formName}' updated.", Severity.Success);
             }
             else
             {
-                if (string.IsNullOrWhiteSpace(formDeviceId) || string.IsNullOrWhiteSpace(formName))
+                if (string.IsNullOrWhiteSpace(_formDeviceId) || string.IsNullOrWhiteSpace(_formName))
                 {
-                    errorMessage = "Device ID and Name are required.";
-                    saving = false;
+                    Snackbar.Add("Device ID and Name are required.", Severity.Warning);
                     return;
                 }
-
                 await DeviceService.RegisterDeviceAsync(new DeviceRegistration
                 {
-                    DeviceId = formDeviceId.Trim(),
-                    Name = formName.Trim(),
-                    Platform = string.IsNullOrWhiteSpace(formPlatform) ? null : formPlatform.Trim(),
-                    Group = string.IsNullOrWhiteSpace(formGroup) ? null : formGroup.Trim()
+                    DeviceId = _formDeviceId.Trim(),
+                    Name = _formName.Trim(),
+                    Platform = string.IsNullOrWhiteSpace(_formPlatform) ? null : _formPlatform.Trim(),
+                    Group = string.IsNullOrWhiteSpace(_formGroup) ? null : _formGroup.Trim()
                 });
-                successMessage = $"Device '{formName}' added.";
+                Snackbar.Add($"Device '{_formName}' added.", Severity.Success);
             }
-
-            showForm = false;
-            devices = await DeviceService.GetAllDevicesAsync();
+            _showForm = false;
+            await LoadDevices();
         }
-        catch (Exception ex) { errorMessage = $"Error: {ex.Message}"; }
-        finally { saving = false; }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally { _saving = false; }
     }
 
-    private void ConfirmDelete(DeviceSummary device)
+    private async Task ConfirmDelete(DeviceSummary device)
     {
-        ClearMessages();
-        deviceToDelete = device;
+        var result = await DialogService.ShowMessageBoxAsync(
+            "Confirm Delete",
+            $"Are you sure you want to delete '{device.Name}'? This cannot be undone.",
+            yesText: "Delete", cancelText: "Cancel");
+
+        if (result is true) await DeleteDevice(device);
     }
 
-    private void CancelDelete() => deviceToDelete = null;
-
-    private async Task DeleteDevice()
+    private async Task DeleteDevice(DeviceSummary device)
     {
-        if (deviceToDelete is null) return;
-        saving = true;
         try
         {
-            await DeviceService.DeleteDeviceAsync(deviceToDelete.DeviceId);
-            successMessage = $"Device '{deviceToDelete.Name}' deleted.";
-            deviceToDelete = null;
-            devices = await DeviceService.GetAllDevicesAsync();
+            await DeviceService.DeleteDeviceAsync(device.DeviceId);
+            Snackbar.Add($"Device '{device.Name}' deleted.", Severity.Success);
+            await LoadDevices();
         }
-        catch (Exception ex) { errorMessage = $"Error: {ex.Message}"; }
-        finally { saving = false; }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
     }
 
-    private void ClearMessages() { errorMessage = null; successMessage = null; }
-
-    private static string GetStatusClass(DeviceConnectionStatus status) => status switch
+    private static Color GetStatusColor(DeviceConnectionStatus status) => status switch
     {
-        DeviceConnectionStatus.Active => "active",
-        DeviceConnectionStatus.Warning => "warning",
-        DeviceConnectionStatus.Error => "error",
-        _ => "inactive"
+        DeviceConnectionStatus.Active => Color.Success,
+        DeviceConnectionStatus.Warning => Color.Warning,
+        DeviceConnectionStatus.Error => Color.Error,
+        _ => Color.Default
     };
+
+    private static Color GetBatteryColor(int battery) => battery switch { > 50 => Color.Success, > 20 => Color.Warning, _ => Color.Error };
 
     private static string FormatDate(DateTime? dt) => dt is null ? "Never" : dt.Value.ToLocalTime().ToString("MMM dd, HH:mm");
 }

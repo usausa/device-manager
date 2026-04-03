@@ -4,89 +4,88 @@
 
 <PageTitle>Logs - DeviceManager</PageTitle>
 
-<div class="page-header">
-    <h1>📋 System Logs</h1>
-    <button class="btn btn-outline" @onclick="LoadLogs">Refresh</button>
-</div>
+<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4">
+    <MudText Typo="Typo.h5">
+        <MudIcon Icon="@Icons.Material.Filled.List" Class="mr-2" />System Logs
+    </MudText>
+    <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" OnClick="LoadLogs" />
+</MudStack>
 
-<div class="card">
-    <div class="toolbar" style="padding: 1rem 1.25rem;">
-        <div class="search-input" style="flex: 1;">
-            <input type="text" placeholder="Filter by device or message..." @bind="searchText" @bind:event="oninput" />
-        </div>
-        <select class="form-control" style="width: auto;" @bind="levelFilter">
-            <option value="">All Levels</option>
-            <option value="2">Information</option>
-            <option value="3">Warning</option>
-            <option value="4">Error</option>
-            <option value="1">Debug</option>
-            <option value="0">Trace</option>
-        </select>
-    </div>
-    <div class="table-container">
-        @if (logs is null)
-        {
-            <div class="loading"><div class="spinner"></div> Loading logs...</div>
-        }
-        else if (filteredLogs!.Count == 0)
-        {
-            <div class="empty-state"><div class="empty-icon">📋</div><p>No logs found.</p></div>
-        }
-        else
-        {
-            <table>
-                <thead>
-                    <tr>
-                        <th>Timestamp</th>
-                        <th>Level</th>
-                        <th>Device</th>
-                        <th>Category</th>
-                        <th>Message</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var log in filteredLogs)
-                    {
-                        <tr class="log-@GetLevelCss(log.Level)">
-                            <td class="text-secondary" style="white-space: nowrap;">@log.Timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
-                            <td><span class="log-level @GetLevelCss(log.Level)">@log.Level</span></td>
-                            <td><a href="/devices/@log.DeviceId" class="mono">@log.DeviceId</a></td>
-                            <td class="mono">@log.Category</td>
-                            <td>@log.Message</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        }
-    </div>
-</div>
+<MudCard>
+    <MudCardContent Class="pa-0">
+        <MudTable Items="@FilteredLogs" Hover="true" Dense="true" Elevation="0" T="LogEntry">
+            <ToolBarContent>
+                <MudTextField @bind-Value="_searchText" Placeholder="Filter by device or message..."
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                              IconSize="Size.Medium" Class="mt-0 mr-4" Immediate="true" Style="max-width:400px" />
+                <MudSelect @bind-Value="_levelFilter" Label="Level" Dense="true" Margin="Margin.Dense"
+                           Style="max-width:160px" Clearable="true">
+                    <MudSelectItem Value="@((int?)2)">Information</MudSelectItem>
+                    <MudSelectItem Value="@((int?)3)">Warning</MudSelectItem>
+                    <MudSelectItem Value="@((int?)4)">Error</MudSelectItem>
+                    <MudSelectItem Value="@((int?)1)">Debug</MudSelectItem>
+                    <MudSelectItem Value="@((int?)0)">Trace</MudSelectItem>
+                </MudSelect>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Timestamp</MudTh>
+                <MudTh>Level</MudTh>
+                <MudTh>Device</MudTh>
+                <MudTh>Category</MudTh>
+                <MudTh>Message</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Timestamp">
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary" Style="white-space:nowrap">
+                        @context.Timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
+                    </MudText>
+                </MudTd>
+                <MudTd DataLabel="Level">
+                    <MudChip T="string" Color="@GetLevelColor(context.Level)" Size="Size.Small" Variant="Variant.Filled">
+                        @context.Level
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Device">
+                    <MudLink Href="@($"/devices/{context.DeviceId}")" Typo="Typo.body2">@context.DeviceId</MudLink>
+                </MudTd>
+                <MudTd DataLabel="Category">
+                    <MudText Typo="Typo.body2" Style="font-family:monospace">@context.Category</MudText>
+                </MudTd>
+                <MudTd DataLabel="Message">@context.Message</MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText Class="pa-4 mud-text-secondary">No logs found.</MudText>
+            </NoRecordsContent>
+        </MudTable>
+    </MudCardContent>
+</MudCard>
 
 @code {
-    private List<LogEntry>? logs;
-    private string searchText = string.Empty;
-    private string levelFilter = string.Empty;
+    private List<LogEntry>? _logs;
+    private string _searchText = string.Empty;
+    private int? _levelFilter;
 
-    private List<LogEntry>? filteredLogs => logs?
+    private IEnumerable<LogEntry> FilteredLogs => _logs?
         .Where(l =>
-            (string.IsNullOrEmpty(searchText)
-                || l.DeviceId.Contains(searchText, StringComparison.OrdinalIgnoreCase)
-                || l.Message.Contains(searchText, StringComparison.OrdinalIgnoreCase))
-            && (string.IsNullOrEmpty(levelFilter) || ((int)l.Level).ToString() == levelFilter))
-        .ToList();
+            (string.IsNullOrEmpty(_searchText)
+                || l.DeviceId.Contains(_searchText, StringComparison.OrdinalIgnoreCase)
+                || l.Message.Contains(_searchText, StringComparison.OrdinalIgnoreCase))
+            && (_levelFilter is null || (int)l.Level == _levelFilter))
+        ?? [];
 
     protected override async Task OnInitializedAsync() => await LoadLogs();
 
     private async Task LoadLogs()
     {
-        try { logs = await LogService.GetLogsAsync(null, null, 0, 500); }
-        catch { logs = []; }
+        try { _logs = await LogService.GetLogsAsync(null, null, 0, 500); }
+        catch { _logs = []; }
     }
 
-    private static string GetLevelCss(Shared.Models.LogLevel level) => level switch
+    private static Color GetLevelColor(Shared.Models.LogLevel level) => level switch
     {
-        Shared.Models.LogLevel.Information => "info",
-        Shared.Models.LogLevel.Warning => "warning",
-        Shared.Models.LogLevel.Error or Shared.Models.LogLevel.Critical => "error",
-        _ => "debug"
+        Shared.Models.LogLevel.Information => Color.Info,
+        Shared.Models.LogLevel.Warning => Color.Warning,
+        Shared.Models.LogLevel.Error or Shared.Models.LogLevel.Critical => Color.Error,
+        _ => Color.Default
     };
 }

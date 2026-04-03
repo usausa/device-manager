@@ -1,13 +1,6 @@
 namespace DeviceManager.Components.Layout;
 
-using Microsoft.AspNetCore.Components;
-
+// Drawer state is managed directly in MainLayout.razor
 public partial class MainLayout
 {
-    private bool sidebarOpen;
-
-    private void ToggleSidebar()
-    {
-        sidebarOpen = !sidebarOpen;
-    }
 }

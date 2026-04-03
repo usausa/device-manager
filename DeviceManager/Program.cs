@@ -2,6 +2,7 @@ using DeviceManager.Components;
 using DeviceManager.Hubs;
 using DeviceManager.Services;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using MudBlazor.Services;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,6 +24,9 @@ builder.Host.UseSerilog((context, config) => config.ReadFrom.Configuration(conte
 // Blazor
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+// MudBlazor
+builder.Services.AddMudServices();
 
 // SignalR
 builder.Services.AddSignalR();

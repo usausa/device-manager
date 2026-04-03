@@ -1,30 +1,9 @@
-<nav class="nav-menu">
-    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-        <span class="nav-icon">📊</span>
-        <span class="nav-text">Dashboard</span>
-    </NavLink>
-    <NavLink class="nav-link" href="devices" Match="NavLinkMatch.Prefix">
-        <span class="nav-icon">📱</span>
-        <span class="nav-text">Devices</span>
-    </NavLink>
-    <NavLink class="nav-link" href="storage" Match="NavLinkMatch.Prefix">
-        <span class="nav-icon">📁</span>
-        <span class="nav-text">Storage</span>
-    </NavLink>
-    <NavLink class="nav-link" href="messages" Match="NavLinkMatch.Prefix">
-        <span class="nav-icon">📨</span>
-        <span class="nav-text">Messages</span>
-    </NavLink>
-    <NavLink class="nav-link" href="datastore" Match="NavLinkMatch.Prefix">
-        <span class="nav-icon">💾</span>
-        <span class="nav-text">DataStore</span>
-    </NavLink>
-    <NavLink class="nav-link" href="config" Match="NavLinkMatch.Prefix">
-        <span class="nav-icon">⚙️</span>
-        <span class="nav-text">Config</span>
-    </NavLink>
-    <NavLink class="nav-link" href="logs" Match="NavLinkMatch.Prefix">
-        <span class="nav-icon">📋</span>
-        <span class="nav-text">Logs</span>
-    </NavLink>
-</nav>
+<MudNavMenu>
+    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
+    <MudNavLink Href="devices" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Devices">Devices</MudNavLink>
+    <MudNavLink Href="storage" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Folder">Storage</MudNavLink>
+    <MudNavLink Href="messages" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Message">Messages</MudNavLink>
+    <MudNavLink Href="datastore" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Storage">DataStore</MudNavLink>
+    <MudNavLink Href="config" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Tune">Config</MudNavLink>
+    <MudNavLink Href="logs" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.List">Logs</MudNavLink>
+</MudNavMenu>

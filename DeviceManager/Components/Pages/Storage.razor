@@ -4,68 +4,76 @@
 
 <PageTitle>Storage - DeviceManager</PageTitle>
 
-<div class="page-header">
-    <h1>📁 Storage Overview</h1>
-    <button class="btn btn-outline" @onclick="LoadData">Refresh</button>
-</div>
+<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4">
+    <MudText Typo="Typo.h5">
+        <MudIcon Icon="@Icons.Material.Filled.Folder" Class="mr-2" />Storage
+    </MudText>
+    <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default" OnClick="LoadData" />
+</MudStack>
 
-<div class="stats-grid mb-3">
-    <div class="stat-card">
-        <div class="stat-value">@totalEntries</div>
-        <div class="stat-label">Total Entries</div>
-    </div>
-</div>
+<MudGrid Spacing="2" Class="mb-4">
+    <MudItem xs="12" sm="4">
+        <MudCard Class="border-b-4 border-solid mud-border-primary">
+            <MudCardContent Class="pa-3">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                    <MudIcon Icon="@Icons.Material.Filled.Storage" Color="Color.Primary" />
+                    <MudText Typo="Typo.subtitle1">Total Entries</MudText>
+                </MudStack>
+                <MudText Typo="Typo.h3" Align="Align.Center" Class="mt-1">@_totalEntries</MudText>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
 
-<div class="card">
-    <div class="card-header">Common Storage Entries</div>
-    <div class="toolbar" style="padding: 1rem 1.25rem;">
-        <div class="search-input">
-            <input type="text" placeholder="Filter by key..." @bind="searchText" @bind:event="oninput" />
-        </div>
-    </div>
-    <div class="table-container">
-        @if (entries is null)
-        {
-            <div class="loading"><div class="spinner"></div> Loading storage...</div>
-        }
-        else if (filteredEntries!.Count == 0)
-        {
-            <div class="empty-state"><div class="empty-icon">📁</div><p>No storage entries found.</p></div>
-        }
-        else
-        {
-            <table>
-                <thead>
-                    <tr>
-                        <th>Key</th>
-                        <th>Value</th>
-                        <th>Updated</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var e in filteredEntries)
-                    {
-                        <tr>
-                            <td class="mono">@e.Key</td>
-                            <td class="mono" style="max-width:400px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="@e.Value">@e.Value</td>
-                            <td class="text-secondary">@e.UpdatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        }
-    </div>
-</div>
+<MudCard>
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">Common Storage Entries</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent Class="pa-0">
+        <MudTable Items="@FilteredEntries" Hover="true" Dense="true" Elevation="0"
+                  QuickFilter="FilterEntry" T="DataStoreEntry">
+            <ToolBarContent>
+                <MudTextField @bind-Value="_searchText" Placeholder="Filter by key..."
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                              IconSize="Size.Medium" Class="mt-0" Immediate="true" />
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Key</MudTh>
+                <MudTh>Value</MudTh>
+                <MudTh>Updated</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Key">
+                    <MudText Typo="Typo.body2" Style="font-family:monospace">@context.Key</MudText>
+                </MudTd>
+                <MudTd DataLabel="Value" Style="max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    <MudText Typo="Typo.body2" Style="font-family:monospace" title="@context.Value">@context.Value</MudText>
+                </MudTd>
+                <MudTd DataLabel="Updated">
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                        @context.UpdatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                    </MudText>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText Class="pa-4 mud-text-secondary">No storage entries found.</MudText>
+            </NoRecordsContent>
+        </MudTable>
+    </MudCardContent>
+</MudCard>
 
 @code {
-    private List<DataStoreEntry>? entries;
-    private string searchText = string.Empty;
-    private int totalEntries;
+    private List<DataStoreEntry>? _entries;
+    private string _searchText = string.Empty;
+    private int _totalEntries;
 
-    private List<DataStoreEntry>? filteredEntries => entries?
-        .Where(e => string.IsNullOrEmpty(searchText)
-            || e.Key.Contains(searchText, StringComparison.OrdinalIgnoreCase))
-        .ToList();
+    private IEnumerable<DataStoreEntry> FilteredEntries => _entries ?? [];
+
+    private bool FilterEntry(DataStoreEntry e) =>
+        string.IsNullOrEmpty(_searchText)
+        || e.Key.Contains(_searchText, StringComparison.OrdinalIgnoreCase);
 
     protected override async Task OnInitializedAsync() => await LoadData();
 
@@ -73,12 +81,9 @@
     {
         try
         {
-            entries = await DataStoreService.GetCommonEntriesAsync();
-            totalEntries = entries.Count;
+            _entries = await DataStoreService.GetCommonEntriesAsync();
+            _totalEntries = _entries.Count;
         }
-        catch
-        {
-            entries = [];
-        }
+        catch { _entries = []; _totalEntries = 0; }
     }
 }
