@@ -8,7 +8,7 @@ public partial class Logs : IDisposable
     public LogService LogService { get; set; } = default!;
 
     [Inject]
-    public AppEventBus EventBus { get; set; } = default!;
+    public DeviceEventService EventBus { get; set; } = default!;
 
     private List<LogEntry> logs = [];
     private string filterDeviceId = string.Empty;

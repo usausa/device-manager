@@ -23,7 +23,7 @@ public partial class DeviceDetailPage : IDisposable
     public NavigationManager Navigation { get; set; } = default!;
 
     [Inject]
-    public AppEventBus EventBus { get; set; } = default!;
+    public DeviceEventService EventBus { get; set; } = default!;
 
     private DeviceDetail? device;
     private List<DeviceStatusReport>? statusHistory;

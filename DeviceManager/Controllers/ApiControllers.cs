@@ -1,8 +1,6 @@
 namespace DeviceManager.Controllers;
 
-using DeviceManager.Hubs;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -59,10 +57,11 @@ public sealed class DevicesController(DeviceService deviceService) : ControllerB
 [Route("api/[controller]")]
 public sealed class MessagesController(
     MessageService messageService,
-    IHubContext<DeviceHub> hubContext) : ControllerBase
+    DeviceEventService events) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetMessages([FromQuery] string? deviceId, [FromQuery] int skip = 0, [FromQuery] int take = 50)
+    public async Task<IActionResult> GetMessages(
+        [FromQuery] string? deviceId, [FromQuery] int skip = 0, [FromQuery] int take = 50)
         => Ok(await messageService.GetMessagesAsync(deviceId, skip, take));
 
     [HttpPost("send")]
@@ -82,13 +81,11 @@ public sealed class MessagesController(
 
         if (!string.IsNullOrEmpty(request.DeviceId))
         {
-            await hubContext.Clients.Group(HubConstants.Groups.Device(request.DeviceId))
-                .SendAsync(HubConstants.ServerMethods.ReceiveMessage, request.MessageType, request.Content);
+            await events.SendMessageToDeviceAsync(request.DeviceId, request.MessageType, request.Content);
         }
         else
         {
-            await hubContext.Clients.Group(HubConstants.Groups.AllDevices)
-                .SendAsync(HubConstants.ServerMethods.ReceiveMessage, request.MessageType, request.Content);
+            await events.BroadcastMessageToDevicesAsync(request.MessageType, request.Content);
         }
 
         return Ok(message);
@@ -98,8 +95,7 @@ public sealed class MessagesController(
     public async Task<IActionResult> SendCommand([FromBody] SendCommandRequest request)
     {
         var commandId = Guid.NewGuid().ToString("N");
-        await hubContext.Clients.Group(HubConstants.Groups.Device(request.DeviceId))
-            .SendAsync(HubConstants.ServerMethods.ReceiveCommand, commandId, request.Command, request.Payload);
+        await events.SendCommandToDeviceAsync(request.DeviceId, commandId, request.Command, request.Payload ?? string.Empty);
         return Ok(new { CommandId = commandId });
     }
 }

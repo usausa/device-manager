@@ -2,10 +2,10 @@ namespace DeviceManager.Services;
 
 using System.Globalization;
 using System.Threading.Channels;
-using DeviceManager.Hubs;
+
 using global::DeviceManager.Shared.Grpc;
+
 using Grpc.Core;
-using Microsoft.AspNetCore.SignalR;
 
 public sealed class DeviceGrpcService(
     DeviceService deviceService,
@@ -13,7 +13,7 @@ public sealed class DeviceGrpcService(
     DataStoreService dataStoreService,
     MessageService messageService,
     LogService logService,
-    IHubContext<DeviceHub> hubContext,
+    DeviceEventService events,
     GrpcEventDispatcher eventDispatcher,
     ILogger<DeviceGrpcService> logger) : DeviceManagerService.DeviceManagerServiceBase
 {
@@ -34,8 +34,7 @@ public sealed class DeviceGrpcService(
 
             await deviceService.RegisterDeviceAsync(registration);
             await deviceService.UpdateConnectionStatusAsync(request.DeviceId, DeviceConnectionStatus.Active);
-            await hubContext.Clients.Group(HubConstants.Groups.Dashboard)
-                .SendAsync(HubConstants.DashboardMethods.DeviceConnected, registration);
+            await events.NotifyDeviceConnectedAsync(registration);
 
             logger.LogInformation("Device registered via gRPC: {DeviceId} ({Name})", request.DeviceId, request.Name);
             return new RegisterResponse { Success = true, Message = "Registered successfully" };
@@ -63,8 +62,7 @@ public sealed class DeviceGrpcService(
             };
 
             await deviceService.UpdateStatusAsync(request.DeviceId, report);
-            await hubContext.Clients.Group(HubConstants.Groups.Dashboard)
-                .SendAsync(HubConstants.DashboardMethods.DeviceStatusUpdated, request.DeviceId, report);
+            await events.NotifyStatusUpdatedAsync(request.DeviceId, report);
             return new StatusResponse { Success = true };
         }
         catch (Exception ex)
@@ -89,8 +87,7 @@ public sealed class DeviceGrpcService(
             };
 
             await messageService.AddMessageAsync(message);
-            await hubContext.Clients.Group(HubConstants.Groups.Dashboard)
-                .SendAsync(HubConstants.DashboardMethods.MessageReceived, message);
+            await events.NotifyMessageReceivedAsync(message);
             return new MessageResponse { Success = true, MessageId = message.MessageId };
         }
         catch (Exception ex)
@@ -117,8 +114,7 @@ public sealed class DeviceGrpcService(
             };
 
             await logService.AddLogEntryAsync(entry);
-            await hubContext.Clients.Group(HubConstants.Groups.Dashboard)
-                .SendAsync(HubConstants.DashboardMethods.LogReceived, entry);
+            await events.NotifyLogReceivedAsync(entry);
             return new LogResponse { Success = true };
         }
         catch (Exception ex)
@@ -199,8 +195,7 @@ public sealed class DeviceGrpcService(
             channel.Writer.TryComplete();
 
             await deviceService.UpdateConnectionStatusAsync(request.DeviceId, DeviceConnectionStatus.Inactive);
-            await hubContext.Clients.Group(HubConstants.Groups.Dashboard)
-                .SendAsync(HubConstants.DashboardMethods.DeviceDisconnected, request.DeviceId);
+            await events.NotifyDeviceDisconnectedAsync(request.DeviceId);
             logger.LogInformation("Device {DeviceId} unsubscribed from gRPC event stream", request.DeviceId);
         }
     }

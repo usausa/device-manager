@@ -1,8 +1,6 @@
 namespace DeviceManager.Components.Pages;
 
-using DeviceManager.Hubs;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.SignalR;
 
 public partial class SendMessageDialog
 {
@@ -13,7 +11,7 @@ public partial class SendMessageDialog
     public MessageService MessageService { get; set; } = default!;
 
     [Inject]
-    public IHubContext<DeviceHub> HubContext { get; set; } = default!;
+    public DeviceEventService Events { get; set; } = default!;
 
     [Inject]
     public ISnackbar Snackbar { get; set; } = default!;
@@ -45,13 +43,11 @@ public partial class SendMessageDialog
         var targetDeviceId = string.IsNullOrWhiteSpace(deviceId) ? null : deviceId.Trim();
         if (!string.IsNullOrEmpty(targetDeviceId))
         {
-            await HubContext.Clients.Group(HubConstants.Groups.Device(targetDeviceId))
-                .SendAsync(HubConstants.ServerMethods.ReceiveMessage, messageType.Trim(), content.Trim());
+            await Events.SendMessageToDeviceAsync(targetDeviceId, messageType.Trim(), content.Trim());
         }
         else
         {
-            await HubContext.Clients.Group(HubConstants.Groups.AllDevices)
-                .SendAsync(HubConstants.ServerMethods.ReceiveMessage, messageType.Trim(), content.Trim());
+            await Events.BroadcastMessageToDevicesAsync(messageType.Trim(), content.Trim());
         }
 
         Snackbar.Add("Message sent.", Severity.Success);

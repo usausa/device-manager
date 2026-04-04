@@ -1,5 +1,4 @@
 using DeviceManager.Components;
-using DeviceManager.Hubs;
 using DeviceManager.Services;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using MudBlazor.Services;
@@ -28,8 +27,8 @@ builder.Services.AddRazorComponents()
 // MudBlazor
 builder.Services.AddMudServices();
 
-// Application event bus (replaces per-page SignalR client connections)
-builder.Services.AddSingleton<AppEventBus>();
+// Application event service (device connection tracking + in-process event bus)
+builder.Services.AddSingleton<DeviceEventService>();
 
 // SignalR
 builder.Services.AddSignalR();

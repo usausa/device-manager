@@ -14,7 +14,7 @@ public partial class Messages : IDisposable
     public ISnackbar Snackbar { get; set; } = default!;
 
     [Inject]
-    public AppEventBus EventBus { get; set; } = default!;
+    public DeviceEventService EventBus { get; set; } = default!;
 
     private List<ServerMessage> messages = [];
     private string filterDeviceId = string.Empty;

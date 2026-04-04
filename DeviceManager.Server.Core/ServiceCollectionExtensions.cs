@@ -21,11 +21,11 @@ public static class ServiceCollectionExtensions
             return factory;
         });
 
-        services.AddScoped<DeviceService>();
-        services.AddScoped<ConfigService>();
-        services.AddScoped<DataStoreService>();
-        services.AddScoped<MessageService>();
-        services.AddScoped<LogService>();
+        services.AddSingleton<DeviceService>();
+        services.AddSingleton<ConfigService>();
+        services.AddSingleton<DataStoreService>();
+        services.AddSingleton<MessageService>();
+        services.AddSingleton<LogService>();
 
         return services;
     }

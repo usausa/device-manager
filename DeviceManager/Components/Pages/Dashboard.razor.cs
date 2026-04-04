@@ -17,7 +17,7 @@ public partial class Dashboard : IDisposable
     public ISnackbar Snackbar { get; set; } = default!;
 
     [Inject]
-    public AppEventBus EventBus { get; set; } = default!;
+    public DeviceEventService EventBus { get; set; } = default!;
 
     private StatusSummary? summary;
     private List<DeviceSummary>? devices;
