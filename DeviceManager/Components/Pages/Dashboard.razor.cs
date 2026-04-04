@@ -84,8 +84,6 @@ public partial class Dashboard : IDisposable
         await LoadDataAsync();
     }
 
-    internal static string GetStatusIcon(DeviceConnectionStatus status) => Icons.Material.Filled.PhoneAndroid;
-
     internal static Color GetStatusColor(DeviceConnectionStatus status) => status switch
     {
         DeviceConnectionStatus.Active => Color.Success,
@@ -93,17 +91,6 @@ public partial class Dashboard : IDisposable
         DeviceConnectionStatus.Error => Color.Error,
         _ => Color.Default
     };
-
-    internal static string GetWifiStyle(int rssi)
-    {
-        var color = rssi switch
-        {
-            > -50 => "#43A047",
-            > -70 => "#FB8C00",
-            _ => "#E53935"
-        };
-        return $"color:{color};font-size:0.75rem";
-    }
 
     internal static string GetWifiIcon(int rssi) => rssi switch
     {
@@ -118,17 +105,6 @@ public partial class Dashboard : IDisposable
         > -70 => Color.Warning,
         _ => Color.Error
     };
-
-    internal static string GetBatteryStyle(int battery)
-    {
-        var color = battery switch
-        {
-            > 50 => "#43A047",
-            > 20 => "#FB8C00",
-            _ => "#E53935"
-        };
-        return $"color:{color};font-size:0.75rem";
-    }
 
     internal static string GetBatteryIcon(int battery) => battery switch
     {

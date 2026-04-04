@@ -9,7 +9,8 @@
     <MudSpacer />
     <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
                StartIcon="@Icons.Material.Filled.CreateNewFolder" OnClick="ShowNewFolderDialogAsync">New Folder</MudButton>
-    <MudFileUpload T="IReadOnlyList<IBrowserFile>" FilesChanged="UploadFilesAsync" MaximumFileCount="20">
+    <MudFileUpload T="IReadOnlyList<IBrowserFile>" FilesChanged="UploadFilesAsync" MaximumFileCount="20"
+                   Class="ma-0 pa-0" Style="display:inline-flex">
         <CustomContent>
             <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
                        StartIcon="@Icons.Material.Filled.Upload" OnClick="@context.OpenFilePickerAsync">Upload</MudButton>

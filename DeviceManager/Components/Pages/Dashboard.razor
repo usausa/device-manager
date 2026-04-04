@@ -11,45 +11,37 @@ else
 {
     <MudGrid Spacing="1" Class="mb-2">
         <MudItem xs="6" sm="3">
-            <MudPaper Class="pa-2 d-flex align-center gap-2">
+            <MudPaper Class="pa-2 d-flex flex-column align-center">
                 <MudIcon Icon="@Icons.Material.Filled.Devices" Color="Color.Primary" />
-                <div>
-                    <MudText Typo="Typo.caption">Total</MudText>
-                    <MudText Typo="Typo.h6">@summary.Total</MudText>
-                </div>
+                <MudText Typo="Typo.caption">Total</MudText>
+                <MudText Typo="Typo.h5">@summary.Total</MudText>
             </MudPaper>
         </MudItem>
         <MudItem xs="6" sm="3">
-            <MudPaper Class="pa-2 d-flex align-center gap-2">
+            <MudPaper Class="pa-2 d-flex flex-column align-center">
                 <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
-                <div>
-                    <MudText Typo="Typo.caption">Active</MudText>
-                    <MudText Typo="Typo.h6">@summary.Active</MudText>
-                </div>
+                <MudText Typo="Typo.caption">Active</MudText>
+                <MudText Typo="Typo.h5" Color="Color.Success">@summary.Active</MudText>
             </MudPaper>
         </MudItem>
         <MudItem xs="6" sm="3">
-            <MudPaper Class="pa-2 d-flex align-center gap-2">
+            <MudPaper Class="pa-2 d-flex flex-column align-center">
                 <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" />
-                <div>
-                    <MudText Typo="Typo.caption">Warning</MudText>
-                    <MudText Typo="Typo.h6">@summary.Warning</MudText>
-                </div>
+                <MudText Typo="Typo.caption">Warning</MudText>
+                <MudText Typo="Typo.h5" Color="Color.Warning">@summary.Warning</MudText>
             </MudPaper>
         </MudItem>
         <MudItem xs="6" sm="3">
-            <MudPaper Class="pa-2 d-flex align-center gap-2">
+            <MudPaper Class="pa-2 d-flex flex-column align-center">
                 <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error" />
-                <div>
-                    <MudText Typo="Typo.caption">Error</MudText>
-                    <MudText Typo="Typo.h6">@summary.Error</MudText>
-                </div>
+                <MudText Typo="Typo.caption">Error</MudText>
+                <MudText Typo="Typo.h5" Color="Color.Error">@summary.Error</MudText>
             </MudPaper>
         </MudItem>
     </MudGrid>
 
     <MudTable Items="FilteredDevices" Dense="true" Hover="true" Elevation="1"
-              QuickFilter="DeviceFilter" T="DeviceSummary"
+              Filter="DeviceFilter" T="DeviceSummary"
               OnRowClick="row => NavigateToDevice(row.Item!.DeviceId)">
         <ToolBarContent>
             <MudTextField @bind-Value="searchText" Placeholder="Search..." Immediate="true"
@@ -81,7 +73,7 @@ else
                     <div class="d-flex align-center gap-1">
                         <MudIcon Icon="@GetWifiIcon(context.WifiRssi.Value)" Size="Size.Small"
                                  Color="@GetWifiColor(context.WifiRssi.Value)" />
-                        <MudText Typo="Typo.body2">@context.WifiRssi</MudText>
+                        <MudText Typo="Typo.body2" Color="@GetWifiColor(context.WifiRssi.Value)">@context.WifiRssi</MudText>
                     </div>
                 }
             </MudTd>
@@ -91,7 +83,7 @@ else
                     <div class="d-flex align-center gap-1">
                         <MudIcon Icon="@GetBatteryIcon(context.Battery.Value)" Size="Size.Small"
                                  Color="@GetBatteryColor(context.Battery.Value)" />
-                        <MudText Typo="Typo.body2">@context.Battery%</MudText>
+                        <MudText Typo="Typo.body2" Color="@GetBatteryColor(context.Battery.Value)">@context.Battery%</MudText>
                     </div>
                 }
             </MudTd>

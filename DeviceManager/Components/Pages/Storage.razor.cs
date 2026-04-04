@@ -13,7 +13,7 @@ public partial class Storage
     [Inject] public IDialogService DialogService { get; set; } = default!;
 
     private string rootPath = string.Empty;
-    private List<StorageEntry> entries = [];
+    private readonly List<StorageEntry> entries = [];
     private bool isLoading;
     private List<BreadcrumbItem> breadcrumbs = [];
 
