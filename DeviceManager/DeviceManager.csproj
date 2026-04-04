@@ -7,14 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <AdditionalFiles Remove="D:\GitHubDevice\sys-device-manager\stylecop.json" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.0-preview.4.25258.110" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.0-preview.4.25258.110" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.5" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.5" />
     <PackageReference Include="MudBlazor" Version="9.2.0" />
-    <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0" />
     <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" />
     <PackageReference Include="Grpc.AspNetCore" Version="2.76.0" />
@@ -23,10 +19,6 @@
   <ItemGroup>
     <ProjectReference Include="..\DeviceManager.Server.Core\DeviceManager.Server.Core.csproj" />
     <ProjectReference Include="..\DeviceManager.Shared\DeviceManager.Shared.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Data\" />
   </ItemGroup>
 
 </Project>

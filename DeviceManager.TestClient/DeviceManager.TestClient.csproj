@@ -7,11 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <AdditionalFiles Remove="D:\GitHubDevice\sys-device-manager\stylecop.json" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.0-preview.4.25258.110" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.5" />
   </ItemGroup>
 
   <ItemGroup>
