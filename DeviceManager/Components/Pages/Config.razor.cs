@@ -4,9 +4,14 @@ using Microsoft.AspNetCore.Components;
 
 public partial class Config
 {
-    [Inject] public ConfigService ConfigService { get; set; } = default!;
-    [Inject] public IDialogService DialogService { get; set; } = default!;
-    [Inject] public ISnackbar Snackbar { get; set; } = default!;
+    [Inject]
+    public ConfigService ConfigService { get; set; } = default!;
+
+    [Inject]
+    public IDialogService DialogService { get; set; } = default!;
+
+    [Inject]
+    public ISnackbar Snackbar { get; set; } = default!;
 
     private List<ConfigEntry> entries = [];
     private string searchText = string.Empty;

@@ -93,24 +93,24 @@ public static class DataSeeder
 
         var statuses = new[]
         {
-            ("dev-001", 0, 85.0, 72, 35.6812, 139.7671, "{\"scanCount\":1423}"),
-            ("dev-002", 0, 62.5, 58, 35.6815, 139.7675, "{\"scanCount\":987}"),
-            ("tab-a", 0, 100.0, 91, 34.0522, -118.2437, "{\"activeSession\":true}"),
-            ("tab-b", 1, 0.0, 34, 34.0525, -118.2440, "{\"activeSession\":false}"),
-            ("kiosk-tky-01", 0, 50.0, (int?)null, 35.6895, 139.6917, "{\"displayOn\":true,\"uptimeHours\":148}"),
-            ("kiosk-tky-02", 2, 48.0, (int?)null, 35.6897, 139.6920, "{\"displayOn\":true,\"tempCelsius\":42}"),
-            ("sensor-hq-01", 0, 100.0, 100, 37.7749, -122.4194, "{\"humidity\":45,\"tempCelsius\":22}"),
-            ("sensor-hq-02", 3, 0.0, 5, 37.7750, -122.4195, "{\"error\":\"SENSOR_FAULT\"}"),
-            ("laptop-field-01", 0, 75.0, 63, 40.7128, -74.0060, "{\"vpnConnected\":true}"),
-            ("rpi-lab-01", 2, 30.0, (int?)null, 37.3861, -122.0839, "{\"firmwareVersion\":\"0.9.3-beta\",\"crashCount\":7}"),
+            ("dev-001",         0, 85.0,  72,         (int?)-52, 35.6812,  139.7671,  "{\"scanCount\":1423}"),
+            ("dev-002",         0, 62.5,  58,         (int?)-68, 35.6815,  139.7675,  "{\"scanCount\":987}"),
+            ("tab-a",           0, 100.0, 91,         (int?)-45, 34.0522, -118.2437,  "{\"activeSession\":true}"),
+            ("tab-b",           1, 0.0,   34,         (int?)-78, 34.0525, -118.2440,  "{\"activeSession\":false}"),
+            ("kiosk-tky-01",    0, 50.0,  (int?)null, (int?)-55, 35.6895,  139.6917,  "{\"displayOn\":true,\"uptimeHours\":148}"),
+            ("kiosk-tky-02",    2, 48.0,  (int?)null, (int?)-82, 35.6897,  139.6920,  "{\"displayOn\":true,\"tempCelsius\":42}"),
+            ("sensor-hq-01",    0, 100.0, 100,        (int?)-41, 37.7749, -122.4194,  "{\"humidity\":45,\"tempCelsius\":22}"),
+            ("sensor-hq-02",    3, 0.0,   5,          (int?)null, 37.7750, -122.4195,  "{\"error\":\"SENSOR_FAULT\"}"),
+            ("laptop-field-01", 0, 75.0,  63,         (int?)-60, 40.7128,  -74.0060,  "{\"vpnConnected\":true}"),
+            ("rpi-lab-01",      2, 30.0,  (int?)null, (int?)-75, 37.3861, -122.0839,  "{\"firmwareVersion\":\"0.9.3-beta\",\"crashCount\":7}"),
         };
 
         const string sql = """
-            INSERT INTO DeviceStatus (DeviceId, Level, Progress, Battery, Latitude, Longitude, CustomData, Timestamp)
-            VALUES (@DeviceId, @Level, @Progress, @Battery, @Latitude, @Longitude, @CustomData, @Timestamp);
+            INSERT INTO DeviceStatus (DeviceId, Level, Progress, Battery, WifiRssi, Latitude, Longitude, CustomData, Timestamp)
+            VALUES (@DeviceId, @Level, @Progress, @Battery, @WifiRssi, @Latitude, @Longitude, @CustomData, @Timestamp);
             """;
 
-        foreach (var (deviceId, level, progress, battery, lat, lon, customData) in statuses)
+        foreach (var (deviceId, level, progress, battery, wifiRssi, lat, lon, customData) in statuses)
         {
             using var cmd = connection.CreateCommand();
             cmd.CommandText = sql;
@@ -118,6 +118,7 @@ public static class DataSeeder
             cmd.Parameters.AddWithValue("@Level", level);
             cmd.Parameters.AddWithValue("@Progress", progress);
             cmd.Parameters.AddWithValue("@Battery", battery.HasValue ? (object)battery.Value : DBNull.Value);
+            cmd.Parameters.AddWithValue("@WifiRssi", wifiRssi.HasValue ? (object)wifiRssi.Value : DBNull.Value);
             cmd.Parameters.AddWithValue("@Latitude", lat);
             cmd.Parameters.AddWithValue("@Longitude", lon);
             cmd.Parameters.AddWithValue("@CustomData", customData);

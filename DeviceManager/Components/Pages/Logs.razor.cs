@@ -4,8 +4,11 @@ using Microsoft.AspNetCore.Components;
 
 public partial class Logs : IDisposable
 {
-    [Inject] public LogService LogService { get; set; } = default!;
-    [Inject] public AppEventBus EventBus { get; set; } = default!;
+    [Inject]
+    public LogService LogService { get; set; } = default!;
+
+    [Inject]
+    public AppEventBus EventBus { get; set; } = default!;
 
     private List<LogEntry> logs = [];
     private string filterDeviceId = string.Empty;

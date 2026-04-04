@@ -36,6 +36,7 @@ message StatusReport {
   optional double latitude = 5;
   optional double longitude = 6;
   map<string, string> custom_data = 7;
+  optional int32 wifi_rssi = 8;
 }
 
 message StatusResponse {

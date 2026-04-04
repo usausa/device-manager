@@ -4,14 +4,26 @@ using Microsoft.AspNetCore.Components;
 
 public partial class DeviceDetailPage : IDisposable
 {
-    [Parameter] public string DeviceId { get; set; } = string.Empty;
+    [Parameter]
+    public string DeviceId { get; set; } = string.Empty;
 
-    [Inject] public DeviceService DeviceService { get; set; } = default!;
-    [Inject] public MessageService MessageService { get; set; } = default!;
-    [Inject] public ConfigService ConfigService { get; set; } = default!;
-    [Inject] public DataStoreService DataStoreService { get; set; } = default!;
-    [Inject] public NavigationManager Navigation { get; set; } = default!;
-    [Inject] public AppEventBus EventBus { get; set; } = default!;
+    [Inject]
+    public DeviceService DeviceService { get; set; } = default!;
+
+    [Inject]
+    public MessageService MessageService { get; set; } = default!;
+
+    [Inject]
+    public ConfigService ConfigService { get; set; } = default!;
+
+    [Inject]
+    public DataStoreService DataStoreService { get; set; } = default!;
+
+    [Inject]
+    public NavigationManager Navigation { get; set; } = default!;
+
+    [Inject]
+    public AppEventBus EventBus { get; set; } = default!;
 
     private DeviceDetail? device;
     private List<DeviceStatusReport>? statusHistory;

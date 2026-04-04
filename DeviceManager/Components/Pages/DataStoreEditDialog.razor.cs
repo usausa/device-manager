@@ -4,13 +4,23 @@ using Microsoft.AspNetCore.Components;
 
 public partial class DataStoreEditDialog
 {
-    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = default!;
-    [Inject] public DataStoreService DataStoreService { get; set; } = default!;
-    [Inject] public ISnackbar Snackbar { get; set; } = default!;
+    [CascadingParameter]
+    public IMudDialogInstance MudDialog { get; set; } = default!;
 
-    [Parameter] public bool IsNew { get; set; }
-    [Parameter] public string Key { get; set; } = string.Empty;
-    [Parameter] public string InitialValue { get; set; } = string.Empty;
+    [Inject]
+    public DataStoreService DataStoreService { get; set; } = default!;
+
+    [Inject]
+    public ISnackbar Snackbar { get; set; } = default!;
+
+    [Parameter]
+    public bool IsNew { get; set; }
+
+    [Parameter]
+    public string Key { get; set; } = string.Empty;
+
+    [Parameter]
+    public string InitialValue { get; set; } = string.Empty;
 
     private string key = string.Empty;
     private string value = string.Empty;

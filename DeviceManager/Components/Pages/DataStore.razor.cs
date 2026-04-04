@@ -4,9 +4,14 @@ using Microsoft.AspNetCore.Components;
 
 public partial class DataStore
 {
-    [Inject] public DataStoreService DataStoreService { get; set; } = default!;
-    [Inject] public IDialogService DialogService { get; set; } = default!;
-    [Inject] public ISnackbar Snackbar { get; set; } = default!;
+    [Inject]
+    public DataStoreService DataStoreService { get; set; } = default!;
+
+    [Inject]
+    public IDialogService DialogService { get; set; } = default!;
+
+    [Inject]
+    public ISnackbar Snackbar { get; set; } = default!;
 
     private List<DataStoreEntry> entries = [];
     private string searchText = string.Empty;

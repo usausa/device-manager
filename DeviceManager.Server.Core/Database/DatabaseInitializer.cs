@@ -140,6 +140,25 @@ public static class DatabaseInitializer
             using var alter = connection.CreateCommand();
             alter.CommandText = "ALTER TABLE DeviceStatus ADD COLUMN WifiRssi INTEGER";
             alter.ExecuteNonQuery();
+
+            // Backfill sample WiFi values for seeded rows that lack them
+            using var backfill = connection.CreateCommand();
+            backfill.CommandText = """
+                UPDATE DeviceStatus SET WifiRssi = CASE DeviceId
+                    WHEN 'dev-001'        THEN -52
+                    WHEN 'dev-002'        THEN -68
+                    WHEN 'tab-a'          THEN -45
+                    WHEN 'tab-b'          THEN -78
+                    WHEN 'kiosk-tky-01'   THEN -55
+                    WHEN 'kiosk-tky-02'   THEN -82
+                    WHEN 'sensor-hq-01'   THEN -41
+                    WHEN 'laptop-field-01' THEN -60
+                    WHEN 'rpi-lab-01'     THEN -75
+                    ELSE NULL
+                END
+                WHERE WifiRssi IS NULL
+                """;
+            backfill.ExecuteNonQuery();
         }
     }
 

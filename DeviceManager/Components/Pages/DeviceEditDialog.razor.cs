@@ -4,11 +4,17 @@ using Microsoft.AspNetCore.Components;
 
 public partial class DeviceEditDialog
 {
-    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = default!;
-    [Inject] public DeviceService DeviceService { get; set; } = default!;
-    [Inject] public ISnackbar Snackbar { get; set; } = default!;
+    [CascadingParameter]
+    public IMudDialogInstance MudDialog { get; set; } = default!;
 
-    [Parameter] public string? DeviceId { get; set; }
+    [Inject]
+    public DeviceService DeviceService { get; set; } = default!;
+
+    [Inject]
+    public ISnackbar Snackbar { get; set; } = default!;
+
+    [Parameter]
+    public string? DeviceId { get; set; }
 
     private bool IsEdit => !string.IsNullOrEmpty(DeviceId);
 

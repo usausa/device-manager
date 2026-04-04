@@ -6,10 +6,17 @@ using Microsoft.AspNetCore.SignalR;
 
 public partial class SendMessageDialog
 {
-    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = default!;
-    [Inject] public MessageService MessageService { get; set; } = default!;
-    [Inject] public IHubContext<DeviceHub> HubContext { get; set; } = default!;
-    [Inject] public ISnackbar Snackbar { get; set; } = default!;
+    [CascadingParameter]
+    public IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Inject]
+    public MessageService MessageService { get; set; } = default!;
+
+    [Inject]
+    public IHubContext<DeviceHub> HubContext { get; set; } = default!;
+
+    [Inject]
+    public ISnackbar Snackbar { get; set; } = default!;
 
     private string deviceId = string.Empty;
     private string messageType = string.Empty;

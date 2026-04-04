@@ -5,12 +5,20 @@ using Microsoft.AspNetCore.Components.Forms;
 
 public partial class Storage
 {
-    [Parameter] public string? SubPath { get; set; }
+    [Parameter]
+    public string? SubPath { get; set; }
 
-    [Inject] public NavigationManager Navigation { get; set; } = default!;
-    [Inject] public IConfiguration Configuration { get; set; } = default!;
-    [Inject] public ISnackbar Snackbar { get; set; } = default!;
-    [Inject] public IDialogService DialogService { get; set; } = default!;
+    [Inject]
+    public NavigationManager Navigation { get; set; } = default!;
+
+    [Inject]
+    public IConfiguration Configuration { get; set; } = default!;
+
+    [Inject]
+    public ISnackbar Snackbar { get; set; } = default!;
+
+    [Inject]
+    public IDialogService DialogService { get; set; } = default!;
 
     private string rootPath = string.Empty;
     private readonly List<StorageEntry> entries = [];

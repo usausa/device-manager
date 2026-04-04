@@ -4,8 +4,11 @@ using Microsoft.AspNetCore.Components;
 
 public partial class TextInputDialog
 {
-    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = default!;
-    [Parameter] public string Label { get; set; } = "Value";
+    [CascadingParameter]
+    public IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public string Label { get; set; } = "Value";
 
     private string value = string.Empty;
 

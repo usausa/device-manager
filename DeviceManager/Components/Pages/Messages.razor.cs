@@ -4,10 +4,17 @@ using Microsoft.AspNetCore.Components;
 
 public partial class Messages : IDisposable
 {
-    [Inject] public MessageService MessageService { get; set; } = default!;
-    [Inject] public IDialogService DialogService { get; set; } = default!;
-    [Inject] public ISnackbar Snackbar { get; set; } = default!;
-    [Inject] public AppEventBus EventBus { get; set; } = default!;
+    [Inject]
+    public MessageService MessageService { get; set; } = default!;
+
+    [Inject]
+    public IDialogService DialogService { get; set; } = default!;
+
+    [Inject]
+    public ISnackbar Snackbar { get; set; } = default!;
+
+    [Inject]
+    public AppEventBus EventBus { get; set; } = default!;
 
     private List<ServerMessage> messages = [];
     private string filterDeviceId = string.Empty;

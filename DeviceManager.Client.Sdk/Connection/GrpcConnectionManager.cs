@@ -159,6 +159,11 @@ internal sealed class GrpcConnectionManager : IAsyncDisposable
             statusReport.Longitude = report.Longitude.Value;
         }
 
+        if (report.WifiRssi.HasValue)
+        {
+            statusReport.WifiRssi = report.WifiRssi.Value;
+        }
+
         if (report.CustomData is not null)
         {
             foreach (var kvp in report.CustomData)

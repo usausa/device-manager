@@ -4,11 +4,20 @@ using Microsoft.AspNetCore.Components;
 
 public partial class Dashboard : IDisposable
 {
-    [Inject] public DeviceService DeviceService { get; set; } = default!;
-    [Inject] public NavigationManager Navigation { get; set; } = default!;
-    [Inject] public IDialogService DialogService { get; set; } = default!;
-    [Inject] public ISnackbar Snackbar { get; set; } = default!;
-    [Inject] public AppEventBus EventBus { get; set; } = default!;
+    [Inject]
+    public DeviceService DeviceService { get; set; } = default!;
+
+    [Inject]
+    public NavigationManager Navigation { get; set; } = default!;
+
+    [Inject]
+    public IDialogService DialogService { get; set; } = default!;
+
+    [Inject]
+    public ISnackbar Snackbar { get; set; } = default!;
+
+    [Inject]
+    public AppEventBus EventBus { get; set; } = default!;
 
     private StatusSummary? summary;
     private List<DeviceSummary>? devices;

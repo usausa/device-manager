@@ -4,15 +4,29 @@ using Microsoft.AspNetCore.Components;
 
 public partial class ConfigEditDialog
 {
-    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = default!;
-    [Inject] public ConfigService ConfigService { get; set; } = default!;
-    [Inject] public ISnackbar Snackbar { get; set; } = default!;
+    [CascadingParameter]
+    public IMudDialogInstance MudDialog { get; set; } = default!;
 
-    [Parameter] public bool IsNew { get; set; }
-    [Parameter] public string ConfigKey { get; set; } = string.Empty;
-    [Parameter] public string InitialValue { get; set; } = string.Empty;
-    [Parameter] public string InitialValueType { get; set; } = "string";
-    [Parameter] public string InitialDescription { get; set; } = string.Empty;
+    [Inject]
+    public ConfigService ConfigService { get; set; } = default!;
+
+    [Inject]
+    public ISnackbar Snackbar { get; set; } = default!;
+
+    [Parameter]
+    public bool IsNew { get; set; }
+
+    [Parameter]
+    public string ConfigKey { get; set; } = string.Empty;
+
+    [Parameter]
+    public string InitialValue { get; set; } = string.Empty;
+
+    [Parameter]
+    public string InitialValueType { get; set; } = "string";
+
+    [Parameter]
+    public string InitialDescription { get; set; } = string.Empty;
 
     private string key = string.Empty;
     private string value = string.Empty;
