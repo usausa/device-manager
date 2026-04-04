@@ -64,9 +64,15 @@ internal sealed class MessageClient : IMessageClient, IDisposable
     private void RegisterHubHandlers()
     {
         var hub = signalRConnectionManager?.HubConnection;
-        if (hub is null) return;
+        if (hub is null)
+        {
+            return;
+        }
 
-        foreach (var sub in subscriptions) sub.Dispose();
+        foreach (var sub in subscriptions)
+        {
+            sub.Dispose();
+        }
         subscriptions.Clear();
 
         subscriptions.Add(hub.On<string, string>(HubConstants.ServerMethods.ReceiveMessage, (type, content) =>
@@ -87,7 +93,10 @@ internal sealed class MessageClient : IMessageClient, IDisposable
             grpcConnectionManager.MessageReceived -= OnGrpcMessageReceived;
         }
 
-        foreach (var sub in subscriptions) sub.Dispose();
+        foreach (var sub in subscriptions)
+        {
+            sub.Dispose();
+        }
         subscriptions.Clear();
     }
 }

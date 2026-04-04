@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 internal sealed class StorageClient : IStorageClient
 {
-    private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     private readonly HttpClient httpClient;
 
@@ -42,7 +42,7 @@ internal sealed class StorageClient : IStorageClient
     public async Task<string[]> ListAsync(string path, CancellationToken cancellationToken = default)
     {
         var url = $"api/storage/{path.TrimStart('/')}/";
-        var result = await httpClient.GetFromJsonAsync<string[]>(url, s_jsonOptions, cancellationToken).ConfigureAwait(false);
+        var result = await httpClient.GetFromJsonAsync<string[]>(url, JsonOptions, cancellationToken).ConfigureAwait(false);
         return result ?? [];
     }
 }

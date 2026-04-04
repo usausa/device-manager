@@ -104,9 +104,13 @@ public sealed class DeviceManagerClient : IAsyncDisposable
         await StopStatusReportingAsync().ConfigureAwait(false);
 
         if (useGrpc)
+        {
             await grpcConnectionManager!.DisconnectAsync(cancellationToken).ConfigureAwait(false);
+        }
         else
+        {
             await signalRConnectionManager!.DisconnectAsync(cancellationToken).ConfigureAwait(false);
+        }
     }
 
     public void StartStatusReporting(TimeSpan? interval = null)
@@ -133,12 +137,20 @@ public sealed class DeviceManagerClient : IAsyncDisposable
 
     public async Task StopStatusReportingAsync()
     {
-        if (statusTask is null) return;
+        if (statusTask is null)
+        {
+            return;
+        }
 
         statusCts?.Cancel();
 
-        try { await statusTask.ConfigureAwait(false); }
-        catch (OperationCanceledException) { }
+        try
+        {
+            await statusTask.ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+        }
         finally
         {
             statusTimer?.Dispose();
@@ -159,7 +171,10 @@ public sealed class DeviceManagerClient : IAsyncDisposable
                     ? grpcConnectionManager!.State
                     : signalRConnectionManager!.State;
 
-                if (currentState != ConnectionState.Connected) continue;
+                if (currentState != ConnectionState.Connected)
+                {
+                    continue;
+                }
 
                 var status = await statusProvider!.GetCurrentStatusAsync(cancellationToken).ConfigureAwait(false);
 
@@ -170,7 +185,10 @@ public sealed class DeviceManagerClient : IAsyncDisposable
                 else
                 {
                     var hub = signalRConnectionManager!.HubConnection;
-                    if (hub is null) continue;
+                    if (hub is null)
+                    {
+                        continue;
+                    }
                     await hub.InvokeAsync(HubConstants.ClientMethods.ReportStatus, status, cancellationToken)
                         .ConfigureAwait(false);
                 }
@@ -197,7 +215,10 @@ public sealed class DeviceManagerClient : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        if (disposed) return;
+        if (disposed)
+        {
+            return;
+        }
         disposed = true;
 
         await StopStatusReportingAsync().ConfigureAwait(false);
@@ -205,9 +226,13 @@ public sealed class DeviceManagerClient : IAsyncDisposable
         configManager.Dispose();
 
         if (grpcConnectionManager is not null)
+        {
             await grpcConnectionManager.DisposeAsync().ConfigureAwait(false);
+        }
 
         if (signalRConnectionManager is not null)
+        {
             await signalRConnectionManager.DisposeAsync().ConfigureAwait(false);
+        }
     }
 }

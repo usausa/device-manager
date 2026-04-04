@@ -32,7 +32,10 @@ internal sealed class GrpcConnectionManager : IAsyncDisposable
         get => state;
         private set
         {
-            if (state == value) return;
+            if (state == value)
+            {
+                return;
+            }
             state = value;
             ConnectionStateChanged?.Invoke(this, value);
         }
@@ -130,7 +133,9 @@ internal sealed class GrpcConnectionManager : IAsyncDisposable
     public async Task ReportStatusAsync(DeviceStatusReport report, CancellationToken cancellationToken = default)
     {
         if (client is null)
+        {
             throw new InvalidOperationException("Not connected to the server.");
+        }
 
         var statusReport = new StatusReport
         {
@@ -139,9 +144,20 @@ internal sealed class GrpcConnectionManager : IAsyncDisposable
             Progress = report.Progress
         };
 
-        if (report.Battery.HasValue) statusReport.Battery = report.Battery.Value;
-        if (report.Latitude.HasValue) statusReport.Latitude = report.Latitude.Value;
-        if (report.Longitude.HasValue) statusReport.Longitude = report.Longitude.Value;
+        if (report.Battery.HasValue)
+        {
+            statusReport.Battery = report.Battery.Value;
+        }
+
+        if (report.Latitude.HasValue)
+        {
+            statusReport.Latitude = report.Latitude.Value;
+        }
+
+        if (report.Longitude.HasValue)
+        {
+            statusReport.Longitude = report.Longitude.Value;
+        }
 
         if (report.CustomData is not null)
         {
@@ -157,7 +173,9 @@ internal sealed class GrpcConnectionManager : IAsyncDisposable
     public async Task SendMessageAsync(string messageType, string content, CancellationToken cancellationToken = default)
     {
         if (client is null)
+        {
             throw new InvalidOperationException("Not connected to the server.");
+        }
 
         await client.SendMessageAsync(
             new DeviceMessage { DeviceId = deviceInfo.DeviceId, MessageType = messageType, Content = content },
@@ -227,9 +245,15 @@ internal sealed class GrpcConnectionManager : IAsyncDisposable
                 try
                 {
                     var msgData = JsonSerializer.Deserialize<MessagePayload>(serverEvent.Payload);
-                    if (msgData is not null) MessageReceived?.Invoke(this, (msgData.MessageType, msgData.Content));
+                    if (msgData is not null)
+                    {
+                        MessageReceived?.Invoke(this, (msgData.MessageType, msgData.Content));
+                    }
                 }
-                catch (JsonException ex) { logger.LogWarning(ex, "Failed to deserialize ReceiveMessage payload"); }
+                catch (JsonException ex)
+                {
+                    logger.LogWarning(ex, "Failed to deserialize ReceiveMessage payload");
+                }
                 break;
 
             case "ReceiveCommand":
@@ -244,7 +268,10 @@ internal sealed class GrpcConnectionManager : IAsyncDisposable
                             logger.LogDebug("Command {CommandId} handled: Success={Success}", cmdData.CommandId, result.Success);
                         }
                     }
-                    catch (Exception ex) { logger.LogError(ex, "Error handling command from gRPC stream"); }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex, "Error handling command from gRPC stream");
+                    }
                 }
                 break;
 
@@ -252,9 +279,15 @@ internal sealed class GrpcConnectionManager : IAsyncDisposable
                 try
                 {
                     var configData = JsonSerializer.Deserialize<ConfigEntry>(serverEvent.Payload, new JsonSerializerOptions(JsonSerializerDefaults.Web));
-                    if (configData is not null) ConfigUpdated?.Invoke(this, configData);
+                    if (configData is not null)
+                    {
+                        ConfigUpdated?.Invoke(this, configData);
+                    }
                 }
-                catch (JsonException ex) { logger.LogWarning(ex, "Failed to deserialize ConfigUpdated payload"); }
+                catch (JsonException ex)
+                {
+                    logger.LogWarning(ex, "Failed to deserialize ConfigUpdated payload");
+                }
                 break;
         }
     }

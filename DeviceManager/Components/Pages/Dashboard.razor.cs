@@ -77,7 +77,10 @@ public partial class Dashboard : IDisposable
     {
         var confirmed = await DialogService.ShowMessageBoxAsync(
             "Delete Device", $"Delete device '{device.Name}'?", yesText: "Delete", cancelText: "Cancel");
-        if (confirmed != true) return;
+        if (confirmed != true)
+        {
+            return;
+        }
 
         await DeviceService.DeleteDeviceAsync(device.DeviceId);
         Snackbar.Add($"Device '{device.Name}' deleted.", Severity.Success);
@@ -124,12 +127,27 @@ public partial class Dashboard : IDisposable
 
     private static string FormatDateTime(DateTime? dt)
     {
-        if (dt is null) return "-";
+        if (dt is null)
+        {
+            return "-";
+        }
+
         var local = dt.Value.ToLocalTime();
         var diff = DateTime.Now - local;
-        if (diff.TotalMinutes < 1) return "Just now";
-        if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes}m ago";
-        if (diff.TotalHours < 24) return $"{(int)diff.TotalHours}h ago";
+        if (diff.TotalMinutes < 1)
+        {
+            return "Just now";
+        }
+
+        if (diff.TotalMinutes < 60)
+        {
+            return $"{(int)diff.TotalMinutes}m ago";
+        }
+
+        if (diff.TotalHours < 24)
+        {
+            return $"{(int)diff.TotalHours}h ago";
+        }
         return local.ToString("MM/dd HH:mm");
     }
 

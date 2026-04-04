@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 
 internal sealed class DataStoreClient : IDataStoreClient
 {
-    private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     private readonly HttpClient httpClient;
     private readonly string deviceId;
@@ -24,22 +24,26 @@ internal sealed class DataStoreClient : IDataStoreClient
     {
         var url = $"api/datastore/devices/{Uri.EscapeDataString(deviceId)}/{Uri.EscapeDataString(key)}";
         var response = await httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
-        if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<DataStoreEntry>(s_jsonOptions, cancellationToken).ConfigureAwait(false);
+        return await response.Content.ReadFromJsonAsync<DataStoreEntry>(JsonOptions, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IReadOnlyList<DataStoreEntry>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         var url = $"api/datastore/devices/{Uri.EscapeDataString(deviceId)}";
-        var entries = await httpClient.GetFromJsonAsync<List<DataStoreEntry>>(url, s_jsonOptions, cancellationToken).ConfigureAwait(false);
+        var entries = await httpClient.GetFromJsonAsync<List<DataStoreEntry>>(url, JsonOptions, cancellationToken).ConfigureAwait(false);
         return entries?.AsReadOnly() ?? (IReadOnlyList<DataStoreEntry>)[];
     }
 
     public async Task SetAsync(string key, string value, CancellationToken cancellationToken = default)
     {
         var url = $"api/datastore/devices/{Uri.EscapeDataString(deviceId)}/{Uri.EscapeDataString(key)}";
-        var response = await httpClient.PutAsJsonAsync(url, new { value }, s_jsonOptions, cancellationToken).ConfigureAwait(false);
+        var response = await httpClient.PutAsJsonAsync(url, new { value }, JsonOptions, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
     }
 
@@ -54,22 +58,26 @@ internal sealed class DataStoreClient : IDataStoreClient
     {
         var url = $"api/datastore/common/{Uri.EscapeDataString(key)}";
         var response = await httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
-        if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<DataStoreEntry>(s_jsonOptions, cancellationToken).ConfigureAwait(false);
+        return await response.Content.ReadFromJsonAsync<DataStoreEntry>(JsonOptions, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IReadOnlyList<DataStoreEntry>> GetAllCommonAsync(CancellationToken cancellationToken = default)
     {
         var url = "api/datastore/common";
-        var entries = await httpClient.GetFromJsonAsync<List<DataStoreEntry>>(url, s_jsonOptions, cancellationToken).ConfigureAwait(false);
+        var entries = await httpClient.GetFromJsonAsync<List<DataStoreEntry>>(url, JsonOptions, cancellationToken).ConfigureAwait(false);
         return entries?.AsReadOnly() ?? (IReadOnlyList<DataStoreEntry>)[];
     }
 
     public async Task SetCommonAsync(string key, string value, CancellationToken cancellationToken = default)
     {
         var url = $"api/datastore/common/{Uri.EscapeDataString(key)}";
-        var response = await httpClient.PutAsJsonAsync(url, new { value }, s_jsonOptions, cancellationToken).ConfigureAwait(false);
+        var response = await httpClient.PutAsJsonAsync(url, new { value }, JsonOptions, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
     }
 
@@ -80,3 +88,4 @@ internal sealed class DataStoreClient : IDataStoreClient
         response.EnsureSuccessStatusCode();
     }
 }
+

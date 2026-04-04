@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <AdditionalFiles Remove="D:\GitHubDevice\sys-device-manager\stylecop.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Grpc.Tools" Version="2.76.0" PrivateAssets="All" />
     <PackageReference Include="Google.Protobuf" Version="3.29.3" />
     <PackageReference Include="Grpc.Core.Api" Version="2.76.0" />

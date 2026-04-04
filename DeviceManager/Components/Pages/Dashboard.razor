@@ -11,30 +11,38 @@ else
 {
     <MudGrid Spacing="1" Class="mb-2">
         <MudItem xs="6" sm="3">
-            <MudPaper Class="pa-2 d-flex flex-column align-center">
-                <MudIcon Icon="@Icons.Material.Filled.Devices" Color="Color.Primary" />
-                <MudText Typo="Typo.caption">Total</MudText>
+            <MudPaper Class="pa-3 summary-card-primary">
+                <div class="d-flex align-center gap-1 mb-1">
+                    <MudIcon Icon="@Icons.Material.Filled.Devices" Color="Color.Primary" Size="Size.Small" />
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Total</MudText>
+                </div>
                 <MudText Typo="Typo.h5">@summary.Total</MudText>
             </MudPaper>
         </MudItem>
         <MudItem xs="6" sm="3">
-            <MudPaper Class="pa-2 d-flex flex-column align-center">
-                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
-                <MudText Typo="Typo.caption">Active</MudText>
+            <MudPaper Class="pa-3 summary-card-success">
+                <div class="d-flex align-center gap-1 mb-1">
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Active</MudText>
+                </div>
                 <MudText Typo="Typo.h5" Color="Color.Success">@summary.Active</MudText>
             </MudPaper>
         </MudItem>
         <MudItem xs="6" sm="3">
-            <MudPaper Class="pa-2 d-flex flex-column align-center">
-                <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" />
-                <MudText Typo="Typo.caption">Warning</MudText>
+            <MudPaper Class="pa-3 summary-card-warning">
+                <div class="d-flex align-center gap-1 mb-1">
+                    <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Size="Size.Small" />
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Warning</MudText>
+                </div>
                 <MudText Typo="Typo.h5" Color="Color.Warning">@summary.Warning</MudText>
             </MudPaper>
         </MudItem>
         <MudItem xs="6" sm="3">
-            <MudPaper Class="pa-2 d-flex flex-column align-center">
-                <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error" />
-                <MudText Typo="Typo.caption">Error</MudText>
+            <MudPaper Class="pa-3 summary-card-error">
+                <div class="d-flex align-center gap-1 mb-1">
+                    <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error" Size="Size.Small" />
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Error</MudText>
+                </div>
                 <MudText Typo="Typo.h5" Color="Color.Error">@summary.Error</MudText>
             </MudPaper>
         </MudItem>

@@ -80,7 +80,10 @@ public partial class Storage
     private void BuildBreadcrumbs()
     {
         breadcrumbs = [new BreadcrumbItem("Storage", "/storage", icon: Icons.Material.Filled.Folder)];
-        if (string.IsNullOrEmpty(SubPath)) return;
+        if (string.IsNullOrEmpty(SubPath))
+        {
+            return;
+        }
         var parts = SubPath.Split('/', StringSplitOptions.RemoveEmptyEntries);
         var accumulated = string.Empty;
         for (var i = 0; i < parts.Length; i++)
@@ -93,7 +96,10 @@ public partial class Storage
 
     private Task OnRowClickAsync(StorageEntry entry)
     {
-        if (!entry.IsDirectory) return Task.CompletedTask;
+        if (!entry.IsDirectory)
+        {
+            return Task.CompletedTask;
+        }
 
         if (entry.IsParent)
         {
@@ -143,15 +149,22 @@ public partial class Storage
     {
         var confirmed = await DialogService.ShowMessageBoxAsync(
             "Delete", $"Delete '{entry.Name}'?", yesText: "Delete", cancelText: "Cancel");
-        if (confirmed != true) return;
+        if (confirmed != true)
+        {
+            return;
+        }
 
         var fullPath = ResolveSafePath(SubPath) ?? rootPath;
         var target = Path.Combine(fullPath, entry.Name);
 
         if (entry.IsDirectory)
+        {
             Directory.Delete(target, recursive: true);
+        }
         else
+        {
             File.Delete(target);
+        }
 
         Snackbar.Add($"'{entry.Name}' deleted.", Severity.Success);
         await LoadEntriesAsync();
@@ -165,7 +178,10 @@ public partial class Storage
 
     private string? ResolveSafePath(string? relativePath)
     {
-        if (string.IsNullOrWhiteSpace(relativePath)) return rootPath;
+        if (string.IsNullOrWhiteSpace(relativePath))
+        {
+            return rootPath;
+        }
         var combined = Path.GetFullPath(Path.Combine(rootPath, relativePath));
         return !combined.StartsWith(rootPath, StringComparison.OrdinalIgnoreCase) ? null : combined;
     }

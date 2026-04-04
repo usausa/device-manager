@@ -23,7 +23,10 @@ internal sealed class SignalRConnectionManager : IAsyncDisposable
         get => state;
         private set
         {
-            if (state == value) return;
+            if (state == value)
+            {
+                return;
+            }
             state = value;
             ConnectionStateChanged?.Invoke(this, value);
         }
@@ -85,7 +88,10 @@ internal sealed class SignalRConnectionManager : IAsyncDisposable
 
     public async Task DisconnectAsync(CancellationToken cancellationToken = default)
     {
-        if (hubConnection is null) return;
+        if (hubConnection is null)
+        {
+            return;
+        }
 
         try
         {
@@ -122,7 +128,10 @@ internal sealed class SignalRConnectionManager : IAsyncDisposable
 
     private void RegisterCommandHandler()
     {
-        if (commandHandler is null || hubConnection is null) return;
+        if (commandHandler is null || hubConnection is null)
+        {
+            return;
+        }
 
         hubConnection.On<string, string, string>(
             HubConstants.ServerMethods.ReceiveCommand,

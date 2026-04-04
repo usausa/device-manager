@@ -30,3 +30,9 @@ html, body {
     margin-top: 0;
     margin-bottom: 0;
 }
+
+/* Summary card bottom border */
+.summary-card-primary { border-bottom: 3px solid var(--mud-palette-primary) !important; }
+.summary-card-success  { border-bottom: 3px solid var(--mud-palette-success) !important; }
+.summary-card-warning  { border-bottom: 3px solid var(--mud-palette-warning) !important; }
+.summary-card-error    { border-bottom: 3px solid var(--mud-palette-error) !important; }

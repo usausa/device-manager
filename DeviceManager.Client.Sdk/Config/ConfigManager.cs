@@ -13,7 +13,7 @@ using Microsoft.Extensions.Logging;
 
 internal sealed class ConfigManager : IConfigManager, IDisposable
 {
-    private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     private readonly HttpClient httpClient;
     private readonly string deviceId;
@@ -81,7 +81,7 @@ internal sealed class ConfigManager : IConfigManager, IDisposable
         try
         {
             var url = $"api/config/devices/{Uri.EscapeDataString(deviceId)}/resolved";
-            var entries = await httpClient.GetFromJsonAsync<List<ConfigEntry>>(url, s_jsonOptions, cancellationToken)
+            var entries = await httpClient.GetFromJsonAsync<List<ConfigEntry>>(url, JsonOptions, cancellationToken)
                 .ConfigureAwait(false);
 
             if (entries is not null)
@@ -119,9 +119,15 @@ internal sealed class ConfigManager : IConfigManager, IDisposable
     private void RegisterHubHandlers()
     {
         var hub = signalRConnectionManager?.HubConnection;
-        if (hub is null) return;
+        if (hub is null)
+        {
+            return;
+        }
 
-        foreach (var sub in subscriptions) sub.Dispose();
+        foreach (var sub in subscriptions)
+        {
+            sub.Dispose();
+        }
         subscriptions.Clear();
 
         subscriptions.Add(hub.On<List<ConfigEntry>>(HubConstants.ServerMethods.ConfigReload, entries =>
@@ -138,15 +144,21 @@ internal sealed class ConfigManager : IConfigManager, IDisposable
 
     private void LoadCacheFromDisk()
     {
-        if (cachePath is null || !File.Exists(cachePath)) return;
+        if (cachePath is null || !File.Exists(cachePath))
+        {
+            return;
+        }
 
         try
         {
             var json = File.ReadAllText(cachePath);
-            var entries = JsonSerializer.Deserialize<List<ConfigEntry>>(json, s_jsonOptions);
+            var entries = JsonSerializer.Deserialize<List<ConfigEntry>>(json, JsonOptions);
             if (entries is not null)
             {
-                foreach (var entry in entries) cache[entry.Key] = entry;
+                foreach (var entry in entries)
+                {
+                    cache[entry.Key] = entry;
+                }
             }
         }
         catch (Exception ex)
@@ -157,14 +169,20 @@ internal sealed class ConfigManager : IConfigManager, IDisposable
 
     private void SaveCacheToDisk()
     {
-        if (cachePath is null) return;
+        if (cachePath is null)
+        {
+            return;
+        }
 
         try
         {
             var directory = Path.GetDirectoryName(cachePath);
-            if (!string.IsNullOrEmpty(directory)) Directory.CreateDirectory(directory);
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
 
-            var json = JsonSerializer.Serialize(cache.Values.ToList(), s_jsonOptions);
+            var json = JsonSerializer.Serialize(cache.Values.ToList(), JsonOptions);
             File.WriteAllText(cachePath, json);
         }
         catch (Exception ex)
@@ -185,7 +203,10 @@ internal sealed class ConfigManager : IConfigManager, IDisposable
             grpcConnectionManager.ConfigUpdated -= OnGrpcConfigUpdated;
         }
 
-        foreach (var sub in subscriptions) sub.Dispose();
+        foreach (var sub in subscriptions)
+        {
+            sub.Dispose();
+        }
         subscriptions.Clear();
     }
 }

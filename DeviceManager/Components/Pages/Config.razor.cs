@@ -59,7 +59,10 @@ public partial class Config
     {
         var confirmed = await DialogService.ShowMessageBoxAsync(
             "Delete", $"Delete config '{entry.Key}'?", yesText: "Delete", cancelText: "Cancel");
-        if (confirmed != true) return;
+        if (confirmed != true)
+        {
+            return;
+        }
 
         await ConfigService.DeleteCommonConfigAsync(entry.Key);
         Snackbar.Add($"Config '{entry.Key}' deleted.", Severity.Success);

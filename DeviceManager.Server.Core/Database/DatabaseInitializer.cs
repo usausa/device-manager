@@ -26,6 +26,7 @@ public static class DatabaseInitializer
             Level INTEGER NOT NULL DEFAULT 0,
             Progress REAL NOT NULL DEFAULT 0,
             Battery INTEGER,
+            WifiRssi INTEGER,
             Latitude REAL,
             Longitude REAL,
             CustomData TEXT,
@@ -118,7 +119,28 @@ public static class DatabaseInitializer
         command.CommandText = CommonSchema;
         command.ExecuteNonQuery();
 
+        MigrateCommonDatabase(connection);
+
         logger?.LogInformation("Common database initialized successfully");
+    }
+
+    private static void MigrateCommonDatabase(SqliteConnection connection)
+    {
+        var existing = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        using var pragma = connection.CreateCommand();
+        pragma.CommandText = "PRAGMA table_info(DeviceStatus)";
+        using var reader = pragma.ExecuteReader();
+        while (reader.Read())
+        {
+            existing.Add(reader.GetString(1));
+        }
+
+        if (!existing.Contains("WifiRssi"))
+        {
+            using var alter = connection.CreateCommand();
+            alter.CommandText = "ALTER TABLE DeviceStatus ADD COLUMN WifiRssi INTEGER";
+            alter.ExecuteNonQuery();
+        }
     }
 
     public static void InitializeDeviceDatabase(string connectionString, ILogger? logger = null)

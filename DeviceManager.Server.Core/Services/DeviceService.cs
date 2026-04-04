@@ -14,7 +14,7 @@ public sealed class DeviceService(DbConnectionFactory dbFactory, ILogger<DeviceS
         using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT d.DeviceId, d.Name, d."Group", d.Status, d.LastConnectedAt,
-                   ds.Level, ds.Progress, ds.Battery, ds.Timestamp
+                   ds.Level, ds.Progress, ds.Battery, ds.WifiRssi, ds.Timestamp
             FROM Device d
             LEFT JOIN DeviceStatus ds ON d.DeviceId = ds.DeviceId
             ORDER BY d.Name
@@ -34,7 +34,8 @@ public sealed class DeviceService(DbConnectionFactory dbFactory, ILogger<DeviceS
                 Level = reader.IsDBNull(5) ? 0 : reader.GetInt32(5),
                 Progress = reader.IsDBNull(6) ? 0 : reader.GetDouble(6),
                 Battery = reader.IsDBNull(7) ? null : reader.GetInt32(7),
-                StatusTimestamp = reader.IsDBNull(8) ? null : ParseDateTime(reader.GetString(8))
+                WifiRssi = reader.IsDBNull(8) ? null : reader.GetInt32(8),
+                StatusTimestamp = reader.IsDBNull(9) ? null : ParseDateTime(reader.GetString(9))
             });
         }
 
@@ -48,7 +49,7 @@ public sealed class DeviceService(DbConnectionFactory dbFactory, ILogger<DeviceS
         command.CommandText = """
             SELECT d.DeviceId, d.Name, d.Platform, d."Group", d.Tags, d.Note, d.Status,
                    d.IsEnabled, d.RegisteredAt, d.LastConnectedAt,
-                   ds.Level, ds.Progress, ds.Battery, ds.Latitude, ds.Longitude,
+                   ds.Level, ds.Progress, ds.Battery, ds.WifiRssi, ds.Latitude, ds.Longitude,
                    ds.CustomData, ds.Timestamp
             FROM Device d
             LEFT JOIN DeviceStatus ds ON d.DeviceId = ds.DeviceId
@@ -77,10 +78,11 @@ public sealed class DeviceService(DbConnectionFactory dbFactory, ILogger<DeviceS
             Level = reader.IsDBNull(10) ? 0 : reader.GetInt32(10),
             Progress = reader.IsDBNull(11) ? 0 : reader.GetDouble(11),
             Battery = reader.IsDBNull(12) ? null : reader.GetInt32(12),
-            Latitude = reader.IsDBNull(13) ? null : reader.GetDouble(13),
-            Longitude = reader.IsDBNull(14) ? null : reader.GetDouble(14),
-            CustomData = reader.IsDBNull(15) ? null : JsonSerializer.Deserialize<Dictionary<string, string>>(reader.GetString(15)),
-            StatusTimestamp = reader.IsDBNull(16) ? null : ParseDateTime(reader.GetString(16))
+            WifiRssi = reader.IsDBNull(13) ? null : reader.GetInt32(13),
+            Latitude = reader.IsDBNull(14) ? null : reader.GetDouble(14),
+            Longitude = reader.IsDBNull(15) ? null : reader.GetDouble(15),
+            CustomData = reader.IsDBNull(16) ? null : JsonSerializer.Deserialize<Dictionary<string, string>>(reader.GetString(16)),
+            StatusTimestamp = reader.IsDBNull(17) ? null : ParseDateTime(reader.GetString(17))
         };
     }
 
@@ -193,16 +195,17 @@ public sealed class DeviceService(DbConnectionFactory dbFactory, ILogger<DeviceS
         using var connection = dbFactory.GetCommonConnection();
         using var command = connection.CreateCommand();
         command.CommandText = """
-            INSERT INTO DeviceStatus (DeviceId, Level, Progress, Battery, Latitude, Longitude, CustomData, Timestamp)
-            VALUES (@DeviceId, @Level, @Progress, @Battery, @Latitude, @Longitude, @CustomData, @Timestamp)
+            INSERT INTO DeviceStatus (DeviceId, Level, Progress, Battery, WifiRssi, Latitude, Longitude, CustomData, Timestamp)
+            VALUES (@DeviceId, @Level, @Progress, @Battery, @WifiRssi, @Latitude, @Longitude, @CustomData, @Timestamp)
             ON CONFLICT(DeviceId) DO UPDATE SET
-                Level = @Level, Progress = @Progress, Battery = @Battery,
+                Level = @Level, Progress = @Progress, Battery = @Battery, WifiRssi = @WifiRssi,
                 Latitude = @Latitude, Longitude = @Longitude, CustomData = @CustomData, Timestamp = @Timestamp
             """;
         command.Parameters.AddWithValue("@DeviceId", deviceId);
         command.Parameters.AddWithValue("@Level", report.Level);
         command.Parameters.AddWithValue("@Progress", report.Progress);
         command.Parameters.AddWithValue("@Battery", (object?)report.Battery ?? DBNull.Value);
+        command.Parameters.AddWithValue("@WifiRssi", (object?)report.WifiRssi ?? DBNull.Value);
         command.Parameters.AddWithValue("@Latitude", (object?)report.Latitude ?? DBNull.Value);
         command.Parameters.AddWithValue("@Longitude", (object?)report.Longitude ?? DBNull.Value);
         command.Parameters.AddWithValue("@CustomData", report.CustomData is not null ? JsonSerializer.Serialize(report.CustomData) : DBNull.Value);

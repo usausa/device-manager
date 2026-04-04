@@ -57,7 +57,10 @@ public partial class DataStore
     {
         var confirmed = await DialogService.ShowMessageBoxAsync(
             "Delete", $"Delete key '{entry.Key}'?", yesText: "Delete", cancelText: "Cancel");
-        if (confirmed != true) return;
+        if (confirmed != true)
+        {
+            return;
+        }
 
         await DataStoreService.DeleteCommonEntryAsync(entry.Key);
         Snackbar.Add($"Key '{entry.Key}' deleted.", Severity.Success);

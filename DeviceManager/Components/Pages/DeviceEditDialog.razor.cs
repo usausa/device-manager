@@ -22,10 +22,16 @@ public partial class DeviceEditDialog
 
     protected override async Task OnInitializedAsync()
     {
-        if (!IsEdit) return;
+        if (!IsEdit)
+        {
+            return;
+        }
 
         var detail = await DeviceService.GetDeviceAsync(DeviceId!);
-        if (detail is null) return;
+        if (detail is null)
+        {
+            return;
+        }
 
         formDeviceId = detail.DeviceId;
         formName = detail.Name;
