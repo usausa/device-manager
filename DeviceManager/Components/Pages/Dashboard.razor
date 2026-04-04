@@ -54,7 +54,7 @@ else
         <ToolBarContent>
             <MudTextField @bind-Value="searchText" Placeholder="Search..." Immediate="true"
                           Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
-                          IconSize="Size.Small" Class="mt-0" Style="max-width:300px" />
+                          IconSize="Size.Small" Margin="Margin.Dense" Class="mt-0" Style="max-width:300px" />
             <MudSpacer />
             <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
                        StartIcon="@Icons.Material.Filled.Add" OnClick="ShowAddDialog">Add Device</MudButton>
@@ -63,27 +63,36 @@ else
             <MudTh Style="width:36px"></MudTh>
             <MudTh>Name</MudTh>
             <MudTh>Group</MudTh>
-            <MudTh Style="width:40px"><MudIcon Icon="@Icons.Material.Filled.Wifi" Size="Size.Small" /></MudTh>
-            <MudTh Style="width:40px"><MudIcon Icon="@Icons.Material.Filled.BatteryFull" Size="Size.Small" /></MudTh>
+            <MudTh Style="width:80px"><MudIcon Icon="@Icons.Material.Filled.Wifi" Size="Size.Small" /></MudTh>
+            <MudTh Style="width:80px"><MudIcon Icon="@Icons.Material.Filled.BatteryFull" Size="Size.Small" /></MudTh>
             <MudTh>Progress</MudTh>
             <MudTh>Last Connected</MudTh>
+            <MudTh Style="width:100px"></MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd>
-                <MudIcon Icon="@GetStatusIcon(context.Status)" Color="@GetStatusColor(context.Status)" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.PhoneAndroid" Color="@GetStatusColor(context.Status)" Size="Size.Small" />
             </MudTd>
             <MudTd DataLabel="Name">@context.Name</MudTd>
             <MudTd DataLabel="Group">@(context.Group ?? "-")</MudTd>
             <MudTd DataLabel="WiFi">
                 @if (context.WifiRssi.HasValue)
                 {
-                    <MudText Typo="Typo.body2" Style="@GetWifiStyle(context.WifiRssi.Value)">@context.WifiRssi dBm</MudText>
+                    <div class="d-flex align-center gap-1">
+                        <MudIcon Icon="@GetWifiIcon(context.WifiRssi.Value)" Size="Size.Small"
+                                 Color="@GetWifiColor(context.WifiRssi.Value)" />
+                        <MudText Typo="Typo.body2">@context.WifiRssi</MudText>
+                    </div>
                 }
             </MudTd>
             <MudTd DataLabel="Battery">
                 @if (context.Battery.HasValue)
                 {
-                    <MudText Typo="Typo.body2" Style="@GetBatteryStyle(context.Battery.Value)">@context.Battery%</MudText>
+                    <div class="d-flex align-center gap-1">
+                        <MudIcon Icon="@GetBatteryIcon(context.Battery.Value)" Size="Size.Small"
+                                 Color="@GetBatteryColor(context.Battery.Value)" />
+                        <MudText Typo="Typo.body2">@context.Battery%</MudText>
+                    </div>
                 }
             </MudTd>
             <MudTd DataLabel="Progress">
@@ -105,6 +114,12 @@ else
             </MudTd>
             <MudTd DataLabel="Last Connected">
                 <MudText Typo="Typo.body2" Class="mud-text-secondary">@FormatDateTime(context.LastConnectedAt)</MudText>
+            </MudTd>
+            <MudTd @onclick:stopPropagation="true">
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                               OnClick="() => ShowEditDialogAsync(context.DeviceId)" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                               OnClick="() => ConfirmDeleteAsync(context)" />
             </MudTd>
         </RowTemplate>
         <NoRecordsContent>

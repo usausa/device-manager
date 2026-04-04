@@ -59,13 +59,32 @@ public partial class Dashboard : IDisposable
         }
     }
 
-    internal static string GetStatusIcon(DeviceConnectionStatus status) => status switch
+    private async Task ShowEditDialogAsync(string deviceId)
     {
-        DeviceConnectionStatus.Active => Icons.Material.Filled.CheckCircle,
-        DeviceConnectionStatus.Warning => Icons.Material.Filled.Warning,
-        DeviceConnectionStatus.Error => Icons.Material.Filled.Error,
-        _ => Icons.Material.Filled.RadioButtonUnchecked
-    };
+        var parameters = new DialogParameters<DeviceEditDialog>
+        {
+            { x => x.DeviceId, deviceId }
+        };
+        var dialog = await DialogService.ShowAsync<DeviceEditDialog>("Edit Device", parameters);
+        var result = await dialog.Result;
+        if (result is { Canceled: false })
+        {
+            await LoadDataAsync();
+        }
+    }
+
+    private async Task ConfirmDeleteAsync(DeviceSummary device)
+    {
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            "Delete Device", $"Delete device '{device.Name}'?", yesText: "Delete", cancelText: "Cancel");
+        if (confirmed != true) return;
+
+        await DeviceService.DeleteDeviceAsync(device.DeviceId);
+        Snackbar.Add($"Device '{device.Name}' deleted.", Severity.Success);
+        await LoadDataAsync();
+    }
+
+    internal static string GetStatusIcon(DeviceConnectionStatus status) => Icons.Material.Filled.PhoneAndroid;
 
     internal static Color GetStatusColor(DeviceConnectionStatus status) => status switch
     {
@@ -86,6 +105,20 @@ public partial class Dashboard : IDisposable
         return $"color:{color};font-size:0.75rem";
     }
 
+    internal static string GetWifiIcon(int rssi) => rssi switch
+    {
+        > -50 => Icons.Material.Filled.Wifi,
+        > -70 => Icons.Material.Filled.Wifi2Bar,
+        _ => Icons.Material.Filled.Wifi1Bar
+    };
+
+    internal static Color GetWifiColor(int rssi) => rssi switch
+    {
+        > -50 => Color.Success,
+        > -70 => Color.Warning,
+        _ => Color.Error
+    };
+
     internal static string GetBatteryStyle(int battery)
     {
         var color = battery switch
@@ -96,6 +129,22 @@ public partial class Dashboard : IDisposable
         };
         return $"color:{color};font-size:0.75rem";
     }
+
+    internal static string GetBatteryIcon(int battery) => battery switch
+    {
+        > 80 => Icons.Material.Filled.BatteryFull,
+        > 60 => Icons.Material.Filled.Battery6Bar,
+        > 40 => Icons.Material.Filled.Battery4Bar,
+        > 20 => Icons.Material.Filled.Battery2Bar,
+        _ => Icons.Material.Filled.BatteryAlert
+    };
+
+    internal static Color GetBatteryColor(int battery) => battery switch
+    {
+        > 50 => Color.Success,
+        > 20 => Color.Warning,
+        _ => Color.Error
+    };
 
     private static string FormatDateTime(DateTime? dt)
     {

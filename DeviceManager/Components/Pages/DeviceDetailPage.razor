@@ -12,7 +12,7 @@ else
     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-2">
         <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" OnClick="GoBack" />
         <MudText Typo="Typo.h6">@device.Name</MudText>
-        <MudIcon Icon="@Dashboard.GetStatusIcon(device.Status)" Color="@Dashboard.GetStatusColor(device.Status)" Size="Size.Small" />
+        <MudIcon Icon="@Icons.Material.Filled.PhoneAndroid" Color="@Dashboard.GetStatusColor(device.Status)" Size="Size.Small" />
     </MudStack>
 
     <MudGrid Spacing="1" Class="mb-2">
@@ -25,11 +25,11 @@ else
                     <tr><td class="mud-text-secondary">Enabled</td><td><MudIcon Icon="@(device.IsEnabled ? Icons.Material.Filled.Check : Icons.Material.Filled.Close)" Color="@(device.IsEnabled ? Color.Success : Color.Error)" Size="Size.Small" /></td></tr>
                     @if (device.Battery.HasValue)
                     {
-                        <tr><td class="mud-text-secondary">Battery</td><td style="@Dashboard.GetBatteryStyle(device.Battery.Value)">@device.Battery%</td></tr>
+                        <tr><td class="mud-text-secondary">Battery</td><td><MudIcon Icon="@Dashboard.GetBatteryIcon(device.Battery.Value)" Color="@Dashboard.GetBatteryColor(device.Battery.Value)" Size="Size.Small" /> @device.Battery%</td></tr>
                     }
                     @if (device.WifiRssi.HasValue)
                     {
-                        <tr><td class="mud-text-secondary">WiFi</td><td style="@Dashboard.GetWifiStyle(device.WifiRssi.Value)">@device.WifiRssi dBm</td></tr>
+                        <tr><td class="mud-text-secondary">WiFi</td><td><MudIcon Icon="@Dashboard.GetWifiIcon(device.WifiRssi.Value)" Color="@Dashboard.GetWifiColor(device.WifiRssi.Value)" Size="Size.Small" /> @device.WifiRssi dBm</td></tr>
                     }
                     <tr><td class="mud-text-secondary">Registered</td><td>@device.RegisteredAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td></tr>
                     <tr><td class="mud-text-secondary">Last Connected</td><td>@(device.LastConnectedAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "-")</td></tr>
