@@ -1,16 +1,16 @@
+namespace DeviceManager.Client.Sdk.Messaging;
+
 using DeviceManager.Client.Sdk.Connection;
 using DeviceManager.Shared;
+
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 
-namespace DeviceManager.Client.Sdk.Messaging;
-
 internal sealed class MessageClient : IMessageClient, IDisposable
 {
-    private readonly SignalRConnectionManager? _signalRConnectionManager;
-    private readonly GrpcConnectionManager? _grpcConnectionManager;
-    private readonly ILogger _logger;
-    private readonly List<IDisposable> _subscriptions = [];
+    private readonly SignalRConnectionManager? signalRConnectionManager;
+    private readonly GrpcConnectionManager? grpcConnectionManager;
+    private readonly List<IDisposable> subscriptions = [];
 
     public event EventHandler<(string Type, string Content)>? MessageReceived;
 
@@ -19,30 +19,29 @@ internal sealed class MessageClient : IMessageClient, IDisposable
         GrpcConnectionManager? grpcConnectionManager,
         ILogger logger)
     {
-        _signalRConnectionManager = signalRConnectionManager;
-        _grpcConnectionManager = grpcConnectionManager;
-        _logger = logger;
+        this.signalRConnectionManager = signalRConnectionManager;
+        this.grpcConnectionManager = grpcConnectionManager;
 
-        if (_signalRConnectionManager is not null)
+        if (this.signalRConnectionManager is not null)
         {
-            _signalRConnectionManager.ConnectionStateChanged += OnConnectionStateChanged;
+            this.signalRConnectionManager.ConnectionStateChanged += OnConnectionStateChanged;
         }
 
-        if (_grpcConnectionManager is not null)
+        if (this.grpcConnectionManager is not null)
         {
-            _grpcConnectionManager.MessageReceived += OnGrpcMessageReceived;
+            this.grpcConnectionManager.MessageReceived += OnGrpcMessageReceived;
         }
     }
 
     public async Task SendAsync(string messageType, string content, CancellationToken cancellationToken = default)
     {
-        if (_grpcConnectionManager is not null)
+        if (grpcConnectionManager is not null)
         {
-            await _grpcConnectionManager.SendMessageAsync(messageType, content, cancellationToken).ConfigureAwait(false);
+            await grpcConnectionManager.SendMessageAsync(messageType, content, cancellationToken).ConfigureAwait(false);
             return;
         }
 
-        var hub = _signalRConnectionManager?.HubConnection
+        var hub = signalRConnectionManager?.HubConnection
             ?? throw new InvalidOperationException("Not connected to the server.");
 
         await hub.InvokeAsync(HubConstants.ClientMethods.SendMessage, messageType, content, cancellationToken)
@@ -64,13 +63,13 @@ internal sealed class MessageClient : IMessageClient, IDisposable
 
     private void RegisterHubHandlers()
     {
-        var hub = _signalRConnectionManager?.HubConnection;
+        var hub = signalRConnectionManager?.HubConnection;
         if (hub is null) return;
 
-        foreach (var sub in _subscriptions) sub.Dispose();
-        _subscriptions.Clear();
+        foreach (var sub in subscriptions) sub.Dispose();
+        subscriptions.Clear();
 
-        _subscriptions.Add(hub.On<string, string>(HubConstants.ServerMethods.ReceiveMessage, (type, content) =>
+        subscriptions.Add(hub.On<string, string>(HubConstants.ServerMethods.ReceiveMessage, (type, content) =>
         {
             MessageReceived?.Invoke(this, (type, content));
         }));
@@ -78,17 +77,17 @@ internal sealed class MessageClient : IMessageClient, IDisposable
 
     public void Dispose()
     {
-        if (_signalRConnectionManager is not null)
+        if (signalRConnectionManager is not null)
         {
-            _signalRConnectionManager.ConnectionStateChanged -= OnConnectionStateChanged;
+            signalRConnectionManager.ConnectionStateChanged -= OnConnectionStateChanged;
         }
 
-        if (_grpcConnectionManager is not null)
+        if (grpcConnectionManager is not null)
         {
-            _grpcConnectionManager.MessageReceived -= OnGrpcMessageReceived;
+            grpcConnectionManager.MessageReceived -= OnGrpcMessageReceived;
         }
 
-        foreach (var sub in _subscriptions) sub.Dispose();
-        _subscriptions.Clear();
+        foreach (var sub in subscriptions) sub.Dispose();
+        subscriptions.Clear();
     }
 }

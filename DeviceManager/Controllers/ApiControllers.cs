@@ -140,7 +140,7 @@ public sealed class StorageController(IConfiguration configuration, ILogger<Stor
             foreach (var file in Directory.GetFiles(fullPath))
             {
                 var info = new FileInfo(file);
-                entries.Add(new { Name = info.Name, Type = "file", info.Length, LastModified = info.LastWriteTimeUtc });
+                entries.Add(new { info.Name, Type = "file", info.Length, LastModified = info.LastWriteTimeUtc });
             }
 
             return Ok(entries);

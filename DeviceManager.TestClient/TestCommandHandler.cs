@@ -1,7 +1,7 @@
+namespace DeviceManager.TestClient;
+
 using DeviceManager.Client.Sdk;
 using DeviceManager.Shared.Models;
-
-namespace DeviceManager.TestClient;
 
 internal sealed class TestCommandHandler : IDeviceCommandHandler
 {

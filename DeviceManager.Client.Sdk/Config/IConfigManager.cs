@@ -1,6 +1,6 @@
-using DeviceManager.Shared.Models;
-
 namespace DeviceManager.Client.Sdk.Config;
+
+using DeviceManager.Shared.Models;
 
 public interface IConfigManager
 {

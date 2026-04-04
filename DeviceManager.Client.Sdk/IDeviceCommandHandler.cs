@@ -1,6 +1,6 @@
-using DeviceManager.Shared.Models;
-
 namespace DeviceManager.Client.Sdk;
+
+using DeviceManager.Shared.Models;
 
 public interface IDeviceCommandHandler
 {

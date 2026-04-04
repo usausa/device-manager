@@ -7,7 +7,7 @@ using global::DeviceManager.Shared.Grpc;
 public sealed class GrpcEventDispatcher
 {
     private readonly ConcurrentDictionary<string, List<Channel<ServerEvent>>> subscribers = new();
-    private readonly object syncLock = new();
+    private readonly Lock syncLock = new();
 
     public void RegisterSubscriber(string deviceId, Channel<ServerEvent> channel)
     {

@@ -1,11 +1,12 @@
+namespace DeviceManager.Client.Sdk;
+
 using DeviceManager.Client.Sdk.Config;
 using DeviceManager.Client.Sdk.DataStore;
 using DeviceManager.Client.Sdk.Messaging;
 using DeviceManager.Client.Sdk.Storage;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-
-namespace DeviceManager.Client.Sdk;
 
 public static class ServiceCollectionExtensions
 {

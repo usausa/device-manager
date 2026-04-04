@@ -1,24 +1,27 @@
+namespace DeviceManager.Client.Sdk.Connection;
+
 using System.Text.Json;
+
 using DeviceManager.Shared.Grpc;
 using DeviceManager.Shared.Models;
+
 using Grpc.Core;
 using Grpc.Net.Client;
-using Microsoft.Extensions.Logging;
 
-namespace DeviceManager.Client.Sdk.Connection;
+using Microsoft.Extensions.Logging;
 
 internal sealed class GrpcConnectionManager : IAsyncDisposable
 {
-    private readonly DeviceManagerClientOptions _options;
-    private readonly IDeviceInfoProvider _deviceInfo;
-    private readonly IDeviceCommandHandler? _commandHandler;
-    private readonly ILogger _logger;
+    private readonly DeviceManagerClientOptions options;
+    private readonly IDeviceInfoProvider deviceInfo;
+    private readonly IDeviceCommandHandler? commandHandler;
+    private readonly ILogger logger;
 
-    private GrpcChannel? _grpcChannel;
-    private DeviceManagerService.DeviceManagerServiceClient? _client;
-    private CancellationTokenSource? _subscribeCts;
-    private Task? _subscribeTask;
-    private ConnectionState _state = ConnectionState.Disconnected;
+    private GrpcChannel? grpcChannel;
+    private DeviceManagerService.DeviceManagerServiceClient? client;
+    private CancellationTokenSource? subscribeCts;
+    private Task? subscribeTask;
+    private ConnectionState state = ConnectionState.Disconnected;
 
     public event EventHandler<ConnectionState>? ConnectionStateChanged;
     public event EventHandler<(string Type, string Content)>? MessageReceived;
@@ -26,16 +29,16 @@ internal sealed class GrpcConnectionManager : IAsyncDisposable
 
     public ConnectionState State
     {
-        get => _state;
+        get => state;
         private set
         {
-            if (_state == value) return;
-            _state = value;
+            if (state == value) return;
+            state = value;
             ConnectionStateChanged?.Invoke(this, value);
         }
     }
 
-    internal DeviceManagerService.DeviceManagerServiceClient? Client => _client;
+    internal DeviceManagerService.DeviceManagerServiceClient? Client => client;
 
     public GrpcConnectionManager(
         DeviceManagerClientOptions options,
@@ -43,43 +46,43 @@ internal sealed class GrpcConnectionManager : IAsyncDisposable
         IDeviceCommandHandler? commandHandler,
         ILogger logger)
     {
-        _options = options;
-        _deviceInfo = deviceInfo;
-        _commandHandler = commandHandler;
-        _logger = logger;
+        this.options = options;
+        this.deviceInfo = deviceInfo;
+        this.commandHandler = commandHandler;
+        this.logger = logger;
     }
 
     public async Task ConnectAsync(CancellationToken cancellationToken = default)
     {
-        if (_grpcChannel is not null)
+        if (grpcChannel is not null)
         {
-            await DisconnectAsync(cancellationToken).ConfigureAwait(false);
+            await DisconnectAsync().ConfigureAwait(false);
         }
 
         State = ConnectionState.Connecting;
 
         try
         {
-            var grpcUrl = _options.GrpcUrl ?? _options.ServerUrl;
-            _grpcChannel = GrpcChannel.ForAddress(grpcUrl);
-            _client = new DeviceManagerService.DeviceManagerServiceClient(_grpcChannel);
+            var grpcUrl = options.GrpcUrl ?? options.ServerUrl;
+            grpcChannel = GrpcChannel.ForAddress(grpcUrl);
+            client = new DeviceManagerService.DeviceManagerServiceClient(grpcChannel);
 
             var registerRequest = new RegisterRequest
             {
-                DeviceId = _deviceInfo.DeviceId,
-                Name = _deviceInfo.DeviceName,
-                Platform = _deviceInfo.Platform ?? string.Empty,
+                DeviceId = deviceInfo.DeviceId,
+                Name = deviceInfo.DeviceName,
+                Platform = deviceInfo.Platform ?? string.Empty,
             };
 
-            if (_deviceInfo.AdditionalInfo is not null)
+            if (deviceInfo.AdditionalInfo is not null)
             {
-                foreach (var kvp in _deviceInfo.AdditionalInfo)
+                foreach (var kvp in deviceInfo.AdditionalInfo)
                 {
                     registerRequest.AdditionalInfo[kvp.Key] = kvp.Value;
                 }
             }
 
-            var response = await _client.RegisterAsync(registerRequest, cancellationToken: cancellationToken);
+            var response = await client.RegisterAsync(registerRequest, cancellationToken: cancellationToken);
             if (!response.Success)
             {
                 State = ConnectionState.Disconnected;
@@ -87,51 +90,51 @@ internal sealed class GrpcConnectionManager : IAsyncDisposable
             }
 
             State = ConnectionState.Connected;
-            _logger.LogInformation("Connected to DeviceManager via gRPC as device {DeviceId}", _deviceInfo.DeviceId);
+            logger.LogInformation("Connected to DeviceManager via gRPC as device {DeviceId}", deviceInfo.DeviceId);
 
-            _subscribeCts = new CancellationTokenSource();
-            _subscribeTask = RunSubscriptionLoopAsync(_subscribeCts.Token);
+            subscribeCts = new CancellationTokenSource();
+            subscribeTask = RunSubscriptionLoopAsync(subscribeCts.Token);
         }
         catch (Exception ex) when (ex is not InvalidOperationException)
         {
             State = ConnectionState.Disconnected;
-            _logger.LogError(ex, "Failed to connect to DeviceManager via gRPC");
+            logger.LogError(ex, "Failed to connect to DeviceManager via gRPC");
             throw;
         }
     }
 
     public async Task DisconnectAsync(CancellationToken cancellationToken = default)
     {
-        _subscribeCts?.Cancel();
+        subscribeCts?.Cancel();
 
-        if (_subscribeTask is not null)
+        if (subscribeTask is not null)
         {
-            try { await _subscribeTask.ConfigureAwait(false); }
+            try { await subscribeTask.ConfigureAwait(false); }
             catch (OperationCanceledException) { }
         }
 
-        _subscribeCts?.Dispose();
-        _subscribeCts = null;
-        _subscribeTask = null;
+        subscribeCts?.Dispose();
+        subscribeCts = null;
+        subscribeTask = null;
 
-        if (_grpcChannel is not null)
+        if (grpcChannel is not null)
         {
-            _grpcChannel.Dispose();
-            _grpcChannel = null;
+            grpcChannel.Dispose();
+            grpcChannel = null;
         }
 
-        _client = null;
+        client = null;
         State = ConnectionState.Disconnected;
     }
 
     public async Task ReportStatusAsync(DeviceStatusReport report, CancellationToken cancellationToken = default)
     {
-        if (_client is null)
+        if (client is null)
             throw new InvalidOperationException("Not connected to the server.");
 
         var statusReport = new StatusReport
         {
-            DeviceId = _deviceInfo.DeviceId,
+            DeviceId = deviceInfo.DeviceId,
             Level = report.Level,
             Progress = report.Progress
         };
@@ -148,16 +151,16 @@ internal sealed class GrpcConnectionManager : IAsyncDisposable
             }
         }
 
-        await _client.ReportStatusAsync(statusReport, cancellationToken: cancellationToken);
+        await client.ReportStatusAsync(statusReport, cancellationToken: cancellationToken);
     }
 
     public async Task SendMessageAsync(string messageType, string content, CancellationToken cancellationToken = default)
     {
-        if (_client is null)
+        if (client is null)
             throw new InvalidOperationException("Not connected to the server.");
 
-        await _client.SendMessageAsync(
-            new DeviceMessage { DeviceId = _deviceInfo.DeviceId, MessageType = messageType, Content = content },
+        await client.SendMessageAsync(
+            new DeviceMessage { DeviceId = deviceInfo.DeviceId, MessageType = messageType, Content = content },
             cancellationToken: cancellationToken);
     }
 
@@ -167,8 +170,8 @@ internal sealed class GrpcConnectionManager : IAsyncDisposable
         {
             try
             {
-                var subscribeRequest = new SubscribeRequest { DeviceId = _deviceInfo.DeviceId };
-                using var stream = _client!.Subscribe(subscribeRequest, cancellationToken: cancellationToken);
+                var subscribeRequest = new SubscribeRequest { DeviceId = deviceInfo.DeviceId };
+                using var stream = client!.Subscribe(subscribeRequest, cancellationToken: cancellationToken);
 
                 await foreach (var serverEvent in stream.ResponseStream.ReadAllAsync(cancellationToken))
                 {
@@ -185,10 +188,10 @@ internal sealed class GrpcConnectionManager : IAsyncDisposable
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "gRPC subscription stream disconnected, reconnecting...");
+                logger.LogWarning(ex, "gRPC subscription stream disconnected, reconnecting...");
                 State = ConnectionState.Reconnecting;
 
-                if (_options.AutoReconnect && !cancellationToken.IsCancellationRequested)
+                if (options.AutoReconnect && !cancellationToken.IsCancellationRequested)
                 {
                     await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken).ConfigureAwait(false);
 
@@ -196,16 +199,16 @@ internal sealed class GrpcConnectionManager : IAsyncDisposable
                     {
                         var registerRequest = new RegisterRequest
                         {
-                            DeviceId = _deviceInfo.DeviceId,
-                            Name = _deviceInfo.DeviceName,
-                            Platform = _deviceInfo.Platform ?? string.Empty,
+                            DeviceId = deviceInfo.DeviceId,
+                            Name = deviceInfo.DeviceName,
+                            Platform = deviceInfo.Platform ?? string.Empty,
                         };
-                        await _client!.RegisterAsync(registerRequest, cancellationToken: cancellationToken);
+                        await client!.RegisterAsync(registerRequest, cancellationToken: cancellationToken);
                         State = ConnectionState.Connected;
                     }
                     catch (Exception reEx)
                     {
-                        _logger.LogError(reEx, "Failed to re-register during reconnection");
+                        logger.LogError(reEx, "Failed to re-register during reconnection");
                     }
                 }
                 else
@@ -226,22 +229,22 @@ internal sealed class GrpcConnectionManager : IAsyncDisposable
                     var msgData = JsonSerializer.Deserialize<MessagePayload>(serverEvent.Payload);
                     if (msgData is not null) MessageReceived?.Invoke(this, (msgData.MessageType, msgData.Content));
                 }
-                catch (JsonException ex) { _logger.LogWarning(ex, "Failed to deserialize ReceiveMessage payload"); }
+                catch (JsonException ex) { logger.LogWarning(ex, "Failed to deserialize ReceiveMessage payload"); }
                 break;
 
             case "ReceiveCommand":
-                if (_commandHandler is not null)
+                if (commandHandler is not null)
                 {
                     try
                     {
                         var cmdData = JsonSerializer.Deserialize<CommandPayload>(serverEvent.Payload);
                         if (cmdData is not null)
                         {
-                            var result = await _commandHandler.HandleCommandAsync(cmdData.Command, cmdData.Payload).ConfigureAwait(false);
-                            _logger.LogDebug("Command {CommandId} handled: Success={Success}", cmdData.CommandId, result.Success);
+                            var result = await commandHandler.HandleCommandAsync(cmdData.Command, cmdData.Payload).ConfigureAwait(false);
+                            logger.LogDebug("Command {CommandId} handled: Success={Success}", cmdData.CommandId, result.Success);
                         }
                     }
-                    catch (Exception ex) { _logger.LogError(ex, "Error handling command from gRPC stream"); }
+                    catch (Exception ex) { logger.LogError(ex, "Error handling command from gRPC stream"); }
                 }
                 break;
 
@@ -251,7 +254,7 @@ internal sealed class GrpcConnectionManager : IAsyncDisposable
                     var configData = JsonSerializer.Deserialize<ConfigEntry>(serverEvent.Payload, new JsonSerializerOptions(JsonSerializerDefaults.Web));
                     if (configData is not null) ConfigUpdated?.Invoke(this, configData);
                 }
-                catch (JsonException ex) { _logger.LogWarning(ex, "Failed to deserialize ConfigUpdated payload"); }
+                catch (JsonException ex) { logger.LogWarning(ex, "Failed to deserialize ConfigUpdated payload"); }
                 break;
         }
     }

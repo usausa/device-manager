@@ -1,26 +1,28 @@
+namespace DeviceManager.Client.Sdk.Config;
+
 using System.Collections.Concurrent;
 using System.Net.Http.Json;
 using System.Text.Json;
+
 using DeviceManager.Client.Sdk.Connection;
 using DeviceManager.Shared;
 using DeviceManager.Shared.Models;
+
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
-
-namespace DeviceManager.Client.Sdk.Config;
 
 internal sealed class ConfigManager : IConfigManager, IDisposable
 {
     private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web);
 
-    private readonly HttpClient _httpClient;
-    private readonly string _deviceId;
-    private readonly string? _cachePath;
-    private readonly SignalRConnectionManager? _signalRConnectionManager;
-    private readonly GrpcConnectionManager? _grpcConnectionManager;
-    private readonly ILogger _logger;
-    private readonly ConcurrentDictionary<string, ConfigEntry> _cache = new(StringComparer.OrdinalIgnoreCase);
-    private readonly List<IDisposable> _subscriptions = [];
+    private readonly HttpClient httpClient;
+    private readonly string deviceId;
+    private readonly string? cachePath;
+    private readonly SignalRConnectionManager? signalRConnectionManager;
+    private readonly GrpcConnectionManager? grpcConnectionManager;
+    private readonly ILogger logger;
+    private readonly ConcurrentDictionary<string, ConfigEntry> cache = new(StringComparer.OrdinalIgnoreCase);
+    private readonly List<IDisposable> subscriptions = [];
 
     public event EventHandler<ConfigEntry>? ConfigChanged;
 
@@ -32,41 +34,41 @@ internal sealed class ConfigManager : IConfigManager, IDisposable
         GrpcConnectionManager? grpcConnectionManager,
         ILogger logger)
     {
-        _httpClient = httpClient;
-        _deviceId = deviceId;
-        _cachePath = cachePath;
-        _signalRConnectionManager = signalRConnectionManager;
-        _grpcConnectionManager = grpcConnectionManager;
-        _logger = logger;
+        this.httpClient = httpClient;
+        this.deviceId = deviceId;
+        this.cachePath = cachePath;
+        this.signalRConnectionManager = signalRConnectionManager;
+        this.grpcConnectionManager = grpcConnectionManager;
+        this.logger = logger;
 
         LoadCacheFromDisk();
 
-        if (_signalRConnectionManager is not null)
+        if (this.signalRConnectionManager is not null)
         {
-            _signalRConnectionManager.ConnectionStateChanged += OnConnectionStateChanged;
+            this.signalRConnectionManager.ConnectionStateChanged += OnConnectionStateChanged;
         }
 
-        if (_grpcConnectionManager is not null)
+        if (this.grpcConnectionManager is not null)
         {
-            _grpcConnectionManager.ConfigUpdated += OnGrpcConfigUpdated;
+            this.grpcConnectionManager.ConfigUpdated += OnGrpcConfigUpdated;
         }
     }
 
     public async Task<IReadOnlyList<ConfigEntry>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         await FetchAndCacheAllAsync(cancellationToken).ConfigureAwait(false);
-        return _cache.Values.ToList().AsReadOnly();
+        return cache.Values.ToList().AsReadOnly();
     }
 
     public async Task<ConfigEntry?> GetAsync(string key, CancellationToken cancellationToken = default)
     {
-        if (_cache.TryGetValue(key, out var cached))
+        if (cache.TryGetValue(key, out var cached))
         {
             return cached;
         }
 
         await FetchAndCacheAllAsync(cancellationToken).ConfigureAwait(false);
-        return _cache.GetValueOrDefault(key);
+        return cache.GetValueOrDefault(key);
     }
 
     public async Task RefreshAsync(CancellationToken cancellationToken = default)
@@ -78,16 +80,16 @@ internal sealed class ConfigManager : IConfigManager, IDisposable
     {
         try
         {
-            var url = $"api/config/devices/{Uri.EscapeDataString(_deviceId)}/resolved";
-            var entries = await _httpClient.GetFromJsonAsync<List<ConfigEntry>>(url, s_jsonOptions, cancellationToken)
+            var url = $"api/config/devices/{Uri.EscapeDataString(deviceId)}/resolved";
+            var entries = await httpClient.GetFromJsonAsync<List<ConfigEntry>>(url, s_jsonOptions, cancellationToken)
                 .ConfigureAwait(false);
 
             if (entries is not null)
             {
-                _cache.Clear();
+                cache.Clear();
                 foreach (var entry in entries)
                 {
-                    _cache[entry.Key] = entry;
+                    cache[entry.Key] = entry;
                 }
 
                 SaveCacheToDisk();
@@ -95,7 +97,7 @@ internal sealed class ConfigManager : IConfigManager, IDisposable
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to fetch config from server; using cached values");
+            logger.LogWarning(ex, "Failed to fetch config from server; using cached values");
         }
     }
 
@@ -109,25 +111,25 @@ internal sealed class ConfigManager : IConfigManager, IDisposable
 
     private void OnGrpcConfigUpdated(object? sender, ConfigEntry entry)
     {
-        _cache[entry.Key] = entry;
+        cache[entry.Key] = entry;
         SaveCacheToDisk();
         ConfigChanged?.Invoke(this, entry);
     }
 
     private void RegisterHubHandlers()
     {
-        var hub = _signalRConnectionManager?.HubConnection;
+        var hub = signalRConnectionManager?.HubConnection;
         if (hub is null) return;
 
-        foreach (var sub in _subscriptions) sub.Dispose();
-        _subscriptions.Clear();
+        foreach (var sub in subscriptions) sub.Dispose();
+        subscriptions.Clear();
 
-        _subscriptions.Add(hub.On<List<ConfigEntry>>(HubConstants.ServerMethods.ConfigReload, entries =>
+        subscriptions.Add(hub.On<List<ConfigEntry>>(HubConstants.ServerMethods.ConfigReload, entries =>
         {
-            _cache.Clear();
+            cache.Clear();
             foreach (var entry in entries)
             {
-                _cache[entry.Key] = entry;
+                cache[entry.Key] = entry;
             }
 
             SaveCacheToDisk();
@@ -136,54 +138,54 @@ internal sealed class ConfigManager : IConfigManager, IDisposable
 
     private void LoadCacheFromDisk()
     {
-        if (_cachePath is null || !File.Exists(_cachePath)) return;
+        if (cachePath is null || !File.Exists(cachePath)) return;
 
         try
         {
-            var json = File.ReadAllText(_cachePath);
+            var json = File.ReadAllText(cachePath);
             var entries = JsonSerializer.Deserialize<List<ConfigEntry>>(json, s_jsonOptions);
             if (entries is not null)
             {
-                foreach (var entry in entries) _cache[entry.Key] = entry;
+                foreach (var entry in entries) cache[entry.Key] = entry;
             }
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to load config cache from disk");
+            logger.LogWarning(ex, "Failed to load config cache from disk");
         }
     }
 
     private void SaveCacheToDisk()
     {
-        if (_cachePath is null) return;
+        if (cachePath is null) return;
 
         try
         {
-            var directory = Path.GetDirectoryName(_cachePath);
+            var directory = Path.GetDirectoryName(cachePath);
             if (!string.IsNullOrEmpty(directory)) Directory.CreateDirectory(directory);
 
-            var json = JsonSerializer.Serialize(_cache.Values.ToList(), s_jsonOptions);
-            File.WriteAllText(_cachePath, json);
+            var json = JsonSerializer.Serialize(cache.Values.ToList(), s_jsonOptions);
+            File.WriteAllText(cachePath, json);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to save config cache to disk");
+            logger.LogWarning(ex, "Failed to save config cache to disk");
         }
     }
 
     public void Dispose()
     {
-        if (_signalRConnectionManager is not null)
+        if (signalRConnectionManager is not null)
         {
-            _signalRConnectionManager.ConnectionStateChanged -= OnConnectionStateChanged;
+            signalRConnectionManager.ConnectionStateChanged -= OnConnectionStateChanged;
         }
 
-        if (_grpcConnectionManager is not null)
+        if (grpcConnectionManager is not null)
         {
-            _grpcConnectionManager.ConfigUpdated -= OnGrpcConfigUpdated;
+            grpcConnectionManager.ConfigUpdated -= OnGrpcConfigUpdated;
         }
 
-        foreach (var sub in _subscriptions) sub.Dispose();
-        _subscriptions.Clear();
+        foreach (var sub in subscriptions) sub.Dispose();
+        subscriptions.Clear();
     }
 }

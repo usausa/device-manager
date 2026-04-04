@@ -24,3 +24,9 @@ html, body {
     align-items: center;
     justify-content: center;
 }
+
+/* MudFileUpload: neutralize form-control margins when used as inline button */
+.mud-file-upload .mud-input-control {
+    margin-top: 0;
+    margin-bottom: 0;
+}

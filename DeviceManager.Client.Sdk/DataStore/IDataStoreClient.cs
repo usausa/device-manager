@@ -1,6 +1,6 @@
-using DeviceManager.Shared.Models;
-
 namespace DeviceManager.Client.Sdk.DataStore;
+
+using DeviceManager.Shared.Models;
 
 public interface IDataStoreClient
 {
