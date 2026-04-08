@@ -25,13 +25,27 @@ public static class DatabaseInitializer
             DeviceId TEXT PRIMARY KEY REFERENCES Device(DeviceId),
             Level INTEGER NOT NULL DEFAULT 0,
             Progress REAL NOT NULL DEFAULT 0,
+            Progress1 REAL,
+            Progress2 REAL,
             Battery INTEGER,
             WifiRssi INTEGER,
+            CpuUsage REAL,
+            MemoryUsage REAL,
             Latitude REAL,
             Longitude REAL,
             CustomData TEXT,
             Timestamp TEXT NOT NULL
         );
+
+        CREATE TABLE IF NOT EXISTS ConnectionLog (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            DeviceId TEXT NOT NULL,
+            Event INTEGER NOT NULL,
+            Timestamp TEXT NOT NULL
+        );
+
+        CREATE INDEX IF NOT EXISTS IX_ConnectionLog_DeviceId ON ConnectionLog(DeviceId);
+        CREATE INDEX IF NOT EXISTS IX_ConnectionLog_Timestamp ON ConnectionLog(Timestamp);
 
         CREATE TABLE IF NOT EXISTS CommonConfig (
             Key TEXT PRIMARY KEY,
@@ -117,7 +131,11 @@ public static class DatabaseInitializer
             Id INTEGER PRIMARY KEY AUTOINCREMENT,
             Level INTEGER NOT NULL DEFAULT 0,
             Progress REAL NOT NULL DEFAULT 0,
+            Progress1 REAL,
+            Progress2 REAL,
             Battery INTEGER,
+            CpuUsage REAL,
+            MemoryUsage REAL,
             Latitude REAL,
             Longitude REAL,
             CustomData TEXT,
@@ -177,6 +195,44 @@ public static class DatabaseInitializer
                 """;
             backfill.ExecuteNonQuery();
         }
+
+        AddColumnIfMissing(connection, "DeviceStatus", "Progress1", "REAL");
+        AddColumnIfMissing(connection, "DeviceStatus", "Progress2", "REAL");
+        AddColumnIfMissing(connection, "DeviceStatus", "CpuUsage", "REAL");
+        AddColumnIfMissing(connection, "DeviceStatus", "MemoryUsage", "REAL");
+
+        using var createLog = connection.CreateCommand();
+        createLog.CommandText = """
+            CREATE TABLE IF NOT EXISTS ConnectionLog (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                DeviceId TEXT NOT NULL,
+                Event INTEGER NOT NULL,
+                Timestamp TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS IX_ConnectionLog_DeviceId ON ConnectionLog(DeviceId);
+            CREATE INDEX IF NOT EXISTS IX_ConnectionLog_Timestamp ON ConnectionLog(Timestamp);
+            """;
+        createLog.ExecuteNonQuery();
+    }
+
+    private static void AddColumnIfMissing(
+        SqliteConnection connection, string table, string column, string type)
+    {
+        var existing = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        using var pragma = connection.CreateCommand();
+        pragma.CommandText = $"PRAGMA table_info({table})";
+        using var reader = pragma.ExecuteReader();
+        while (reader.Read())
+        {
+            existing.Add(reader.GetString(1));
+        }
+
+        if (!existing.Contains(column))
+        {
+            using var alter = connection.CreateCommand();
+            alter.CommandText = $"ALTER TABLE {table} ADD COLUMN {column} {type}";
+            alter.ExecuteNonQuery();
+        }
     }
 
     public static void InitializeDeviceDatabase(string connectionString, ILogger? logger = null)
@@ -189,6 +245,11 @@ public static class DatabaseInitializer
         using var command = connection.CreateCommand();
         command.CommandText = DeviceSchema;
         command.ExecuteNonQuery();
+
+        AddColumnIfMissing(connection, "StatusHistory", "Progress1", "REAL");
+        AddColumnIfMissing(connection, "StatusHistory", "Progress2", "REAL");
+        AddColumnIfMissing(connection, "StatusHistory", "CpuUsage", "REAL");
+        AddColumnIfMissing(connection, "StatusHistory", "MemoryUsage", "REAL");
 
         logger?.LogInformation("Device database initialized successfully");
     }

@@ -22,6 +22,7 @@ public sealed class DeviceEventService(
     MessageService messageService,
     LogService logService,
     CrashReportService crashReportService,
+    ScreenshotStore screenshotStore,
     ILogger<DeviceEventService> logger)
 {
     // ── Connection tracking ────────────────────────────────────────────────────
@@ -79,6 +80,7 @@ public sealed class DeviceEventService(
         }
 
         await deviceService.UpdateConnectionStatusAsync(deviceId, DeviceConnectionStatus.Inactive);
+        await deviceService.LogConnectionEventAsync(deviceId, connected: false);
         await NotifyDeviceDisconnectedAsync(deviceId);
         logger.LogInformation("Device disconnected: {DeviceId} ({ConnectionId})", deviceId, connectionId);
     }
@@ -88,6 +90,7 @@ public sealed class DeviceEventService(
     {
         await deviceService.RegisterDeviceAsync(registration);
         await deviceService.UpdateConnectionStatusAsync(registration.DeviceId, DeviceConnectionStatus.Active);
+        await deviceService.LogConnectionEventAsync(registration.DeviceId, connected: true);
 
         connectionToDevice[connectionId] = registration.DeviceId;
 
@@ -252,6 +255,46 @@ public sealed class DeviceEventService(
         await hubContext.Clients.Group(HubConstants.Groups.Dashboard)
             .SendAsync(HubConstants.DashboardMethods.CrashReportReceived, report);
         await PublishAsync(AppEvents.CrashReportReceived, report);
+    }
+
+    // ── Screenshot ────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Sends a screenshot request to a device over SignalR and returns the generated request ID.
+    /// </summary>
+    public async Task<string> RequestScreenshotAsync(string deviceId)
+    {
+        var requestId = Guid.NewGuid().ToString("N");
+        await hubContext.Clients.Group(HubConstants.Groups.Device(deviceId))
+            .SendAsync(HubConstants.ServerMethods.TakeScreenshot, requestId);
+        logger.LogInformation("Screenshot requested for {DeviceId} (requestId={RequestId})", deviceId, requestId);
+        return requestId;
+    }
+
+    /// <summary>Called by DeviceHub.UploadScreenshot when a device returns a captured screenshot.</summary>
+    public async Task HandleSignalRScreenshotAsync(
+        string connectionId, string requestId, string base64Data, string contentType)
+    {
+        if (!connectionToDevice.TryGetValue(connectionId, out var deviceId))
+        {
+            return;
+        }
+
+        var result = new ScreenshotResult
+        {
+            RequestId = requestId,
+            DeviceId = deviceId,
+            Base64Data = base64Data,
+            ContentType = string.IsNullOrEmpty(contentType) ? "image/png" : contentType,
+            CapturedAt = DateTime.UtcNow
+        };
+
+        screenshotStore.Save(result);
+
+        await hubContext.Clients.Group(HubConstants.Groups.Dashboard)
+            .SendAsync(HubConstants.DashboardMethods.ScreenshotReceived, result);
+        await PublishAsync(AppEvents.ScreenshotReceived, result);
+        logger.LogInformation("Screenshot received from {DeviceId} (requestId={RequestId})", deviceId, requestId);
     }
 
     /// <summary>Sends a message to a specific device over SignalR.</summary>

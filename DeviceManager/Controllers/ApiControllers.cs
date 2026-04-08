@@ -102,6 +102,42 @@ public sealed class MessagesController(
 
 [ApiController]
 [Route("api/[controller]")]
+public sealed class ScreenshotsController(
+    DeviceEventService events,
+    ScreenshotStore screenshotStore) : ControllerBase
+{
+    /// <summary>Requests a screenshot from a device. Returns the requestId for polling.</summary>
+    [HttpPost("{deviceId}/request")]
+    public async Task<IActionResult> RequestScreenshot(string deviceId)
+    {
+        var requestId = await events.RequestScreenshotAsync(deviceId);
+        return Ok(new { RequestId = requestId });
+    }
+
+    /// <summary>Returns the latest screenshot for a device, or 404 if none available.</summary>
+    [HttpGet("{deviceId}/latest")]
+    public IActionResult GetLatest(string deviceId)
+    {
+        var result = screenshotStore.GetLatestForDevice(deviceId);
+        return result is null ? NotFound() : Ok(result);
+    }
+
+    /// <summary>Returns a specific screenshot by requestId.</summary>
+    [HttpGet("{deviceId}/{requestId}")]
+    public IActionResult GetByRequestId(string deviceId, string requestId)
+    {
+        var result = screenshotStore.GetByRequestId(requestId);
+        if (result is null || result.DeviceId != deviceId)
+        {
+            return NotFound();
+        }
+
+        return Ok(result);
+    }
+}
+
+[ApiController]
+[Route("api/[controller]")]
 public sealed class CrashReportsController(CrashReportService crashReportService) : ControllerBase
 {
     [HttpGet]

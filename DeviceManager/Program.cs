@@ -1,4 +1,5 @@
 using DeviceManager.Components;
+using DeviceManager.Options;
 using DeviceManager.Services;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using MudBlazor.Services;
@@ -26,6 +27,12 @@ builder.Services.AddRazorComponents()
 
 // MudBlazor
 builder.Services.AddMudServices();
+
+// Dashboard display options
+builder.Services.Configure<DashboardOptions>(builder.Configuration.GetSection("Dashboard"));
+
+// Screenshot in-memory store
+builder.Services.AddSingleton<ScreenshotStore>();
 
 // Application event service (device connection tracking + in-process event bus)
 builder.Services.AddSingleton<DeviceEventService>();

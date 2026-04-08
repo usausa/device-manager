@@ -63,11 +63,15 @@ else
             <MudTh Style="width:36px"></MudTh>
             <MudTh>Name</MudTh>
             <MudTh>Group</MudTh>
-            <MudTh Style="width:80px"><MudIcon Icon="@Icons.Material.Filled.Wifi" Size="Size.Small" /></MudTh>
-            <MudTh Style="width:80px"><MudIcon Icon="@Icons.Material.Filled.BatteryFull" Size="Size.Small" /></MudTh>
-            <MudTh>Progress</MudTh>
+            @if (Options.ShowWifi)   { <MudTh Style="width:80px"><MudIcon Icon="@Icons.Material.Filled.Wifi" Size="Size.Small" /></MudTh> }
+            @if (Options.ShowBattery){ <MudTh Style="width:80px"><MudIcon Icon="@Icons.Material.Filled.BatteryFull" Size="Size.Small" /></MudTh> }
+            @if (Options.ShowCpu)    { <MudTh Style="width:70px">CPU</MudTh> }
+            @if (Options.ShowMemory) { <MudTh Style="width:70px">MEM</MudTh> }
+            @if (Options.ShowProgress1){ <MudTh Style="min-width:80px">Progress1</MudTh> }
+            @if (Options.ShowProgress2){ <MudTh Style="min-width:80px">Progress2</MudTh> }
+            @if (Options.ShowGps)    { <MudTh Style="width:130px">GPS</MudTh> }
             <MudTh>Last Connected</MudTh>
-            <MudTh Style="width:100px"></MudTh>
+            <MudTh Style="width:120px"></MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd>
@@ -75,47 +79,104 @@ else
             </MudTd>
             <MudTd DataLabel="Name">@context.Name</MudTd>
             <MudTd DataLabel="Group">@(context.Group ?? "-")</MudTd>
-            <MudTd DataLabel="WiFi">
-                @if (context.WifiRssi.HasValue)
-                {
-                    <div class="d-flex align-center gap-1">
-                        <MudIcon Icon="@GetWifiIcon(context.WifiRssi.Value)" Size="Size.Small"
-                                 Color="@GetWifiColor(context.WifiRssi.Value)" />
-                        <MudText Typo="Typo.body2" Color="@GetWifiColor(context.WifiRssi.Value)">@context.WifiRssi</MudText>
-                    </div>
-                }
-            </MudTd>
-            <MudTd DataLabel="Battery">
-                @if (context.Battery.HasValue)
-                {
-                    <div class="d-flex align-center gap-1">
-                        <MudIcon Icon="@GetBatteryIcon(context.Battery.Value)" Size="Size.Small"
-                                 Color="@GetBatteryColor(context.Battery.Value)" />
-                        <MudText Typo="Typo.body2" Color="@GetBatteryColor(context.Battery.Value)">@context.Battery%</MudText>
-                    </div>
-                }
-            </MudTd>
-            <MudTd DataLabel="Progress">
-                @if (context.ProgressValues is { Count: > 0 })
-                {
-                    @foreach (var kv in context.ProgressValues)
+            @if (Options.ShowWifi)
+            {
+                <MudTd DataLabel="WiFi">
+                    @if (context.WifiRssi.HasValue)
                     {
-                        <MudTooltip Text="@kv.Key">
-                            <MudProgressLinear Value="kv.Value" Max="100" Color="Color.Primary"
-                                               Style="min-width:60px;height:6px" Class="my-1" />
+                        <div class="d-flex align-center gap-1">
+                            <MudIcon Icon="@GetWifiIcon(context.WifiRssi.Value)" Size="Size.Small" Color="@GetWifiColor(context.WifiRssi.Value)" />
+                            <MudText Typo="Typo.body2" Color="@GetWifiColor(context.WifiRssi.Value)">@context.WifiRssi</MudText>
+                        </div>
+                    }
+                </MudTd>
+            }
+            @if (Options.ShowBattery)
+            {
+                <MudTd DataLabel="Battery">
+                    @if (context.Battery.HasValue)
+                    {
+                        <div class="d-flex align-center gap-1">
+                            <MudIcon Icon="@GetBatteryIcon(context.Battery.Value)" Size="Size.Small" Color="@GetBatteryColor(context.Battery.Value)" />
+                            <MudText Typo="Typo.body2" Color="@GetBatteryColor(context.Battery.Value)">@context.Battery%</MudText>
+                        </div>
+                    }
+                </MudTd>
+            }
+            @if (Options.ShowCpu)
+            {
+                <MudTd DataLabel="CPU">
+                    @if (context.CpuUsage.HasValue)
+                    {
+                        <MudTooltip Text="@($"{context.CpuUsage:0.0}%")">
+                            <MudProgressLinear Value="context.CpuUsage.Value" Max="100"
+                                               Color="@GetUsageColor(context.CpuUsage.Value)"
+                                               Style="min-width:50px;height:6px" />
                         </MudTooltip>
                     }
-                }
-                else
-                {
-                    <MudProgressLinear Value="context.Progress" Max="100" Color="Color.Primary"
-                                       Style="min-width:60px;height:6px" />
-                }
-            </MudTd>
+                </MudTd>
+            }
+            @if (Options.ShowMemory)
+            {
+                <MudTd DataLabel="Memory">
+                    @if (context.MemoryUsage.HasValue)
+                    {
+                        <MudTooltip Text="@($"{context.MemoryUsage:0.0}%")">
+                            <MudProgressLinear Value="context.MemoryUsage.Value" Max="100"
+                                               Color="@GetUsageColor(context.MemoryUsage.Value)"
+                                               Style="min-width:50px;height:6px" />
+                        </MudTooltip>
+                    }
+                </MudTd>
+            }
+            @if (Options.ShowProgress1)
+            {
+                <MudTd DataLabel="Progress1">
+                    @if (context.Progress1.HasValue)
+                    {
+                        <MudProgressLinear Value="context.Progress1.Value" Max="100" Color="Color.Primary"
+                                           Style="min-width:60px;height:6px" />
+                    }
+                    else
+                    {
+                        <MudProgressLinear Value="context.Progress" Max="100" Color="Color.Primary"
+                                           Style="min-width:60px;height:6px" />
+                    }
+                </MudTd>
+            }
+            @if (Options.ShowProgress2)
+            {
+                <MudTd DataLabel="Progress2">
+                    @if (context.Progress2.HasValue)
+                    {
+                        <MudProgressLinear Value="context.Progress2.Value" Max="100" Color="Color.Secondary"
+                                           Style="min-width:60px;height:6px" />
+                    }
+                </MudTd>
+            }
+            @if (Options.ShowGps)
+            {
+                <MudTd DataLabel="GPS">
+                    @if (context.Latitude.HasValue && context.Longitude.HasValue)
+                    {
+                        <MudTooltip Text="@($"{context.Latitude:0.000000}, {context.Longitude:0.000000}")">
+                            <div class="d-flex align-center gap-1">
+                                <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" Color="Color.Info" />
+                                <MudText Typo="Typo.caption">@($"{context.Latitude:0.00},{context.Longitude:0.00}")</MudText>
+                            </div>
+                        </MudTooltip>
+                    }
+                </MudTd>
+            }
             <MudTd DataLabel="Last Connected">
                 <MudText Typo="Typo.body2" Class="mud-text-secondary">@FormatDateTime(context.LastConnectedAt)</MudText>
             </MudTd>
             <MudTd @onclick:stopPropagation="true">
+                <MudTooltip Text="Take Screenshot">
+                    <MudIconButton Icon="@Icons.Material.Filled.Screenshot" Size="Size.Small"
+                                   Color="@(pendingScreenshot.ContainsKey(context.DeviceId) ? Color.Warning : Color.Default)"
+                                   OnClick="() => RequestScreenshotAsync(context)" />
+                </MudTooltip>
                 <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
                                OnClick="() => ShowEditDialogAsync(context.DeviceId)" />
                 <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"

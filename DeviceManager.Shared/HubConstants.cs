@@ -13,6 +13,7 @@ public static class HubConstants
         public const string ReceiveCommand = nameof(ReceiveCommand);
         public const string ConfigUpdated = nameof(ConfigUpdated);
         public const string ConfigReload = nameof(ConfigReload);
+        public const string TakeScreenshot = nameof(TakeScreenshot);
     }
 
     public static class ClientMethods
@@ -22,6 +23,7 @@ public static class HubConstants
         public const string SendMessage = nameof(SendMessage);
         public const string SendLog = nameof(SendLog);
         public const string SendCrashReport = nameof(SendCrashReport);
+        public const string UploadScreenshot = nameof(UploadScreenshot);
         public const string CommandResult = nameof(CommandResult);
     }
 
@@ -33,6 +35,7 @@ public static class HubConstants
         public const string MessageReceived = nameof(MessageReceived);
         public const string LogReceived = nameof(LogReceived);
         public const string CrashReportReceived = nameof(CrashReportReceived);
+        public const string ScreenshotReceived = nameof(ScreenshotReceived);
     }
 
     public static class Groups

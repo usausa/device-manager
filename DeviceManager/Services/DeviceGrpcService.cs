@@ -55,8 +55,12 @@ public sealed class DeviceGrpcService(
             {
                 Level = request.Level,
                 Progress = request.Progress,
+                Progress1 = request.HasProgress1 ? request.Progress1 : null,
+                Progress2 = request.HasProgress2 ? request.Progress2 : null,
                 Battery = request.HasBattery ? request.Battery : null,
                 WifiRssi = request.HasWifiRssi ? request.WifiRssi : null,
+                CpuUsage = request.HasCpuUsage ? request.CpuUsage : null,
+                MemoryUsage = request.HasMemoryUsage ? request.MemoryUsage : null,
                 Latitude = request.HasLatitude ? request.Latitude : null,
                 Longitude = request.HasLongitude ? request.Longitude : null,
                 CustomData = request.CustomData.Count > 0 ? new Dictionary<string, string>(request.CustomData) : null

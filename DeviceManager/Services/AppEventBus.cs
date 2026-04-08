@@ -11,5 +11,6 @@ public static class AppEvents
     public const string MessageReceived = nameof(MessageReceived);
     public const string LogReceived = nameof(LogReceived);
     public const string CrashReportReceived = nameof(CrashReportReceived);
+    public const string ScreenshotReceived = nameof(ScreenshotReceived);
 }
 

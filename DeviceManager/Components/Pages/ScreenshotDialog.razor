@@ -1,0 +1,19 @@
+@* Screenshot viewer dialog *@
+<MudDialog>
+    <DialogContent>
+        <MudStack Spacing="1">
+            <MudStack Row="true" Spacing="2">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">Device:</MudText>
+                <MudText Typo="Typo.caption" Style="font-family:monospace">@Result.DeviceId</MudText>
+                <MudSpacer />
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">@Result.CapturedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</MudText>
+            </MudStack>
+            <img src="data:@Result.ContentType;base64,@Result.Base64Data"
+                 alt="Screenshot"
+                 style="max-width:100%;border:1px solid var(--mud-palette-divider);border-radius:4px" />
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Close">Close</MudButton>
+    </DialogActions>
+</MudDialog>

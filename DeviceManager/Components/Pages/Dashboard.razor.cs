@@ -1,6 +1,9 @@
 namespace DeviceManager.Components.Pages;
 
+using DeviceManager.Options;
+
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Options;
 
 public partial class Dashboard : IDisposable
 {
@@ -19,6 +22,9 @@ public partial class Dashboard : IDisposable
     [Inject]
     public DeviceEventService EventBus { get; set; } = default!;
 
+    [Inject]
+    public IOptions<DashboardOptions> DashboardOptionsAccessor { get; set; } = default!;
+
     private StatusSummary? summary;
     private List<DeviceSummary>? devices;
     private string searchText = string.Empty;
@@ -26,6 +32,11 @@ public partial class Dashboard : IDisposable
     private IDisposable? connectedSub;
     private IDisposable? disconnectedSub;
     private IDisposable? statusSub;
+    private IDisposable? screenshotSub;
+
+    private readonly Dictionary<string, bool> pendingScreenshot = [];
+
+    internal DashboardOptions Options => DashboardOptionsAccessor.Value;
 
     private IEnumerable<DeviceSummary> FilteredDevices => devices ?? [];
 
@@ -42,6 +53,14 @@ public partial class Dashboard : IDisposable
         connectedSub = EventBus.Subscribe(AppEvents.DeviceConnected, _ => ReloadAsync());
         disconnectedSub = EventBus.Subscribe(AppEvents.DeviceDisconnected, _ => ReloadAsync());
         statusSub = EventBus.Subscribe(AppEvents.DeviceStatusUpdated, _ => ReloadAsync());
+        screenshotSub = EventBus.Subscribe(AppEvents.ScreenshotReceived, async payload =>
+        {
+            if (payload is ScreenshotResult result)
+            {
+                pendingScreenshot.Remove(result.DeviceId);
+                await ShowScreenshotDialogAsync(result);
+            }
+        });
     }
 
     private async Task ReloadAsync()
@@ -57,6 +76,29 @@ public partial class Dashboard : IDisposable
     }
 
     private void NavigateToDevice(string deviceId) => Navigation.NavigateTo($"/devices/{deviceId}");
+
+    private async Task RequestScreenshotAsync(DeviceSummary device)
+    {
+        pendingScreenshot[device.DeviceId] = true;
+        StateHasChanged();
+        await EventBus.RequestScreenshotAsync(device.DeviceId);
+        Snackbar.Add($"Screenshot requested from {device.Name}.", Severity.Info);
+    }
+
+    private async Task ShowScreenshotDialogAsync(ScreenshotResult result)
+    {
+        var parameters = new DialogParameters<ScreenshotDialog>
+        {
+            { x => x.Result, result }
+        };
+        await InvokeAsync(async () =>
+        {
+            await DialogService.ShowAsync<ScreenshotDialog>(
+                $"Screenshot — {result.DeviceId}", parameters,
+                new DialogOptions { MaxWidth = MaxWidth.Large, FullWidth = true });
+            StateHasChanged();
+        });
+    }
 
     private async Task ShowAddDialog()
     {
@@ -134,6 +176,13 @@ public partial class Dashboard : IDisposable
         _ => Color.Error
     };
 
+    internal static Color GetUsageColor(double usage) => usage switch
+    {
+        < 60 => Color.Success,
+        < 85 => Color.Warning,
+        _ => Color.Error
+    };
+
     private static string FormatDateTime(DateTime? dt)
     {
         if (dt is null)
@@ -165,5 +214,6 @@ public partial class Dashboard : IDisposable
         connectedSub?.Dispose();
         disconnectedSub?.Dispose();
         statusSub?.Dispose();
+        screenshotSub?.Dispose();
     }
 }

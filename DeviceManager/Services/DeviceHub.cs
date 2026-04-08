@@ -39,6 +39,9 @@ public sealed class DeviceHub(DeviceEventService events, ILogger<DeviceHub> logg
     public Task SendCrashReport(CrashReport report)
         => events.HandleSignalRCrashReportAsync(Context.ConnectionId, report);
 
+    public Task UploadScreenshot(string requestId, string base64Data, string contentType)
+        => events.HandleSignalRScreenshotAsync(Context.ConnectionId, requestId, base64Data, contentType);
+
     public Task CommandResult(string commandId, bool success, string? result)
         => events.HandleSignalRCommandResultAsync(Context.ConnectionId, commandId, success, result);
 }

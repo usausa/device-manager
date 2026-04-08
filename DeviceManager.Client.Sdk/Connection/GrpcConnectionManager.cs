@@ -144,25 +144,14 @@ internal sealed class GrpcConnectionManager : IAsyncDisposable
             Progress = report.Progress
         };
 
-        if (report.Battery.HasValue)
-        {
-            statusReport.Battery = report.Battery.Value;
-        }
-
-        if (report.Latitude.HasValue)
-        {
-            statusReport.Latitude = report.Latitude.Value;
-        }
-
-        if (report.Longitude.HasValue)
-        {
-            statusReport.Longitude = report.Longitude.Value;
-        }
-
-        if (report.WifiRssi.HasValue)
-        {
-            statusReport.WifiRssi = report.WifiRssi.Value;
-        }
+        if (report.Progress1.HasValue) { statusReport.Progress1 = report.Progress1.Value; }
+        if (report.Progress2.HasValue) { statusReport.Progress2 = report.Progress2.Value; }
+        if (report.Battery.HasValue)   { statusReport.Battery = report.Battery.Value; }
+        if (report.WifiRssi.HasValue)  { statusReport.WifiRssi = report.WifiRssi.Value; }
+        if (report.CpuUsage.HasValue)  { statusReport.CpuUsage = report.CpuUsage.Value; }
+        if (report.MemoryUsage.HasValue) { statusReport.MemoryUsage = report.MemoryUsage.Value; }
+        if (report.Latitude.HasValue)  { statusReport.Latitude = report.Latitude.Value; }
+        if (report.Longitude.HasValue) { statusReport.Longitude = report.Longitude.Value; }
 
         if (report.CustomData is not null)
         {
