@@ -2,6 +2,7 @@ namespace DeviceManager.Client.Sdk;
 
 using DeviceManager.Client.Sdk.Config;
 using DeviceManager.Client.Sdk.Connection;
+using DeviceManager.Client.Sdk.CrashReport;
 using DeviceManager.Client.Sdk.DataStore;
 using DeviceManager.Client.Sdk.Messaging;
 using DeviceManager.Client.Sdk.Storage;
@@ -21,6 +22,7 @@ public sealed class DeviceManagerClient : IAsyncDisposable
     private readonly DataStoreClient dataStoreClient;
     private readonly MessageClient messageClient;
     private readonly StorageClient storageClient;
+    private readonly CrashReportClient crashReportClient;
     private readonly IDeviceStatusProvider? statusProvider;
     private readonly ILogger<DeviceManagerClient> logger;
 
@@ -78,6 +80,10 @@ public sealed class DeviceManagerClient : IAsyncDisposable
 
         storageClient = new StorageClient(
             httpClient, loggerFactory.CreateLogger<StorageClient>());
+
+        crashReportClient = new CrashReportClient(
+            signalRConnectionManager, grpcConnectionManager,
+            loggerFactory.CreateLogger<CrashReportClient>());
     }
 
     public event EventHandler<ConnectionState>? ConnectionStateChanged;
@@ -90,6 +96,7 @@ public sealed class DeviceManagerClient : IAsyncDisposable
     public IDataStoreClient DataStore => dataStoreClient;
     public IMessageClient Messages => messageClient;
     public IStorageClient Storage => storageClient;
+    public ICrashReportClient CrashReports => crashReportClient;
 
     public Task ConnectAsync(CancellationToken cancellationToken = default)
     {

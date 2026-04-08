@@ -9,6 +9,7 @@ service DeviceManagerService {
   rpc ReportStatus(StatusReport) returns (StatusResponse);
   rpc SendMessage(DeviceMessage) returns (MessageResponse);
   rpc SendLog(LogRequest) returns (LogResponse);
+  rpc SendCrashReport(CrashReportRequest) returns (CrashReportResponse);
   rpc GetConfig(ConfigRequest) returns (ConfigResponse);
   rpc GetDataStoreValue(DataStoreRequest) returns (DataStoreResponse);
   rpc SetDataStoreValue(DataStoreSetRequest) returns (DataStoreResponse);
@@ -65,6 +66,23 @@ message LogRequest {
 
 message LogResponse {
   bool success = 1;
+}
+
+message CrashReportRequest {
+  string device_id = 1;
+  string exception_type = 2;
+  string message = 3;
+  string stack_trace = 4;
+  string inner_exception = 5;
+  string app_version = 6;
+  string os_version = 7;
+  map<string, string> additional_data = 8;
+  string occurred_at = 9;
+}
+
+message CrashReportResponse {
+  bool success = 1;
+  int64 report_id = 2;
 }
 
 message ConfigRequest {

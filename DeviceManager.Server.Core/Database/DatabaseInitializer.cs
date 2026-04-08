@@ -79,6 +79,23 @@ public static class DatabaseInitializer
             NewValue TEXT,
             ChangedAt TEXT NOT NULL
         );
+
+        CREATE TABLE IF NOT EXISTS CrashReport (
+            ReportId INTEGER PRIMARY KEY AUTOINCREMENT,
+            DeviceId TEXT NOT NULL,
+            ExceptionType TEXT NOT NULL,
+            Message TEXT NOT NULL,
+            StackTrace TEXT,
+            InnerException TEXT,
+            AppVersion TEXT,
+            OsVersion TEXT,
+            AdditionalData TEXT,
+            OccurredAt TEXT NOT NULL,
+            ReceivedAt TEXT NOT NULL
+        );
+
+        CREATE INDEX IF NOT EXISTS IX_CrashReport_DeviceId ON CrashReport(DeviceId);
+        CREATE INDEX IF NOT EXISTS IX_CrashReport_OccurredAt ON CrashReport(OccurredAt);
         """;
 
     private const string DeviceSchema = """

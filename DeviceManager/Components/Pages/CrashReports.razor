@@ -1,0 +1,42 @@
+@page "/crash-reports"
+@rendermode InteractiveServer
+
+<PageTitle>Crash Reports - DeviceManager</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+    <MudTextField @bind-Value="filterDeviceId" Placeholder="Filter by Device ID" Immediate="true"
+                  Variant="Variant.Outlined" Margin="Margin.Dense" Style="max-width:250px"
+                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.FilterList" IconSize="Size.Small" />
+    <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="LoadAsync">Refresh</MudButton>
+</MudStack>
+
+<MudTable Items="reports" Dense="true" Hover="true" Elevation="1" Loading="isLoading" T="CrashReport"
+          OnRowClick="ShowDetailAsync" RowClass="cursor-pointer">
+    <HeaderContent>
+        <MudTh Style="width:130px">Device</MudTh>
+        <MudTh Style="width:220px">Exception</MudTh>
+        <MudTh>Message</MudTh>
+        <MudTh Style="width:90px">App Ver</MudTh>
+        <MudTh Style="width:140px">Occurred</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd Style="font-family:monospace;font-size:0.75rem">@context.DeviceId</MudTd>
+        <MudTd>
+            <MudChip T="string" Color="Color.Error" Size="Size.Small" Style="max-width:210px;overflow:hidden;text-overflow:ellipsis">
+                @context.ExceptionType
+            </MudChip>
+        </MudTd>
+        <MudTd Style="max-width:380px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+            @context.Message
+        </MudTd>
+        <MudTd Style="font-size:0.75rem" Class="mud-text-secondary">@(context.AppVersion ?? "-")</MudTd>
+        <MudTd>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                @context.OccurredAt.ToLocalTime().ToString("MM/dd HH:mm:ss")
+            </MudText>
+        </MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText Class="pa-4 mud-text-secondary">No crash reports.</MudText>
+    </NoRecordsContent>
+</MudTable>

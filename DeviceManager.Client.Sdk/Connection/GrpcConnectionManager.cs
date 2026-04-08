@@ -187,6 +187,36 @@ internal sealed class GrpcConnectionManager : IAsyncDisposable
             cancellationToken: cancellationToken);
     }
 
+    public async Task SendCrashReportAsync(DeviceManager.Shared.Models.CrashReport report, CancellationToken cancellationToken = default)
+    {
+        if (client is null)
+        {
+            throw new InvalidOperationException("Not connected to the server.");
+        }
+
+        var request = new CrashReportRequest
+        {
+            DeviceId = deviceInfo.DeviceId,
+            ExceptionType = report.ExceptionType,
+            Message = report.Message,
+            StackTrace = report.StackTrace ?? string.Empty,
+            InnerException = report.InnerException ?? string.Empty,
+            AppVersion = report.AppVersion ?? string.Empty,
+            OsVersion = report.OsVersion ?? string.Empty,
+            OccurredAt = report.OccurredAt.ToUniversalTime().ToString("o", System.Globalization.CultureInfo.InvariantCulture)
+        };
+
+        if (report.AdditionalData is not null)
+        {
+            foreach (var kvp in report.AdditionalData)
+            {
+                request.AdditionalData[kvp.Key] = kvp.Value;
+            }
+        }
+
+        await client.SendCrashReportAsync(request, cancellationToken: cancellationToken);
+    }
+
     private async Task RunSubscriptionLoopAsync(CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)

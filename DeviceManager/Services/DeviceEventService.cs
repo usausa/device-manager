@@ -21,6 +21,7 @@ public sealed class DeviceEventService(
     ConfigService configService,
     MessageService messageService,
     LogService logService,
+    CrashReportService crashReportService,
     ILogger<DeviceEventService> logger)
 {
     // ── Connection tracking ────────────────────────────────────────────────────
@@ -219,7 +220,39 @@ public sealed class DeviceEventService(
         await PublishAsync(AppEvents.LogReceived, entry);
     }
 
-    // ── Outgoing helpers (used by REST API controllers) ────────────────────────
+    /// <summary>Called by DeviceHub.SendCrashReport to process a crash report received over SignalR.</summary>
+    public async Task HandleSignalRCrashReportAsync(string connectionId, CrashReport report)
+    {
+        if (!connectionToDevice.TryGetValue(connectionId, out var deviceId))
+        {
+            return;
+        }
+
+        var entry = new CrashReport
+        {
+            DeviceId = deviceId,
+            ExceptionType = report.ExceptionType,
+            Message = report.Message,
+            StackTrace = report.StackTrace,
+            InnerException = report.InnerException,
+            AppVersion = report.AppVersion,
+            OsVersion = report.OsVersion,
+            AdditionalData = report.AdditionalData,
+            OccurredAt = report.OccurredAt,
+            ReceivedAt = DateTime.UtcNow
+        };
+
+        var saved = await crashReportService.AddReportAsync(entry);
+        await NotifyCrashReportAsync(saved);
+    }
+
+    /// <summary>Notifies the dashboard and in-process subscribers that a crash report was received from a device.</summary>
+    public async Task NotifyCrashReportAsync(CrashReport report)
+    {
+        await hubContext.Clients.Group(HubConstants.Groups.Dashboard)
+            .SendAsync(HubConstants.DashboardMethods.CrashReportReceived, report);
+        await PublishAsync(AppEvents.CrashReportReceived, report);
+    }
 
     /// <summary>Sends a message to a specific device over SignalR.</summary>
     public Task SendMessageToDeviceAsync(string deviceId, string messageType, string content)

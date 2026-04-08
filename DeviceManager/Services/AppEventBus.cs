@@ -10,5 +10,6 @@ public static class AppEvents
     public const string DeviceStatusUpdated = nameof(DeviceStatusUpdated);
     public const string MessageReceived = nameof(MessageReceived);
     public const string LogReceived = nameof(LogReceived);
+    public const string CrashReportReceived = nameof(CrashReportReceived);
 }
 

@@ -102,6 +102,36 @@ public sealed class MessagesController(
 
 [ApiController]
 [Route("api/[controller]")]
+public sealed class CrashReportsController(CrashReportService crashReportService) : ControllerBase
+{
+    [HttpGet]
+    public async Task<IActionResult> GetAll(
+        [FromQuery] string? deviceId, [FromQuery] int skip = 0, [FromQuery] int take = 50)
+        => Ok(await crashReportService.GetReportsAsync(deviceId, skip, take));
+
+    [HttpGet("{reportId:long}")]
+    public async Task<IActionResult> Get(long reportId)
+    {
+        var report = await crashReportService.GetReportAsync(reportId);
+        return report is null ? NotFound() : Ok(report);
+    }
+
+    [HttpDelete("{reportId:long}")]
+    public async Task<IActionResult> Delete(long reportId)
+    {
+        var report = await crashReportService.GetReportAsync(reportId);
+        if (report is null)
+        {
+            return NotFound();
+        }
+
+        await crashReportService.DeleteReportAsync(reportId);
+        return NoContent();
+    }
+}
+
+[ApiController]
+[Route("api/[controller]")]
 public sealed class StorageController(IConfiguration configuration, ILogger<StorageController> logger) : ControllerBase
 {
     private readonly string rootPath = InitRootPath(configuration);

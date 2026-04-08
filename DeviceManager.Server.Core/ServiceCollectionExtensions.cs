@@ -26,6 +26,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<DataStoreService>();
         services.AddSingleton<MessageService>();
         services.AddSingleton<LogService>();
+        services.AddSingleton<CrashReportService>();
 
         return services;
     }

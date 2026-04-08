@@ -21,6 +21,7 @@ public static class HubConstants
         public const string ReportStatus = nameof(ReportStatus);
         public const string SendMessage = nameof(SendMessage);
         public const string SendLog = nameof(SendLog);
+        public const string SendCrashReport = nameof(SendCrashReport);
         public const string CommandResult = nameof(CommandResult);
     }
 
@@ -31,6 +32,7 @@ public static class HubConstants
         public const string DeviceStatusUpdated = nameof(DeviceStatusUpdated);
         public const string MessageReceived = nameof(MessageReceived);
         public const string LogReceived = nameof(LogReceived);
+        public const string CrashReportReceived = nameof(CrashReportReceived);
     }
 
     public static class Groups

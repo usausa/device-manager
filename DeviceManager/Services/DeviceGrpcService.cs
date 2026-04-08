@@ -13,6 +13,7 @@ public sealed class DeviceGrpcService(
     DataStoreService dataStoreService,
     MessageService messageService,
     LogService logService,
+    CrashReportService crashReportService,
     DeviceEventService events,
     GrpcEventDispatcher eventDispatcher,
     ILogger<DeviceGrpcService> logger) : DeviceManagerService.DeviceManagerServiceBase
@@ -121,6 +122,40 @@ public sealed class DeviceGrpcService(
         {
             logger.LogError(ex, "Failed to process log from {DeviceId} via gRPC", request.DeviceId);
             return new LogResponse { Success = false };
+        }
+    }
+
+    public override async Task<CrashReportResponse> SendCrashReport(
+        CrashReportRequest request, ServerCallContext context)
+    {
+        try
+        {
+            var report = new CrashReport
+            {
+                DeviceId = request.DeviceId,
+                ExceptionType = request.ExceptionType,
+                Message = request.Message,
+                StackTrace = string.IsNullOrEmpty(request.StackTrace) ? null : request.StackTrace,
+                InnerException = string.IsNullOrEmpty(request.InnerException) ? null : request.InnerException,
+                AppVersion = string.IsNullOrEmpty(request.AppVersion) ? null : request.AppVersion,
+                OsVersion = string.IsNullOrEmpty(request.OsVersion) ? null : request.OsVersion,
+                AdditionalData = request.AdditionalData.Count > 0
+                    ? new Dictionary<string, string>(request.AdditionalData)
+                    : null,
+                OccurredAt = string.IsNullOrEmpty(request.OccurredAt)
+                    ? DateTime.UtcNow
+                    : DateTime.Parse(request.OccurredAt, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+                ReceivedAt = DateTime.UtcNow
+            };
+
+            var saved = await crashReportService.AddReportAsync(report);
+            await events.NotifyCrashReportAsync(saved);
+            return new CrashReportResponse { Success = true, ReportId = saved.ReportId };
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to process crash report from {DeviceId} via gRPC", request.DeviceId);
+            return new CrashReportResponse { Success = false };
         }
     }
 
