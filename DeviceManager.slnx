@@ -1,3 +1,6 @@
 <Solution>
+  <Project Path="DeviceManager.Client/DeviceManager.Client.csproj" Id="f4980043-1d15-434f-bbce-277552de8861" />
+  <Project Path="DeviceManager.Contracts/DeviceManager.Contracts.csproj" Id="c50aac70-a22b-447d-be70-139700d48918" />
+  <Project Path="DeviceManager.Core/DeviceManager.Core.csproj" Id="758d7e43-7b2f-48b9-905c-0bbdbf5c0d56" />
   <Project Path="DeviceManager.Server/DeviceManager.Server.csproj" />
 </Solution>
