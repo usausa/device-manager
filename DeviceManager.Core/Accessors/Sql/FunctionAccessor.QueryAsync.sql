@@ -1,0 +1,1 @@
+SELECT * FROM FunctionDefinition WHERE Name = /*@ name */''

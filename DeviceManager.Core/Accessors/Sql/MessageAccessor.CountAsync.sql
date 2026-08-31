@@ -1,0 +1,1 @@
+SELECT COUNT(*) FROM Message WHERE (/*@ deviceId */'' IS NULL) OR (DeviceId = /*@ deviceId */'')

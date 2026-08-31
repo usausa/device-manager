@@ -1,56 +1,39 @@
 namespace DeviceManager.Client;
 
-//using DeviceManager.Client.Sdk.Config;
-//using DeviceManager.Client.Sdk.DataStore;
-//using DeviceManager.Client.Sdk.Messaging;
-//using DeviceManager.Client.Sdk.Storage;
+using DeviceManager.Client.Logging;
+using DeviceManager.Client.Telemetry;
 
-//using Microsoft.Extensions.DependencyInjection;
-//using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 public static class ServiceCollectionExtensions
 {
-    //public static IServiceCollection AddDeviceManagerClient(
-    //    this IServiceCollection services,
-    //    Action<DeviceManagerClientOptions> configureOptions)
-    //{
-    //    ArgumentNullException.ThrowIfNull(configureOptions);
+    // クライアントの登録(IDeviceInfoProvider は利用側で登録する。IDeviceStatusProvider は任意)
+    public static IServiceCollection AddDeviceManagerClient(this IServiceCollection services, Action<DeviceManagerClientOptions> configure)
+    {
+        var options = new DeviceManagerClientOptions();
+        configure(options);
 
-    //    var options = new DeviceManagerClientOptions { ServerUrl = null! };
-    //    configureOptions(options);
+        services.AddSingleton(options);
+        // テレメトリの内部ログはロギング基盤との循環を避けるため既定(null)とする
+        services.AddSingleton(static p => new DeviceManagerTelemetry(
+            p.GetRequiredService<DeviceManagerClientOptions>(),
+            p.GetRequiredService<IDeviceInfoProvider>()));
+        services.AddSingleton(static p => new DeviceManagerClient(
+            p.GetRequiredService<DeviceManagerClientOptions>(),
+            p.GetRequiredService<IDeviceInfoProvider>(),
+            p.GetRequiredService<DeviceManagerTelemetry>(),
+            p.GetRequiredService<ILogger<DeviceManagerClient>>(),
+            p.GetService<IDeviceStatusProvider>()));
 
-    //    if (string.IsNullOrWhiteSpace(options.ServerUrl))
-    //    {
-    //        throw new ArgumentException("ServerUrl must be configured.", nameof(configureOptions));
-    //    }
+        return services;
+    }
 
-    //    services.AddSingleton(options);
-
-    //    services.AddHttpClient("DeviceManager", client =>
-    //    {
-    //        client.BaseAddress = new Uri(options.ServerUrl.TrimEnd('/') + "/");
-    //        client.Timeout = options.ApiTimeout;
-    //    });
-
-    //    services.AddSingleton(sp =>
-    //    {
-    //        var deviceInfo = sp.GetRequiredService<IDeviceInfoProvider>();
-    //        var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
-    //        var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
-    //        var httpClient = httpClientFactory.CreateClient("DeviceManager");
-    //        var statusProvider = sp.GetService<IDeviceStatusProvider>();
-    //        var commandHandler = sp.GetService<IDeviceCommandHandler>();
-
-    //        return new DeviceManagerClient(
-    //            options, deviceInfo, loggerFactory, httpClient,
-    //            statusProvider, commandHandler);
-    //    });
-
-    //    services.AddSingleton<IConfigManager>(sp => sp.GetRequiredService<DeviceManagerClient>().Config);
-    //    services.AddSingleton<IDataStoreClient>(sp => sp.GetRequiredService<DeviceManagerClient>().DataStore);
-    //    services.AddSingleton<IMessageClient>(sp => sp.GetRequiredService<DeviceManagerClient>().Messages);
-    //    services.AddSingleton<IStorageClient>(sp => sp.GetRequiredService<DeviceManagerClient>().Storage);
-
-    //    return services;
-    //}
+    // 端末ログ転送(Microsoft.Extensions.Logging ベース)の登録
+    public static IServiceCollection AddDeviceManagerLogging(this IServiceCollection services)
+    {
+        services.AddSingleton<ILoggerProvider>(static p => new DeviceManagerLoggerProvider(
+            p.GetRequiredService<DeviceManagerClientOptions>(),
+            p.GetRequiredService<DeviceManagerTelemetry>()));
+        return services;
+    }
 }

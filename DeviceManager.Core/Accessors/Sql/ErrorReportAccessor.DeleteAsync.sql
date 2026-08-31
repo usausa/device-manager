@@ -1,0 +1,1 @@
+DELETE FROM ErrorReport WHERE ReportId = /*@ reportId */0

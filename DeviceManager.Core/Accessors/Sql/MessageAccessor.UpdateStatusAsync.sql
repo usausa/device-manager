@@ -1,0 +1,1 @@
+UPDATE Message SET Status = /*@ status */0 WHERE MessageId = /*@ messageId */0

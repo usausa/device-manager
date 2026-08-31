@@ -1,0 +1,78 @@
+@page "/storage"
+@page "/storage/{*Path}"
+@attribute [Authorize]
+
+<PageTitle>ストレージ</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">ストレージ</MudText>
+
+@* パンくず *@
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+    <MudLink Href="storage"><MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Small" Style="vertical-align: middle;" /></MudLink>
+    @foreach (var crumb in GetBreadcrumbs())
+    {
+        <MudText Typo="Typo.body2">/</MudText>
+        if (crumb.Link is null)
+        {
+            <MudText Typo="Typo.body2">@crumb.Name</MudText>
+        }
+        else
+        {
+            <MudLink Href="@crumb.Link" Typo="Typo.body2">@crumb.Name</MudLink>
+        }
+    }
+</MudStack>
+
+@* ツールバー *@
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+    <MudFileUpload T="IBrowserFile" FilesChanged="UploadAsync" Accept="*">
+        <CustomContent>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Upload" OnClick="@context.OpenFilePickerAsync">アップロード</MudButton>
+        </CustomContent>
+    </MudFileUpload>
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CreateNewFolder" OnClick="CreateFolderAsync">フォルダ作成</MudButton>
+    <MudSpacer />
+    <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Primary" OnClick="ReloadAsync" />
+</MudStack>
+
+@if (uploading)
+{
+    <MudProgressLinear Value="progress" Color="Color.Primary" Class="mb-2" Style="max-width: 400px;" />
+}
+
+@* 一覧 *@
+<MudTable Items="entries" Dense="true" Hover="true">
+    <HeaderContent>
+        <MudTh Style="width: 40px;"></MudTh>
+        <MudTh>ファイル名</MudTh>
+        <MudTh Style="width: 110px;">サイズ</MudTh>
+        <MudTh Style="width: 160px;">更新日</MudTh>
+        <MudTh Style="width: 100px;">操作</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>
+            <MudIcon Icon="@ViewHelper.FileIcon(context.Directory, context.Name)" Color="@ViewHelper.FileIconColor(context.Directory)" Size="Size.Small" />
+        </MudTd>
+        <MudTd>
+            @if (context.Directory)
+            {
+                <MudLink Href="@GetChildLink(context.Name)">@context.Name</MudLink>
+            }
+            else
+            {
+                @context.Name
+            }
+        </MudTd>
+        <MudTd>@(context.Directory ? string.Empty : ViewHelper.FormatSize(context.Size))</MudTd>
+        <MudTd>@context.LastModified.ToString("yyyy/MM/dd HH:mm")</MudTd>
+        <MudTd>
+            @if (!context.Directory)
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.Download" Size="Size.Small" Href="@GetDownloadLink(context.Name)" />
+            }
+            <AuthorizeView Roles="@Roles.Administrator" Context="auth">
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="() => DeleteAsync(context)" />
+            </AuthorizeView>
+        </MudTd>
+    </RowTemplate>
+</MudTable>

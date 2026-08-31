@@ -1,0 +1,1 @@
+DELETE FROM StatusHistory WHERE DeviceId = /*@ deviceId */''

@@ -1,0 +1,1 @@
+SELECT COUNT(*) FROM ErrorReport WHERE (/*@ deviceId */'' IS NULL) OR (DeviceId = /*@ deviceId */'')

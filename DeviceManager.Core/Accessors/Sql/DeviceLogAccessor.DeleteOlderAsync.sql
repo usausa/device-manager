@@ -1,0 +1,1 @@
+DELETE FROM DeviceLog WHERE CreatedAt < /*@ threshold */''

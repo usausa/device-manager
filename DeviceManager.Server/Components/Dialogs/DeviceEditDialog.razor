@@ -1,0 +1,43 @@
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">@Title</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="form" Model="Form">
+            <MudTextField @bind-Value="Form.DeviceId"
+                          For="@(() => Form.DeviceId)"
+                          Validation="@Validator.ValidateValue"
+                          Label="端末ID"
+                          MaxLength="@Length.DeviceId"
+                          Disabled="@(!IsNew)"
+                          Immediate="true" />
+            <MudTextField @bind-Value="Form.Name"
+                          For="@(() => Form.Name)"
+                          Validation="@Validator.ValidateValue"
+                          Label="名称"
+                          MaxLength="@Length.Name"
+                          Immediate="true"
+                          Class="mt-4" />
+            <MudTextField @bind-Value="Form.GroupName"
+                          For="@(() => Form.GroupName)"
+                          Validation="@Validator.ValidateValue"
+                          Label="グループ"
+                          MaxLength="@Length.GroupName"
+                          Immediate="true"
+                          Class="mt-4" />
+            <MudTextField @bind-Value="Form.Note"
+                          For="@(() => Form.Note)"
+                          Validation="@Validator.ValidateValue"
+                          Label="備考"
+                          MaxLength="@Length.Note"
+                          Lines="2"
+                          Immediate="true"
+                          Class="mt-4" />
+            <MudSwitch @bind-Value="Form.IsEnabled" Color="Color.Primary" Label="有効" Class="mt-4" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="OnOkClick">OK</MudButton>
+        <MudButton Color="Color.Default" OnClick="OnCancelClick">CANCEL</MudButton>
+    </DialogActions>
+</MudDialog>

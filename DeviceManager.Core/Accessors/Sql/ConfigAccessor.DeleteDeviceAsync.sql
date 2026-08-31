@@ -1,0 +1,1 @@
+DELETE FROM DeviceConfig WHERE DeviceId = /*@ deviceId */''

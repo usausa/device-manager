@@ -1,0 +1,1 @@
+UPDATE Device SET Status = /*@ status */0, LastConnectedAt = /*@ lastConnectedAt */'' WHERE DeviceId = /*@ deviceId */''

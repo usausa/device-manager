@@ -1,0 +1,1 @@
+DELETE FROM FunctionDefinition WHERE Name = /*@ name */''

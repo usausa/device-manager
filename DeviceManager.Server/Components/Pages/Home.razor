@@ -1,59 +1,153 @@
-﻿@page "/"
+@page "/"
+@attribute [Authorize]
+@inherits AppComponentBase
 
-<PageTitle>Home</PageTitle>
+<PageTitle>ダッシュボード</PageTitle>
 
-<MudText Typo="Typo.h3" GutterBottom="true">Hello, world!</MudText>
-<MudText Class="mb-8">Welcome to your new app, powered by MudBlazor and the .NET 10 Template!</MudText>
+<MudText Typo="Typo.h4" Class="mb-4">ダッシュボード</MudText>
 
-<MudAlert Severity="Severity.Normal" ContentAlignment="HorizontalAlignment.Start">
-    You can find documentation and examples on our website here:
-    <MudLink Href="https://mudblazor.com" Target="_blank" Typo="Typo.body2" Color="Color.Primary">
-        <b>www.mudblazor.com</b>
-    </MudLink>
-</MudAlert>
+@* サマリーカード *@
+<MudGrid Class="mb-2">
+    <MudItem xs="6" md="3">
+        <MudPaper Class="pa-4" Style="border-bottom: 4px solid var(--mud-palette-success);">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                <div>
+                    <MudText Typo="Typo.subtitle2">稼働(日) @now.ToString("MM/dd")</MudText>
+                    <MudText Typo="Typo.h4">@summary.ActiveDay / @summary.Total</MudText>
+                </div>
+                <MudIcon Icon="@Icons.Material.Filled.Today" Size="Size.Large" Color="Color.Success" />
+            </MudStack>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="6" md="3">
+        <MudPaper Class="pa-4" Style="border-bottom: 4px solid var(--mud-palette-info);">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                <div>
+                    <MudText Typo="Typo.subtitle2">稼働(週) @now.AddDays(-6).ToString("MM/dd")〜</MudText>
+                    <MudText Typo="Typo.h4">@summary.ActiveWeek / @summary.Total</MudText>
+                </div>
+                <MudIcon Icon="@Icons.Material.Filled.DateRange" Size="Size.Large" Color="Color.Info" />
+            </MudStack>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="6" md="3">
+        <MudPaper Class="pa-4" Style="border-bottom: 4px solid var(--mud-palette-warning);">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                <div>
+                    <MudText Typo="Typo.subtitle2">バッテリー小</MudText>
+                    <MudText Typo="Typo.h4">@summary.LowBattery / @summary.Total</MudText>
+                </div>
+                <MudIcon Icon="@Icons.Material.Filled.BatteryAlert" Size="Size.Large" Color="Color.Warning" />
+            </MudStack>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="6" md="3">
+        <MudPaper Class="pa-4" Style="border-bottom: 4px solid var(--mud-palette-error);">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                <div>
+                    <MudText Typo="Typo.subtitle2">警告 / 異常</MudText>
+                    <MudText Typo="Typo.h4">@summary.Warning / @summary.Error</MudText>
+                </div>
+                <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Large" Color="Color.Error" />
+            </MudStack>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
 
-<br />
-<MudText Typo="Typo.h5" GutterBottom="true">Interactivity in this Template</MudText>
-<br />
-<MudText Typo="Typo.body2">
-    When you opt for the "Global" Interactivity Location, <br />
-    the render modes are defined in App.razor and consequently apply to all child components.<br />
-    In this case, providers are globally set in the MainLayout.<br />
-    <br />
-    On the other hand, if you choose the "Per page/component" Interactivity Location,<br />
-    it is necessary to include the <br />
-    <br />
-    &lt;MudPopoverProvider /&gt; <br />
-    &lt;MudDialogProvider /&gt; <br />
-    &lt;MudSnackbarProvider /&gt; <br />
-    <br />
-    components on every interactive page.<br />
-    <br />
-    If a render mode is not specified for a page, it defaults to Server-Side Rendering (SSR),<br />
-    similar to this page. While MudBlazor allows pages to be rendered in SSR,<br />
-    please note that interactive features, such as buttons and dropdown menus, will not be functional.
-</MudText>
+@* ツールバー *@
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+    <MudTextField @bind-Value="searchText"
+                  Label="検索(ID / 名称 / グループ)"
+                  Clearable="true"
+                  Immediate="true"
+                  OnKeyDown="OnSearchKeyDown"
+                  Adornment="Adornment.Start"
+                  AdornmentIcon="@Icons.Material.Filled.Search"
+                  Style="max-width: 320px;" />
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SearchAsync">検索</MudButton>
+    <MudSpacer />
+    <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Primary" OnClick="ReloadAsync" />
+    <MudMenu Icon="@Icons.Material.Filled.MoreVert" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+        <MudMenuItem Icon="@Icons.Material.Filled.Add" OnClick="AddAsync">端末の追加</MudMenuItem>
+    </MudMenu>
+</MudStack>
 
-<br />
-<MudText Typo="Typo.h5" GutterBottom="true">What's New in Blazor with the Release of .NET 10</MudText>
-<br />
-
-<MudText Typo="Typo.h6" GutterBottom="true">Prerendering</MudText>
-<MudText Typo="Typo.body2" GutterBottom="true">
-    If you're exploring the features of .NET 10 Blazor,<br /> you might be pleasantly surprised to learn that each page is prerendered on the server,<br /> regardless of the selected render mode.<br /><br />
-    This means that you'll need to inject all necessary services on the server,<br /> even when opting for the wasm (WebAssembly) render mode.<br /><br />
-    This prerendering functionality is crucial to ensuring that WebAssembly mode feels fast and responsive,<br /> especially when it comes to initial page load times.<br /><br />
-    For more information on how to detect prerendering and leverage the RenderContext, you can refer to the following link:
-    <MudLink Href="https://github.com/dotnet/aspnetcore/issues/51468#issuecomment-1783568121" Target="_blank" Typo="Typo.body2" Color="Color.Primary">
-        More details
-    </MudLink>
-</MudText>
-
-<br />
-<MudText Typo="Typo.h6" GutterBottom="true">InteractiveAuto</MudText>
-<MudText Typo="Typo.body2">
-    A discussion on how to achieve this can be found here:
-    <MudLink Href="https://github.com/dotnet/aspnetcore/issues/51468#issue-1950424116" Target="_blank" Typo="Typo.body2" Color="Color.Primary">
-        More details
-    </MudLink>
-</MudText>
+@* 端末リスト *@
+<MudTable Items="devices" Dense="true" Hover="true" Breakpoint="Breakpoint.None" Style="overflow-x: auto;">
+    <HeaderContent>
+        <MudTh Style="width: 60px;">状態</MudTh>
+        <MudTh>名称</MudTh>
+        <MudTh Style="width: 90px;">電波</MudTh>
+        <MudTh>AP名</MudTh>
+        <MudTh Style="width: 100px;">バッテリー</MudTh>
+        <MudTh Style="width: 60px;">移動</MudTh>
+        <MudTh Style="width: 60px;">位置</MudTh>
+        <MudTh Style="width: 90px;">スキャン</MudTh>
+        <MudTh Style="width: 110px;">最終更新</MudTh>
+        <MudTh Style="width: 110px;">進捗1</MudTh>
+        <MudTh Style="width: 110px;">進捗2</MudTh>
+        <MudTh Style="width: 80px;">ログ</MudTh>
+        <MudTh Style="width: 100px;">操作</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>
+            <MudTooltip Text="@ViewHelper.StateText(context.Status)">
+                <MudIcon Icon="@Icons.Material.Filled.Smartphone" Color="@ViewHelper.StateColor(context.Status)" Style="@(context.IsEnabled == 0 ? "opacity: 0.3;" : null)" />
+            </MudTooltip>
+        </MudTd>
+        <MudTd>
+            <MudText Typo="Typo.body2">@context.Name</MudText>
+            <MudText Typo="Typo.caption" Style="opacity: 0.6;">@context.DeviceId @(String.IsNullOrEmpty(context.GroupName) ? string.Empty : $"[{context.GroupName}]")</MudText>
+        </MudTd>
+        <MudTd>
+            <MudIcon Icon="@ViewHelper.WifiIcon(context.WifiRssi)" Color="@ViewHelper.WifiColor(context.WifiRssi)" Size="Size.Small" />
+            <MudText Typo="Typo.caption">@(context.WifiRssi is null ? "-" : $"{context.WifiRssi}dB")</MudText>
+        </MudTd>
+        <MudTd>@(context.ApName ?? "-")</MudTd>
+        <MudTd>
+            <MudIcon Icon="@ViewHelper.BatteryIcon(context.Battery)" Color="@ViewHelper.BatteryColor(context.Battery)" Size="Size.Small" />
+            <MudText Typo="Typo.caption">@(context.Battery is null ? "-" : $"{context.Battery:F0}%")</MudText>
+        </MudTd>
+        <MudTd>
+            @if (context.Moving == 1)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.DirectionsWalk" Color="Color.Info" Size="Size.Small" />
+            }
+            else
+            {
+                <MudText Typo="Typo.caption">-</MudText>
+            }
+        </MudTd>
+        <MudTd>
+            @if (context.Latitude is not null && context.Longitude is not null)
+            {
+                <MudTooltip Text="@($"{context.Latitude:F6}, {context.Longitude:F6}")">
+                    <MudIcon Icon="@Icons.Material.Filled.Place" Color="Color.Info" Size="Size.Small" />
+                </MudTooltip>
+            }
+            else
+            {
+                <MudText Typo="Typo.caption">-</MudText>
+            }
+        </MudTd>
+        <MudTd>@(context.ScanCount is null ? "-" : $"{context.ScanCount:N0}")</MudTd>
+        <MudTd>@ViewHelper.RelativeTime(context.StatusUpdatedAt ?? context.LastConnectedAt, now)</MudTd>
+        <MudTd>
+            <MudProgressLinear Value="@(context.Progress1 ?? 0)" Color="Color.Primary" />
+            <MudText Typo="Typo.caption">@(context.Progress1 is null ? "-" : $"{context.Progress1:F0}%")</MudText>
+        </MudTd>
+        <MudTd>
+            <MudProgressLinear Value="@(context.Progress2 ?? 0)" Color="Color.Success" />
+            <MudText Typo="Typo.caption">@(context.Progress2 is null ? "-" : $"{context.Progress2:F0}%")</MudText>
+        </MudTd>
+        <MudTd>
+            <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="() => ShowLogsAsync(context)">@context.LogCount 件</MudButton>
+        </MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => EditAsync(context)" />
+            <AuthorizeView Roles="@Roles.Administrator" Context="auth">
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="() => DeleteAsync(context)" />
+            </AuthorizeView>
+        </MudTd>
+    </RowTemplate>
+</MudTable>

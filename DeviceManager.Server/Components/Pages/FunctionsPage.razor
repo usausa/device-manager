@@ -1,0 +1,37 @@
+@page "/functions"
+@attribute [Authorize]
+
+<PageTitle>Function</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Function</MudText>
+
+<MudText Typo="Typo.body2" Class="mb-2">端末開発・検証用のモック API。登録した JSON を <code>/api/function/{名前}</code> で返します。</MudText>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+    <MudSpacer />
+    <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Primary" OnClick="ReloadAsync" />
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="AddAsync">追加</MudButton>
+</MudStack>
+
+<MudTable Items="functions" Dense="true" Hover="true">
+    <HeaderContent>
+        <MudTh>名前</MudTh>
+        <MudTh Style="width: 120px;">呼出回数</MudTh>
+        <MudTh Style="width: 160px;">更新日時</MudTh>
+        <MudTh Style="width: 100px;">操作</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>
+            <MudText Typo="Typo.body2">@context.Name</MudText>
+            <MudText Typo="Typo.caption" Style="opacity: 0.6;">/api/function/@context.Name</MudText>
+        </MudTd>
+        <MudTd>@context.CallCount.ToString("N0")</MudTd>
+        <MudTd>@context.UpdatedAt.ToString("yyyy/MM/dd HH:mm")</MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => EditAsync(context)" />
+            <AuthorizeView Roles="@Roles.Administrator" Context="auth">
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="() => DeleteAsync(context)" />
+            </AuthorizeView>
+        </MudTd>
+    </RowTemplate>
+</MudTable>

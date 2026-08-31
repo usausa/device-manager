@@ -1,0 +1,1 @@
+UPDATE FunctionDefinition SET CallCount = CallCount + 1 WHERE Name = /*@ name */''

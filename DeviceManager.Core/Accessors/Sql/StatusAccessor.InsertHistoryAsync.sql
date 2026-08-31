@@ -1,0 +1,2 @@
+INSERT INTO StatusHistory (DeviceId, Level, Battery, WifiRssi, ApName, Moving, ScanCount, Progress1, Progress2, Latitude, Longitude, CreatedAt)
+VALUES (/*@ deviceId */'', /*@ level */0, /*@ battery */0, /*@ wifiRssi */0, /*@ apName */NULL, /*@ moving */0, /*@ scanCount */0, /*@ progress1 */0, /*@ progress2 */0, /*@ latitude */NULL, /*@ longitude */NULL, /*@ createdAt */'')

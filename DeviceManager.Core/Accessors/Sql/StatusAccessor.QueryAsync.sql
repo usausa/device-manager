@@ -1,0 +1,1 @@
+SELECT * FROM DeviceStatus WHERE DeviceId = /*@ deviceId */''

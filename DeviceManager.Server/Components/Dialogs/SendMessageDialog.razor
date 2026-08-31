@@ -1,0 +1,33 @@
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">メッセージ送信</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="form" Model="Form">
+            <MudSelect T="string" @bind-Value="Form.DeviceId" Label="宛先" Clearable="true" Placeholder="全体送信">
+                @foreach (var device in Devices)
+                {
+                    <MudSelectItem T="string" Value="@device.DeviceId">@device.Name (@device.DeviceId)</MudSelectItem>
+                }
+            </MudSelect>
+            <MudTextField @bind-Value="Form.MessageType"
+                          For="@(() => Form.MessageType)"
+                          Validation="@Validator.ValidateValue"
+                          Label="種別"
+                          MaxLength="@Length.MessageType"
+                          Immediate="true"
+                          Class="mt-4" />
+            <MudTextField @bind-Value="Form.Content"
+                          For="@(() => Form.Content)"
+                          Validation="@Validator.ValidateValue"
+                          Label="内容"
+                          Lines="4"
+                          Immediate="true"
+                          Class="mt-4" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="OnOkClick">送信</MudButton>
+        <MudButton Color="Color.Default" OnClick="OnCancelClick">CANCEL</MudButton>
+    </DialogActions>
+</MudDialog>

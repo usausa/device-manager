@@ -1,0 +1,1 @@
+SELECT * FROM CommonConfig ORDER BY Key

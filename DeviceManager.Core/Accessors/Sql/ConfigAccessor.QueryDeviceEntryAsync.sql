@@ -1,0 +1,1 @@
+SELECT * FROM DeviceConfig WHERE DeviceId = /*@ deviceId */'' AND Key = /*@ key */''

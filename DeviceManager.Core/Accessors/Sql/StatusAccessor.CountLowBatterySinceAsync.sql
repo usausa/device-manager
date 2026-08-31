@@ -1,0 +1,1 @@
+SELECT COUNT(*) FROM DeviceStatus WHERE Battery < /*@ threshold */20 AND UpdatedAt >= /*@ since */''

@@ -1,0 +1,1 @@
+DELETE FROM ConnectionLog WHERE DeviceId = /*@ deviceId */''

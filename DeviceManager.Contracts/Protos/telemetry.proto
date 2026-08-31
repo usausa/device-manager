@@ -1,0 +1,62 @@
+// テレメトリ(メトリクス / ログ / クラッシュレポート)受信サービス
+// サーバー(GrpcServices=Server)とクライアント SDK(GrpcServices=Client)の両方から参照される
+syntax = "proto3";
+
+option csharp_namespace = "DeviceManager.Telemetry";
+
+package devicemanager;
+
+service TelemetryService {
+  // メトリクス(ステータス)報告
+  rpc ReportStatus (StatusRequest) returns (TelemetryReply);
+
+  // ログの一括送信
+  rpc SendLogs (LogRequest) returns (TelemetryReply);
+
+  // クラッシュレポート送信
+  rpc SendCrashReport (CrashReportRequest) returns (TelemetryReply);
+}
+
+message TelemetryReply {
+  bool accepted = 1;
+}
+
+message StatusRequest {
+  string device_id = 1;
+  int32 level = 2;
+  double battery = 3;
+  int32 wifi_rssi = 4;
+  string ap_name = 5;
+  bool moving = 6;
+  int32 scan_count = 7;
+  double progress1 = 8;
+  double progress2 = 9;
+  optional double latitude = 10;
+  optional double longitude = 11;
+  // 計測時刻(Unix ミリ秒)。タンキング再送時に元の時刻を保持するために使用
+  int64 timestamp = 12;
+}
+
+message LogRequest {
+  string device_id = 1;
+  repeated LogRecord records = 2;
+}
+
+message LogRecord {
+  int32 level = 1;
+  string category = 2;
+  string message = 3;
+  string exception = 4;
+  int64 timestamp = 5;
+}
+
+message CrashReportRequest {
+  string device_id = 1;
+  string exception_type = 2;
+  string message = 3;
+  string stack_trace = 4;
+  string inner_exception = 5;
+  string app_version = 6;
+  string os_version = 7;
+  int64 occurred_at = 8;
+}

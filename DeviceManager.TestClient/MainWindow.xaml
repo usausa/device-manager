@@ -1,0 +1,67 @@
+<Window x:Class="DeviceManager.TestClient.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="DeviceManager TestClient" Height="680" Width="1000">
+    <Grid Margin="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- 接続設定 -->
+        <WrapPanel Grid.Row="0" Margin="0,0,0,4">
+            <TextBlock Text="Server" VerticalAlignment="Center" Margin="0,0,4,0" />
+            <TextBox x:Name="ServerUrlBox" Width="200" Text="http://localhost:8082/" Margin="0,0,8,0" />
+            <TextBlock Text="gRPC" VerticalAlignment="Center" Margin="0,0,4,0" />
+            <TextBox x:Name="GrpcUrlBox" Width="200" Text="http://localhost:8083/" Margin="0,0,8,0" />
+            <TextBlock Text="ApiKey" VerticalAlignment="Center" Margin="0,0,4,0" />
+            <TextBox x:Name="ApiKeyBox" Width="220" Text="device-manager-api-key-0123456789" Margin="0,0,8,0" />
+        </WrapPanel>
+
+        <!-- 端末設定 / 接続 -->
+        <WrapPanel Grid.Row="1" Margin="0,0,0,4">
+            <TextBlock Text="DeviceId" VerticalAlignment="Center" Margin="0,0,4,0" />
+            <TextBox x:Name="DeviceIdBox" Width="100" Text="dev-001" Margin="0,0,8,0" />
+            <TextBlock Text="Name" VerticalAlignment="Center" Margin="0,0,4,0" />
+            <TextBox x:Name="DeviceNameBox" Width="120" Text="Test Device 1" Margin="0,0,8,0" />
+            <TextBlock Text="タンキング" VerticalAlignment="Center" Margin="0,0,4,0" />
+            <ComboBox x:Name="TankCombo" Width="100" SelectedIndex="0" Margin="0,0,8,0">
+                <ComboBoxItem Content="メモリ" />
+                <ComboBoxItem Content="SQLite" />
+            </ComboBox>
+            <Button x:Name="ConnectButton" Content="接続" Width="80" Click="OnConnectClick" Margin="0,0,4,0" />
+            <Button x:Name="DisconnectButton" Content="切断" Width="80" Click="OnDisconnectClick" IsEnabled="False" Margin="0,0,8,0" />
+            <Border x:Name="StateIndicator" Width="12" Height="12" CornerRadius="6" Background="Gray" VerticalAlignment="Center" Margin="0,0,4,0" />
+            <TextBlock x:Name="StateText" Text="Disconnected" VerticalAlignment="Center" />
+        </WrapPanel>
+
+        <!-- ステータス / メッセージ -->
+        <WrapPanel Grid.Row="2" Margin="0,0,0,4">
+            <CheckBox x:Name="AutoStatusCheck" Content="自動ステータス(5秒)" VerticalAlignment="Center" Checked="OnAutoStatusChecked" Unchecked="OnAutoStatusUnchecked" Margin="0,0,8,0" />
+            <Button Content="ステータス送信" Width="110" Click="OnSendStatusClick" Margin="0,0,12,0" />
+            <TextBlock Text="種別" VerticalAlignment="Center" Margin="0,0,4,0" />
+            <TextBox x:Name="MessageTypeBox" Width="80" Text="text" Margin="0,0,4,0" />
+            <TextBlock Text="内容" VerticalAlignment="Center" Margin="0,0,4,0" />
+            <TextBox x:Name="MessageContentBox" Width="200" Text="Hello from device" Margin="0,0,4,0" />
+            <Button Content="メッセージ送信" Width="110" Click="OnSendMessageClick" />
+        </WrapPanel>
+
+        <!-- 機能テスト -->
+        <WrapPanel Grid.Row="3" Margin="0,0,0,4">
+            <Button Content="アップロード" Width="100" Click="OnUploadClick" Margin="0,0,4,0" />
+            <Button Content="一覧" Width="70" Click="OnListClick" Margin="0,0,4,0" />
+            <Button Content="ダウンロード" Width="100" Click="OnDownloadClick" Margin="0,0,4,0" />
+            <Button Content="削除" Width="70" Click="OnDeleteClick" Margin="0,0,12,0" />
+            <Button Content="クラッシュレポート送信" Width="150" Click="OnErrorReportClick" Margin="0,0,4,0" />
+            <Button Content="ログテスト" Width="90" Click="OnLogTestClick" Margin="0,0,4,0" />
+            <Button Content="コンフィグ取得" Width="110" Click="OnGetConfigClick" Margin="0,0,4,0" />
+            <Button Content="未送信件数" Width="90" Click="OnPendingCountClick" />
+        </WrapPanel>
+
+        <!-- ログ -->
+        <ListBox Grid.Row="4" x:Name="LogList" FontFamily="Consolas" />
+    </Grid>
+</Window>

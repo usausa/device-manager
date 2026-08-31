@@ -1,0 +1,1 @@
+SELECT * FROM ErrorReport WHERE ReportId = /*@ reportId */0

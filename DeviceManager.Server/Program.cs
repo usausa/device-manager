@@ -1,29 +1,79 @@
-using DeviceManager.Server.Components;
-using MudBlazor.Services;
+using Microsoft.Extensions.Hosting.WindowsServices;
 
-var builder = WebApplication.CreateBuilder(args);
+//--------------------------------------------------------------------------------
+// Configure builder
+//--------------------------------------------------------------------------------
+Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    ContentRootPath = WindowsServiceHelpers.IsWindowsService() ? AppContext.BaseDirectory : default
+});
 
-// Add MudBlazor services
-builder.Services.AddMudServices();
+// System
+builder.ConfigureSystem();
 
-// Add services to the container.
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+// Host
+builder.ConfigureHost();
 
+// Logging
+builder.ConfigureLogging();
+
+// Http
+builder.ConfigureHttp();
+// API
+builder.ConfigureApi();
+// Authentication
+builder.ConfigureAuthentication();
+// OpenApi
+builder.ConfigureOpenApi();
+
+// Blazor
+builder.ConfigureBlazor();
+
+// Health
+builder.ConfigureHealth();
+// Metrics
+builder.ConfigureTelemetry();
+
+// Components
+builder.ConfigureComponents();
+
+//--------------------------------------------------------------------------------
+// Configure the HTTP request pipeline.
+//--------------------------------------------------------------------------------
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-}
-app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+// Startup information
+app.LogStartupInformation();
 
+// Forwarded headers
+app.UseForwardedHeaders();
 
+// Error handler
+app.UseErrorHandler();
+
+// Logging
+app.UseLogging();
+
+// Authentication
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseAntiforgery();
 
-app.MapStaticAssets();
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+// Logging context
+app.UseLoggingContext();
 
-app.Run();
+// End point
+app.MapEndpoints();
+
+// Initialize
+await app.InitializeApplicationAsync();
+
+// Run
+await app.RunAsync();
+
+[ExcludeFromCodeCoverage]
+public partial class Program
+{
+}

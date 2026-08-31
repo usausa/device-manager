@@ -1,0 +1,51 @@
+@page "/logs"
+@attribute [Authorize]
+@inherits AppComponentBase
+
+<PageTitle>ログ</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">ログ</MudText>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+    <MudSelect T="string" @bind-Value="deviceId" Label="端末" Clearable="true" Placeholder="すべて" Style="max-width: 280px;" SelectedValuesChanged="OnFilterChanged">
+        @foreach (var device in devices)
+        {
+            <MudSelectItem T="string" Value="@device.DeviceId">@device.Name (@device.DeviceId)</MudSelectItem>
+        }
+    </MudSelect>
+    <MudSelect T="int" @bind-Value="minLevel" Label="最小レベル" Style="max-width: 160px;" SelectedValuesChanged="OnFilterChanged">
+        <MudSelectItem T="int" Value="0">Trace</MudSelectItem>
+        <MudSelectItem T="int" Value="1">Debug</MudSelectItem>
+        <MudSelectItem T="int" Value="2">Info</MudSelectItem>
+        <MudSelectItem T="int" Value="3">Warning</MudSelectItem>
+        <MudSelectItem T="int" Value="4">Error</MudSelectItem>
+        <MudSelectItem T="int" Value="5">Critical</MudSelectItem>
+    </MudSelect>
+    <MudSpacer />
+    <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Primary" OnClick="ReloadAsync" />
+</MudStack>
+
+<MudTable Items="logs" Dense="true" Hover="true">
+    <HeaderContent>
+        <MudTh Style="width: 150px;">時刻</MudTh>
+        <MudTh Style="width: 160px;">端末</MudTh>
+        <MudTh Style="width: 90px;">レベル</MudTh>
+        <MudTh Style="width: 200px;">カテゴリ</MudTh>
+        <MudTh>メッセージ</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.CreatedAt.ToString("MM/dd HH:mm:ss")</MudTd>
+        <MudTd>@context.DeviceId</MudTd>
+        <MudTd>
+            <MudChip T="string" Size="Size.Small" Color="@ViewHelper.LogLevelColor(context.Level)">@ViewHelper.LogLevelText(context.Level)</MudChip>
+        </MudTd>
+        <MudTd Style="word-break: break-all;">@context.Category</MudTd>
+        <MudTd Style="word-break: break-all;">
+            @context.Message
+            @if (!String.IsNullOrEmpty(context.Exception))
+            {
+                <MudText Typo="Typo.caption" Color="Color.Error" Style="white-space: pre-wrap;">@context.Exception</MudText>
+            }
+        </MudTd>
+    </RowTemplate>
+</MudTable>

@@ -1,0 +1,1 @@
+INSERT INTO ConnectionLog (DeviceId, EventType, CreatedAt) VALUES (/*@ deviceId */'', /*@ eventType */'', /*@ createdAt */'')

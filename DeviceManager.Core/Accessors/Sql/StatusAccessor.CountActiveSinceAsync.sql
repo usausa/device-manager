@@ -1,0 +1,1 @@
+SELECT COUNT(DISTINCT DeviceId) FROM StatusHistory WHERE CreatedAt >= /*@ since */''

@@ -1,0 +1,2 @@
+INSERT INTO DeviceLog (DeviceId, Level, Category, Message, Exception, CreatedAt)
+VALUES (/*@ deviceId */'', /*@ level */0, /*@ category */'', /*@ message */'', /*@ exception */NULL, /*@ createdAt */'')

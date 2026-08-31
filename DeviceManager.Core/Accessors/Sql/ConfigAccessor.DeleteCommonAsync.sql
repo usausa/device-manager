@@ -1,0 +1,1 @@
+DELETE FROM CommonConfig WHERE Key = /*@ key */''

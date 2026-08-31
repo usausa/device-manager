@@ -1,0 +1,97 @@
+@page "/config"
+@attribute [Authorize]
+
+<PageTitle>設定</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">設定</MudText>
+
+<MudTabs Elevation="1" Rounded="true" ApplyEffectsToContainer="true">
+    <MudTabPanel Text="共通">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+            <MudSpacer />
+            <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Primary" OnClick="ReloadCommonAsync" />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="AddCommonAsync">追加</MudButton>
+        </MudStack>
+        <MudTable Items="commonEntries" Dense="true" Hover="true">
+            <HeaderContent>
+                <MudTh>キー</MudTh>
+                <MudTh>値</MudTh>
+                <MudTh>説明</MudTh>
+                <MudTh Style="width: 160px;">更新日時</MudTh>
+                <MudTh Style="width: 100px;">操作</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Key</MudTd>
+                <MudTd Style="word-break: break-all;">@context.Value</MudTd>
+                <MudTd>@context.Description</MudTd>
+                <MudTd>@context.UpdatedAt.ToString("yyyy/MM/dd HH:mm")</MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => EditCommonAsync(context)" />
+                    <AuthorizeView Roles="@Roles.Administrator" Context="auth">
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="() => DeleteCommonAsync(context)" />
+                    </AuthorizeView>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudTabPanel>
+    <MudTabPanel Text="端末別">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+            <MudSelect T="string" @bind-Value="deviceId" Label="端末" Clearable="true" Style="max-width: 280px;" SelectedValuesChanged="ReloadDeviceAsync">
+                @foreach (var device in devices)
+                {
+                    <MudSelectItem T="string" Value="@device.DeviceId">@device.Name (@device.DeviceId)</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSpacer />
+            <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Primary" OnClick="ReloadDeviceAsync" Disabled="@(deviceId is null)" />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="AddDeviceAsync" Disabled="@(deviceId is null)">追加</MudButton>
+        </MudStack>
+        <MudTable Items="deviceEntries" Dense="true" Hover="true">
+            <HeaderContent>
+                <MudTh>キー</MudTh>
+                <MudTh>値</MudTh>
+                <MudTh>説明</MudTh>
+                <MudTh Style="width: 160px;">更新日時</MudTh>
+                <MudTh Style="width: 100px;">操作</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Key</MudTd>
+                <MudTd Style="word-break: break-all;">@context.Value</MudTd>
+                <MudTd>@context.Description</MudTd>
+                <MudTd>@context.UpdatedAt.ToString("yyyy/MM/dd HH:mm")</MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => EditDeviceAsync(context)" />
+                    <AuthorizeView Roles="@Roles.Administrator" Context="auth">
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="() => DeleteDeviceAsync(context)" />
+                    </AuthorizeView>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+        @if (deviceId is null)
+        {
+            <MudText Typo="Typo.body2" Class="mt-2">端末を選択してください。共通設定に端末別設定を上書きした値が端末へ配信されます。</MudText>
+        }
+    </MudTabPanel>
+    <MudTabPanel Text="変更履歴">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+            <MudSpacer />
+            <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Primary" OnClick="ReloadHistoryAsync" />
+        </MudStack>
+        <MudTable Items="histories" Dense="true" Hover="true">
+            <HeaderContent>
+                <MudTh Style="width: 160px;">日時</MudTh>
+                <MudTh Style="width: 180px;">スコープ</MudTh>
+                <MudTh>キー</MudTh>
+                <MudTh>変更前</MudTh>
+                <MudTh>変更後</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.ChangedAt.ToString("MM/dd HH:mm:ss")</MudTd>
+                <MudTd>@context.Scope</MudTd>
+                <MudTd>@context.Key</MudTd>
+                <MudTd Style="word-break: break-all;">@(context.OldValue ?? "-")</MudTd>
+                <MudTd Style="word-break: break-all;">@(context.NewValue ?? "(削除)")</MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudTabPanel>
+</MudTabs>

@@ -1,0 +1,1 @@
+DELETE FROM ErrorReport WHERE ReceivedAt < /*@ threshold */''

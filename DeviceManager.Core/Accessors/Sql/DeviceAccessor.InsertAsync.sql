@@ -1,0 +1,2 @@
+INSERT INTO Device (DeviceId, Name, Platform, IsEnabled, Status, RegisteredAt, LastConnectedAt)
+VALUES (/*@ deviceId */'', /*@ name */'', /*@ platform */NULL, 1, /*@ status */0, /*@ registeredAt */'', /*@ lastConnectedAt */NULL)

@@ -1,0 +1,1 @@
+SELECT COUNT(*) FROM Device WHERE Status = /*@ status */0

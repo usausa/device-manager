@@ -1,0 +1,1 @@
+SELECT * FROM ConfigHistory ORDER BY Id DESC LIMIT /*@ take */50

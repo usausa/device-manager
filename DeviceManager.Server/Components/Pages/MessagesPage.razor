@@ -1,0 +1,45 @@
+@page "/messages"
+@attribute [Authorize]
+@inherits AppComponentBase
+
+<PageTitle>メッセージ</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">メッセージ</MudText>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+    <MudSelect T="string" @bind-Value="deviceId" Label="端末" Clearable="true" Placeholder="すべて" Style="max-width: 280px;" SelectedValuesChanged="OnFilterChanged">
+        @foreach (var device in devices)
+        {
+            <MudSelectItem T="string" Value="@device.DeviceId">@device.Name (@device.DeviceId)</MudSelectItem>
+        }
+    </MudSelect>
+    <MudSpacer />
+    <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Primary" OnClick="ReloadAsync" />
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Send" OnClick="SendAsync">送信</MudButton>
+</MudStack>
+
+<MudDataGrid @ref="Grid" T="MessageEntity" ServerData="LoadServerData" SortMode="SortMode.None" Dense="true">
+    <Columns>
+        <TemplateColumn Title="日時" CellStyle="width: 150px;">
+            <CellTemplate>@context.Item.CreatedAt.ToString("MM/dd HH:mm:ss")</CellTemplate>
+        </TemplateColumn>
+        <TemplateColumn Title="方向" CellStyle="width: 60px;">
+            <CellTemplate>
+                <MudIcon Icon="@ViewHelper.MessageDirectionIcon(context.Item.Direction)" Size="Size.Small" />
+            </CellTemplate>
+        </TemplateColumn>
+        <TemplateColumn Title="端末">
+            <CellTemplate>@(context.Item.DeviceId ?? "全体")</CellTemplate>
+        </TemplateColumn>
+        <PropertyColumn Property="x => x.MessageType" Title="種別" CellStyle="width: 120px;" />
+        <PropertyColumn Property="x => x.Content" Title="内容" CellStyle="word-break: break-all;" />
+        <TemplateColumn Title="状態" CellStyle="width: 100px;">
+            <CellTemplate>
+                <MudChip T="string" Size="Size.Small" Color="@ViewHelper.MessageStatusColor(context.Item.Status)">@ViewHelper.MessageStatusText(context.Item.Status)</MudChip>
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="MessageEntity" />
+    </PagerContent>
+</MudDataGrid>

@@ -1,0 +1,45 @@
+@page "/reports"
+@attribute [Authorize]
+@inherits AppComponentBase
+
+<PageTitle>エラーレポート</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">エラーレポート</MudText>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+    <MudSelect T="string" @bind-Value="deviceId" Label="端末" Clearable="true" Placeholder="すべて" Style="max-width: 280px;" SelectedValuesChanged="OnFilterChanged">
+        @foreach (var device in devices)
+        {
+            <MudSelectItem T="string" Value="@device.DeviceId">@device.Name (@device.DeviceId)</MudSelectItem>
+        }
+    </MudSelect>
+    <MudSpacer />
+    <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Primary" OnClick="ReloadAsync" />
+</MudStack>
+
+<MudDataGrid @ref="Grid" T="ErrorReportEntity" ServerData="LoadServerData" SortMode="SortMode.None" Dense="true" RowClick="OnRowClick" Hover="true">
+    <Columns>
+        <TemplateColumn Title="受信日時" CellStyle="width: 150px;">
+            <CellTemplate>@context.Item.ReceivedAt.ToString("MM/dd HH:mm:ss")</CellTemplate>
+        </TemplateColumn>
+        <PropertyColumn Property="x => x.DeviceId" Title="端末" />
+        <TemplateColumn Title="例外種別">
+            <CellTemplate>
+                <MudChip T="string" Size="Size.Small" Color="Color.Error">@context.Item.ExceptionType</MudChip>
+            </CellTemplate>
+        </TemplateColumn>
+        <PropertyColumn Property="x => x.Message" Title="メッセージ" CellStyle="word-break: break-all;" />
+        <PropertyColumn Property="x => x.AppVersion" Title="アプリ" CellStyle="width: 100px;" />
+        <TemplateColumn Title="操作" CellStyle="width: 100px;">
+            <CellTemplate>
+                <MudIconButton Icon="@Icons.Material.Filled.Info" Size="Size.Small" OnClick="() => ShowDetailAsync(context.Item)" />
+                <AuthorizeView Roles="@Roles.Administrator" Context="auth">
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="() => DeleteAsync(context.Item)" />
+                </AuthorizeView>
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="ErrorReportEntity" />
+    </PagerContent>
+</MudDataGrid>
