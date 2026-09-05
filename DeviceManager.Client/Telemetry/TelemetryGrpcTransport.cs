@@ -45,7 +45,7 @@ internal sealed class TelemetryGrpcTransport : ITelemetryTransport
         new DateTimeOffset(value.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(value, DateTimeKind.Local) : value).ToUnixTimeMilliseconds();
 
     // 一括送信(ログはまとめて 1 リクエスト、メトリクス / クラッシュは順に送信)。通信失敗は false
-    public async ValueTask<bool> SendAsync(IReadOnlyList<TelemetryEnvelope> envelopes, CancellationToken cancellationToken = default)
+    public async ValueTask<bool> SendAsync(IEnumerable<TelemetryEnvelope> envelopes, CancellationToken cancellationToken = default)
     {
         try
         {

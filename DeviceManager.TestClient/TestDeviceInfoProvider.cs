@@ -7,7 +7,7 @@ public sealed class TestDeviceInfoProvider : IDeviceInfoProvider
 
     public string DeviceName { get; }
 
-    public string? Platform => "Windows";
+    public string Platform => "Windows";
 
     public TestDeviceInfoProvider(string deviceId, string deviceName)
     {

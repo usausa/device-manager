@@ -74,6 +74,4 @@ await app.InitializeApplicationAsync();
 await app.RunAsync();
 
 [ExcludeFromCodeCoverage]
-public partial class Program
-{
-}
+public partial class Program;

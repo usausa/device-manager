@@ -6,7 +6,7 @@ using System.Windows.Media;
 using DeviceManager.Client.Logging;
 using DeviceManager.Client.Telemetry;
 
-public partial class MainWindow : Window, IAsyncDisposable
+public partial class MainWindow : IAsyncDisposable
 {
     private const int MaxLogItems = 500;
 
@@ -92,6 +92,7 @@ public partial class MainWindow : Window, IAsyncDisposable
     // Connection
     //--------------------------------------------------------------------------------
 
+    // ReSharper disable once AsyncVoidEventHandlerMethod
     private async void OnConnectClick(object sender, RoutedEventArgs e)
     {
         if (client is not null)
@@ -104,15 +105,18 @@ public partial class MainWindow : Window, IAsyncDisposable
             var options = new DeviceManagerClientOptions
             {
                 ServerUrl = ServerUrlBox.Text,
-                ApiKey = ApiKeyBox.Text
+                ApiKey = ApiKeyBox.Text,
+                Telemetry =
+                {
+                    GrpcUrl = GrpcUrlBox.Text,
+                    FlushIntervalSeconds = 2,
+                    LogMinLevel = DeviceLogLevel.Information,
+                    // タンキングプロバイダーの選択(メモリ / SQLite)
+                    Store = TankCombo.SelectedIndex == 1
+                        ? new SqliteTelemetryStoreOptions { FilePath = Path.Combine(AppContext.BaseDirectory, "telemetry.db"), RetentionHours = 72, MaxItems = 10000 }
+                        : new MemoryTelemetryStoreOptions { RetentionHours = 72, MaxItems = 10000 }
+                }
             };
-            options.Telemetry.GrpcUrl = GrpcUrlBox.Text;
-            options.Telemetry.FlushIntervalSeconds = 2;
-            options.Telemetry.LogMinLevel = DeviceLogLevel.Information;
-            // タンキングプロバイダーの選択(メモリ / SQLite)
-            options.Telemetry.Store = TankCombo.SelectedIndex == 1
-                ? new SqliteTelemetryStoreOptions { FilePath = Path.Combine(AppContext.BaseDirectory, "telemetry.db"), RetentionHours = 72, MaxItems = 10000 }
-                : new MemoryTelemetryStoreOptions { RetentionHours = 72, MaxItems = 10000 };
 
             var infoProvider = new TestDeviceInfoProvider(DeviceIdBox.Text, DeviceNameBox.Text);
 
@@ -171,6 +175,7 @@ public partial class MainWindow : Window, IAsyncDisposable
         }
     }
 
+    // ReSharper disable once AsyncVoidEventHandlerMethod
     private async void OnAutoStatusUnchecked(object sender, RoutedEventArgs e)
     {
         if (client is null)
@@ -182,6 +187,7 @@ public partial class MainWindow : Window, IAsyncDisposable
         AppendLog("自動ステータス報告を停止しました。");
     }
 
+    // ReSharper disable once AsyncVoidEventHandlerMethod
     private async void OnSendStatusClick(object sender, RoutedEventArgs e)
     {
         if (client is null)
@@ -205,6 +211,7 @@ public partial class MainWindow : Window, IAsyncDisposable
     // Message
     //--------------------------------------------------------------------------------
 
+    // ReSharper disable once AsyncVoidEventHandlerMethod
     private async void OnSendMessageClick(object sender, RoutedEventArgs e)
     {
         if (client is null)
@@ -227,6 +234,7 @@ public partial class MainWindow : Window, IAsyncDisposable
     // Storage
     //--------------------------------------------------------------------------------
 
+    // ReSharper disable once AsyncVoidEventHandlerMethod
     private async void OnUploadClick(object sender, RoutedEventArgs e)
     {
         if (client is null)
@@ -246,6 +254,7 @@ public partial class MainWindow : Window, IAsyncDisposable
         }
     }
 
+    // ReSharper disable once AsyncVoidEventHandlerMethod
     private async void OnListClick(object sender, RoutedEventArgs e)
     {
         if (client is null)
@@ -264,6 +273,7 @@ public partial class MainWindow : Window, IAsyncDisposable
         }
     }
 
+    // ReSharper disable once AsyncVoidEventHandlerMethod
     private async void OnDownloadClick(object sender, RoutedEventArgs e)
     {
         if (client is null)
@@ -293,6 +303,7 @@ public partial class MainWindow : Window, IAsyncDisposable
         }
     }
 
+    // ReSharper disable once AsyncVoidEventHandlerMethod
     private async void OnDeleteClick(object sender, RoutedEventArgs e)
     {
         if (client is null)
@@ -348,6 +359,7 @@ public partial class MainWindow : Window, IAsyncDisposable
         AppendLog("[ログ] テストログを 3 件出力しました(バックグラウンドで gRPC 転送されます)。");
     }
 
+    // ReSharper disable once AsyncVoidEventHandlerMethod
     private async void OnGetConfigClick(object sender, RoutedEventArgs e)
     {
         if (client is null)
@@ -366,6 +378,7 @@ public partial class MainWindow : Window, IAsyncDisposable
         }
     }
 
+    // ReSharper disable once AsyncVoidEventHandlerMethod
     private async void OnPendingCountClick(object sender, RoutedEventArgs e)
     {
         if (telemetry is null)

@@ -41,12 +41,12 @@ public sealed partial class Home
     [Inject]
     public required ISnackbar Snackbar { get; set; }
 
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync()
     {
         // 端末イベントを購読してリアルタイム更新(破棄時に解除)
         EventBus.Received += OnDeviceEvent;
 
-        await ReloadAsync();
+        return ReloadAsync();
     }
 
     protected override void Dispose(bool disposing)
