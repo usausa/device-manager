@@ -71,21 +71,35 @@ public partial class MainWindow : IAsyncDisposable
 
     private async ValueTask CleanupAsync()
     {
-        if (client is not null)
+        try
         {
-            await client.DisposeAsync();
-            client = null;
-        }
+            if (client is not null)
+            {
+                await client.DisposeAsync();
+                client = null;
+            }
 
-        if (telemetry is not null)
+            if (telemetry is not null)
+            {
+                await telemetry.DisposeAsync();
+                telemetry = null;
+            }
+
+            loggerFactory?.Dispose();
+            loggerFactory = null;
+        }
+        catch (OperationCanceledException)
         {
-            await telemetry.DisposeAsync();
-            telemetry = null;
+            AppendLog("[キャンセル] 後始末を中断しました。");
         }
-
-        loggerFactory?.Dispose();
-        loggerFactory = null;
-        UpdateState(ConnectionState.Disconnected);
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            AppendLog($"[エラー] 後始末に失敗しました: {ex.Message}");
+        }
+        finally
+        {
+            UpdateState(ConnectionState.Disconnected);
+        }
     }
 
     //--------------------------------------------------------------------------------
@@ -137,6 +151,11 @@ public partial class MainWindow : IAsyncDisposable
             await client.ConnectAsync();
             AppendLog("接続しました。");
         }
+        catch (OperationCanceledException)
+        {
+            AppendLog("[キャンセル] 接続を中断しました。");
+            await CleanupAsync();
+        }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             AppendLog($"[エラー] 接続失敗: {ex.Message}");
@@ -151,6 +170,10 @@ public partial class MainWindow : IAsyncDisposable
             AutoStatusCheck.IsChecked = false;
             await CleanupAsync();
             AppendLog("切断しました。");
+        }
+        catch (OperationCanceledException)
+        {
+            AppendLog("[キャンセル] 操作を中断しました。");
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -183,8 +206,19 @@ public partial class MainWindow : IAsyncDisposable
             return;
         }
 
-        await client.StopStatusReportingAsync();
-        AppendLog("自動ステータス報告を停止しました。");
+        try
+        {
+            await client.StopStatusReportingAsync();
+            AppendLog("自動ステータス報告を停止しました。");
+        }
+        catch (OperationCanceledException)
+        {
+            AppendLog("[キャンセル] 操作を中断しました。");
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            AppendLog($"[エラー] {ex.Message}");
+        }
     }
 
     // ReSharper disable once AsyncVoidEventHandlerMethod
@@ -200,6 +234,10 @@ public partial class MainWindow : IAsyncDisposable
             var report = await statusProvider.GetStatusAsync();
             client.ReportStatus(report);
             AppendLog($"[ステータス] battery={report.Battery:F0}% rssi={report.WifiRssi}dB ap={report.ApName} scan={report.ScanCount}(バックグラウンドで gRPC 送信)");
+        }
+        catch (OperationCanceledException)
+        {
+            AppendLog("[キャンセル] 操作を中断しました。");
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -223,6 +261,10 @@ public partial class MainWindow : IAsyncDisposable
         {
             await client.SendMessageAsync(MessageTypeBox.Text, MessageContentBox.Text);
             AppendLog($"[送信] {MessageTypeBox.Text}: {MessageContentBox.Text}");
+        }
+        catch (OperationCanceledException)
+        {
+            AppendLog("[キャンセル] 操作を中断しました。");
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -248,6 +290,10 @@ public partial class MainWindow : IAsyncDisposable
             await client.UploadAsync(TestFilePath, stream);
             AppendLog($"[ストレージ] アップロード: {TestFilePath}");
         }
+        catch (OperationCanceledException)
+        {
+            AppendLog("[キャンセル] 操作を中断しました。");
+        }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             AppendLog($"[エラー] {ex.Message}");
@@ -266,6 +312,10 @@ public partial class MainWindow : IAsyncDisposable
         {
             var entries = await client.ListAsync($"devices/{DeviceIdBox.Text}");
             AppendLog($"[ストレージ] {entries.Count} 件: {String.Join(", ", entries.Select(static x => x.Name))}");
+        }
+        catch (OperationCanceledException)
+        {
+            AppendLog("[キャンセル] 操作を中断しました。");
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -297,6 +347,10 @@ public partial class MainWindow : IAsyncDisposable
                 AppendLog($"[ストレージ] ダウンロード: {text}");
             }
         }
+        catch (OperationCanceledException)
+        {
+            AppendLog("[キャンセル] 操作を中断しました。");
+        }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             AppendLog($"[エラー] {ex.Message}");
@@ -315,6 +369,10 @@ public partial class MainWindow : IAsyncDisposable
         {
             var deleted = await client.DeleteAsync(TestFilePath);
             AppendLog(deleted ? "[ストレージ] 削除しました。" : "[ストレージ] ファイルがありません。");
+        }
+        catch (OperationCanceledException)
+        {
+            AppendLog("[キャンセル] 操作を中断しました。");
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -372,6 +430,10 @@ public partial class MainWindow : IAsyncDisposable
             var values = await client.GetConfigAsync();
             AppendLog($"[コンフィグ] {values.Count} 件: {String.Join(", ", values.Select(static x => $"{x.Key}={x.Value}"))}");
         }
+        catch (OperationCanceledException)
+        {
+            AppendLog("[キャンセル] 操作を中断しました。");
+        }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             AppendLog($"[エラー] {ex.Message}");
@@ -390,6 +452,10 @@ public partial class MainWindow : IAsyncDisposable
         {
             var count = await telemetry.GetPendingCountAsync();
             AppendLog($"[テレメトリ] 未送信 {count} 件(キュー + タンク)");
+        }
+        catch (OperationCanceledException)
+        {
+            AppendLog("[キャンセル] 操作を中断しました。");
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
