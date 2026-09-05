@@ -37,9 +37,9 @@ public sealed class SqliteTelemetryStore : ITelemetryStore
 
     public async ValueTask AddAsync(TelemetryEnvelope envelope, CancellationToken cancellationToken = default)
     {
-        using var connection = new SqliteConnection(connectionString);
+        await using var connection = new SqliteConnection(connectionString);
         await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
-        using var command = connection.CreateCommand();
+        await using var command = connection.CreateCommand();
         command.CommandText = "INSERT INTO Telemetry (Kind, Payload, CreatedAt) VALUES (@kind, @payload, @createdAt)";
         command.Parameters.AddWithValue("@kind", (int)envelope.Kind);
         command.Parameters.AddWithValue("@payload", envelope.Payload);
@@ -49,14 +49,14 @@ public sealed class SqliteTelemetryStore : ITelemetryStore
 
     public async ValueTask<IReadOnlyList<TelemetryEnvelope>> PeekAsync(int max, CancellationToken cancellationToken = default)
     {
-        using var connection = new SqliteConnection(connectionString);
+        await using var connection = new SqliteConnection(connectionString);
         await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
-        using var command = connection.CreateCommand();
+        await using var command = connection.CreateCommand();
         command.CommandText = "SELECT Id, Kind, Payload, CreatedAt FROM Telemetry ORDER BY Id LIMIT @max";
         command.Parameters.AddWithValue("@max", max);
 
         var list = new List<TelemetryEnvelope>();
-        using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
         while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
         {
             list.Add(new TelemetryEnvelope
@@ -78,10 +78,10 @@ public sealed class SqliteTelemetryStore : ITelemetryStore
             return;
         }
 
-        using var connection = new SqliteConnection(connectionString);
+        await using var connection = new SqliteConnection(connectionString);
         await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
-        using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-        using var command = connection.CreateCommand();
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
         command.Transaction = transaction;
         command.CommandText = "DELETE FROM Telemetry WHERE Id = @id";
         var parameter = command.Parameters.Add("@id", SqliteType.Integer);
@@ -96,17 +96,17 @@ public sealed class SqliteTelemetryStore : ITelemetryStore
 
     public async ValueTask CleanupAsync(DateTime threshold, int maxItems, CancellationToken cancellationToken = default)
     {
-        using var connection = new SqliteConnection(connectionString);
+        await using var connection = new SqliteConnection(connectionString);
         await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
-        using (var command = connection.CreateCommand())
+        await using (var command = connection.CreateCommand())
         {
             command.CommandText = "DELETE FROM Telemetry WHERE CreatedAt < @threshold";
             command.Parameters.AddWithValue("@threshold", threshold.Ticks);
             await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        using (var command = connection.CreateCommand())
+        await using (var command = connection.CreateCommand())
         {
             command.CommandText = "DELETE FROM Telemetry WHERE Id NOT IN (SELECT Id FROM Telemetry ORDER BY Id DESC LIMIT @max)";
             command.Parameters.AddWithValue("@max", maxItems);
@@ -116,9 +116,9 @@ public sealed class SqliteTelemetryStore : ITelemetryStore
 
     public async ValueTask<int> CountAsync(CancellationToken cancellationToken = default)
     {
-        using var connection = new SqliteConnection(connectionString);
+        await using var connection = new SqliteConnection(connectionString);
         await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
-        using var command = connection.CreateCommand();
+        await using var command = connection.CreateCommand();
         command.CommandText = "SELECT COUNT(*) FROM Telemetry";
         var result = await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
         return Convert.ToInt32(result, CultureInfo.InvariantCulture);
