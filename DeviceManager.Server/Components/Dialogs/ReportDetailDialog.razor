@@ -10,7 +10,7 @@
                 <tr><td>例外種別</td><td>@Report.ExceptionType</td></tr>
                 <tr><td>メッセージ</td><td style="word-break: break-all;">@Report.Message</td></tr>
                 <tr><td>アプリ / OS</td><td>@(Report.AppVersion ?? "-") / @(Report.OsVersion ?? "-")</td></tr>
-                <tr><td>発生 / 受信</td><td>@Report.OccurredAt.ToString("yyyy/MM/dd HH:mm:ss") / @Report.ReceivedAt.ToString("yyyy/MM/dd HH:mm:ss")</td></tr>
+                <tr><td>発生 / 受信</td><td>@Report.OccurredAt.ToString("yyyy/MM/dd HH:mm:ss", CultureInfo.InvariantCulture) / @Report.ReceivedAt.ToString("yyyy/MM/dd HH:mm:ss", CultureInfo.InvariantCulture)</td></tr>
             </tbody>
         </MudSimpleTable>
         @if (!String.IsNullOrEmpty(Report.StackTrace))

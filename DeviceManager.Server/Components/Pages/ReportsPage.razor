@@ -20,7 +20,7 @@
 <MudDataGrid @ref="Grid" T="ErrorReportEntity" ServerData="LoadServerData" SortMode="SortMode.None" Dense="true" RowClick="OnRowClick" Hover="true">
     <Columns>
         <TemplateColumn Title="受信日時" CellStyle="width: 150px;">
-            <CellTemplate>@context.Item.ReceivedAt.ToString("MM/dd HH:mm:ss")</CellTemplate>
+            <CellTemplate>@context.Item.ReceivedAt.ToString("MM/dd HH:mm:ss", CultureInfo.InvariantCulture)</CellTemplate>
         </TemplateColumn>
         <PropertyColumn Property="x => x.DeviceId" Title="端末" />
         <TemplateColumn Title="例外種別">

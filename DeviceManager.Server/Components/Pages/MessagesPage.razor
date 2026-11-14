@@ -21,7 +21,7 @@
 <MudDataGrid @ref="Grid" T="MessageEntity" ServerData="LoadServerData" SortMode="SortMode.None" Dense="true">
     <Columns>
         <TemplateColumn Title="日時" CellStyle="width: 150px;">
-            <CellTemplate>@context.Item.CreatedAt.ToString("MM/dd HH:mm:ss")</CellTemplate>
+            <CellTemplate>@context.Item.CreatedAt.ToString("MM/dd HH:mm:ss", CultureInfo.InvariantCulture)</CellTemplate>
         </TemplateColumn>
         <TemplateColumn Title="方向" CellStyle="width: 60px;">
             <CellTemplate>

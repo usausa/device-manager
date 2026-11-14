@@ -24,7 +24,7 @@
                 <MudTd>@context.Key</MudTd>
                 <MudTd Style="word-break: break-all;">@context.Value</MudTd>
                 <MudTd>@context.Description</MudTd>
-                <MudTd>@context.UpdatedAt.ToString("yyyy/MM/dd HH:mm")</MudTd>
+                <MudTd>@context.UpdatedAt.ToString("yyyy/MM/dd HH:mm", CultureInfo.InvariantCulture)</MudTd>
                 <MudTd>
                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => EditCommonAsync(context)" />
                     <AuthorizeView Roles="@Roles.Administrator" Context="auth">
@@ -58,7 +58,7 @@
                 <MudTd>@context.Key</MudTd>
                 <MudTd Style="word-break: break-all;">@context.Value</MudTd>
                 <MudTd>@context.Description</MudTd>
-                <MudTd>@context.UpdatedAt.ToString("yyyy/MM/dd HH:mm")</MudTd>
+                <MudTd>@context.UpdatedAt.ToString("yyyy/MM/dd HH:mm", CultureInfo.InvariantCulture)</MudTd>
                 <MudTd>
                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => EditDeviceAsync(context)" />
                     <AuthorizeView Roles="@Roles.Administrator" Context="auth">
@@ -86,7 +86,7 @@
                 <MudTh>変更後</MudTh>
             </HeaderContent>
             <RowTemplate>
-                <MudTd>@context.ChangedAt.ToString("MM/dd HH:mm:ss")</MudTd>
+                <MudTd>@context.ChangedAt.ToString("MM/dd HH:mm:ss", CultureInfo.InvariantCulture)</MudTd>
                 <MudTd>@context.Scope</MudTd>
                 <MudTd>@context.Key</MudTd>
                 <MudTd Style="word-break: break-all;">@(context.OldValue ?? "-")</MudTd>

@@ -11,7 +11,7 @@
                 <MudTh>メッセージ</MudTh>
             </HeaderContent>
             <RowTemplate>
-                <MudTd>@context.CreatedAt.ToString("MM/dd HH:mm:ss")</MudTd>
+                <MudTd>@context.CreatedAt.ToString("MM/dd HH:mm:ss", CultureInfo.InvariantCulture)</MudTd>
                 <MudTd>
                     <MudChip T="string" Size="Size.Small" Color="@ViewHelper.LogLevelColor(context.Level)">@ViewHelper.LogLevelText(context.Level)</MudChip>
                 </MudTd>

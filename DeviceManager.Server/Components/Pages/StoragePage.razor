@@ -64,7 +64,7 @@
             }
         </MudTd>
         <MudTd>@(context.Directory ? string.Empty : ViewHelper.FormatSize(context.Size))</MudTd>
-        <MudTd>@context.LastModified.ToString("yyyy/MM/dd HH:mm")</MudTd>
+        <MudTd>@context.LastModified.ToString("yyyy/MM/dd HH:mm", CultureInfo.InvariantCulture)</MudTd>
         <MudTd>
             @if (!context.Directory)
             {

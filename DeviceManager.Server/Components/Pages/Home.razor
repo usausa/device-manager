@@ -12,7 +12,7 @@
         <MudPaper Class="pa-4" Style="border-bottom: 4px solid var(--mud-palette-success);">
             <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
                 <div>
-                    <MudText Typo="Typo.subtitle2">稼働(日) @now.ToString("MM/dd")</MudText>
+                    <MudText Typo="Typo.subtitle2">稼働(日) @now.ToString("MM/dd", CultureInfo.InvariantCulture)</MudText>
                     <MudText Typo="Typo.h4">@summary.ActiveDay / @summary.Total</MudText>
                 </div>
                 <MudIcon Icon="@Icons.Material.Filled.Today" Size="Size.Large" Color="Color.Success" />
@@ -23,7 +23,7 @@
         <MudPaper Class="pa-4" Style="border-bottom: 4px solid var(--mud-palette-info);">
             <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
                 <div>
-                    <MudText Typo="Typo.subtitle2">稼働(週) @now.AddDays(-6).ToString("MM/dd")〜</MudText>
+                    <MudText Typo="Typo.subtitle2">稼働(週) @now.AddDays(-6).ToString("MM/dd", CultureInfo.InvariantCulture)〜</MudText>
                     <MudText Typo="Typo.h4">@summary.ActiveWeek / @summary.Total</MudText>
                 </div>
                 <MudIcon Icon="@Icons.Material.Filled.DateRange" Size="Size.Large" Color="Color.Info" />
