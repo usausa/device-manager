@@ -16,7 +16,7 @@ public sealed partial class MessageAccessor
     public partial ValueTask<int> CountAsync(string? deviceId);
 
     [Query]
-    public partial ValueTask<List<MessageEntity>> QueryPageAsync(string? deviceId, long offset, int size);
+    public partial ValueTask<List<MessageEntity>> QueryPageAsync(string? deviceId, int offset, int size);
 
     [Execute]
     public partial ValueTask<int> DeleteByDeviceAsync(string deviceId);
