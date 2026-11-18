@@ -13,7 +13,7 @@ public sealed partial class ErrorReportAccessor
     public partial ValueTask<int> CountAsync(string? deviceId);
 
     [Query]
-    public partial ValueTask<List<ErrorReportEntity>> QueryPageAsync(string? deviceId, int offset, int size);
+    public partial ValueTask<List<ErrorReportEntity>> QueryPageAsync(string? deviceId, long offset, int size);
 
     [QueryFirst]
     public partial ValueTask<ErrorReportEntity?> QueryAsync(long reportId);

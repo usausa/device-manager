@@ -34,7 +34,7 @@ public sealed class ErrorReportService
     public ValueTask<int> CountAsync(string? deviceId) =>
         errorReportAccessor.CountAsync(String.IsNullOrEmpty(deviceId) ? null : deviceId);
 
-    public ValueTask<List<ErrorReportEntity>> QueryPageAsync(string? deviceId, int offset, int size) =>
+    public ValueTask<List<ErrorReportEntity>> QueryPageAsync(string? deviceId, long offset, int size) =>
         errorReportAccessor.QueryPageAsync(String.IsNullOrEmpty(deviceId) ? null : deviceId, offset, size);
 
     public ValueTask<ErrorReportEntity?> QueryAsync(long reportId) =>

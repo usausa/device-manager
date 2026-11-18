@@ -41,7 +41,7 @@ public sealed class MessageService
     public ValueTask<int> CountAsync(string? deviceId) =>
         messageAccessor.CountAsync(String.IsNullOrEmpty(deviceId) ? null : deviceId);
 
-    public ValueTask<List<MessageEntity>> QueryPageAsync(string? deviceId, int offset, int size) =>
+    public ValueTask<List<MessageEntity>> QueryPageAsync(string? deviceId, long offset, int size) =>
         messageAccessor.QueryPageAsync(String.IsNullOrEmpty(deviceId) ? null : deviceId, offset, size);
 
     public ValueTask<int> DeleteByDeviceAsync(string deviceId) =>

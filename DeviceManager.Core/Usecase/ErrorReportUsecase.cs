@@ -14,7 +14,7 @@ public sealed class ErrorReportUsecase
     public async ValueTask<PagedResult<ErrorReportEntity>> QueryPageAsync(string? deviceId, int page, int size)
     {
         var total = await errorReportService.CountAsync(deviceId);
-        var items = await errorReportService.QueryPageAsync(deviceId, page * size, size);
+        var items = await errorReportService.QueryPageAsync(deviceId, (long)page * size, size);
         return new PagedResult<ErrorReportEntity>(total, page, size, items);
     }
 }
